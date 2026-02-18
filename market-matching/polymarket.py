@@ -2,22 +2,20 @@ import requests
 
 BASE = "https://gamma-api.polymarket.com"
 
-params = {
-    "active": True,
-    "closed": False,
-    "limit": 100
-}
+params = {"active": True, "closed": False, "limit": 5}
+r = requests.get(f"{BASE}/markets", params=params, timeout=30)
+r.raise_for_status()
+markets = r.json()
 
-response = requests.get(f"{BASE}/markets", params=params, timeout=30)
-response.raise_for_status()
+for m in markets[:5]:
+    event = (m.get("events") or [{}])[0]
+    series = (event.get("series") or [{}])[0]
 
-markets = response.json()
-
-for market in markets[:5]:
     print("\n---")
-    print("Question:", market.get("question"))
-    print("Market Slug:", market.get("slug"))
-    print("Condition ID:", market.get("conditionId"))
-    print("End Date:", market.get("endDate"))
-    print("Category:", market.get("category"))
-    print("Description:", market.get("description"))
+    print("Question:", m.get("question"))
+    print("Condition ID:", m.get("conditionId"))
+    print("End Date:", m.get("endDate"))
+    print("Slug:", m.get("slug"))
+    print("Event Title:", event.get("title"))
+    print("Series Title:", series.get("title"))
+    print("Description:", (m.get("description") or "")[:250], "...")
