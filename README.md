@@ -11,3 +11,8 @@
 `python -m pip install --upgrade pip`  
 `pip install -r requirements.txt`
 
+## 4. When you add dependencies, don't forget to update the requirements
+
+`pip freeze > requirements.txt`
+
+
