@@ -1,11 +1,12 @@
 venv/
+.venv/
 __pycache__/
-node_modules/
 *.pyc
 dist/
-secrets/
+node_modules/
+/secrets/
+
 /trading-bot/server/prisma/generated/
-market-matching/.venv/
 
 # Just a symlink. Safe to commit!!
 !docker/.env
