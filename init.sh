@@ -18,7 +18,6 @@ DEFAULT_PG_DATA="/var/lib/postgresql/18/docker"
 DEFAULT_PG_PORT="5432"
 DEFAULT_TIMEZONE="America/New_York"
 
-
 main() {
     require git
     require npm
@@ -33,8 +32,7 @@ main() {
     fi
 
     if prompt "Clean install?" "N"; then
-        echo ""
-        git clean -dfX
+        clean
     fi
 
     init
@@ -55,6 +53,19 @@ require() {
         echo "Please install $program!"
         exit
     fi
+}
+
+clean() {
+    echo ""
+    echo "Removing .gitignored files..."
+    git clean -dfX
+    echo ""
+
+    echo "Removing docker containers..."
+    cd "$DOCKER_DIR"
+    sudo docker compose down
+
+    cd $ROOT_DIR
 }
 
 init() {
