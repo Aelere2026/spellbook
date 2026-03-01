@@ -21,7 +21,7 @@ model Arbitrage {
   detectionTime     DateTime @map("time_deduction")
   executionTime     DateTime @map("time_execution")
 
-  match Match @relation(fields: [matchId], references: [id])
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
 }
 
 model Market {
@@ -36,7 +36,7 @@ model Market {
   fee            Decimal
   category       String
 
-  platform Platform @relation(fields: [platformId], references: [id])
+  platform Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
   outcome  Outcome?
 
   polymarketMatch Match? @relation("polymarket")
@@ -51,8 +51,8 @@ model Match {
   matchScore         Float @map("match_score")
 
   arbitrages       Arbitrage[]
-  polymarketMarket Market      @relation("polymarket", fields: [polymarketMarketId], references: [id])
-  kalshiMarket     Market      @relation("kalshi", fields: [kalshiMarketId], references: [id])
+  polymarketMarket Market      @relation("polymarket", fields: [polymarketMarketId], references: [id], onDelete: Cascade)
+  kalshiMarket     Market      @relation("kalshi", fields: [kalshiMarketId], references: [id], onDelete: Cascade)
 }
 
 model Outcome {
@@ -61,7 +61,7 @@ model Outcome {
   marketId Int    @unique @map("market_id")
   outcome  String
 
-  market Market @relation(fields: [marketId], references: [id])
+  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
 }
 
 model Platform {

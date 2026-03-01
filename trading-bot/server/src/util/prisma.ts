@@ -13,12 +13,20 @@ const connectionString = `${process.env.DATABASE_URL}`
 const adapter = new PrismaPg({ connectionString })
 const prisma = new PrismaClient({ adapter })
 
-try {
-    await prisma.market.findMany()
-} catch (err) {
-    log.fatal("Connection to database failed...")
-    log.fatal("Please make sure the docker container is running!")
-    process.exit(0)
+async function healthCheck(timeout: number = 5000) {
+    while (true) {
+        try {
+            await prisma.platform.findFirst()
+        } catch (err) {
+            log.fatal("Connection to database failed...")
+            log.fatal("Please make sure the docker container is running!")
+            process.exit(0)
+        }
+
+        await new Promise(resolve => setTimeout(resolve, timeout))
+    }
 }
+
+healthCheck()
 
 export { prisma }
