@@ -10,35 +10,56 @@ SECRETS_DIR=$ROOT_DIR/"secrets"
 
 POSTGRES_ENV="postgres.env"
 DOCKER_ENV="docker.env"
+TRADING_BOT_ENV="bot.env"
 
 DEFAULT_PG_PASSWORD="postgres"
 DEFAULT_PG_DATABASE="spellbookdb"
 DEFAULT_PG_DATA="/var/lib/postgresql/18/docker"
+DEFAULT_PG_PORT="5432"
 DEFAULT_TIMEZONE="America/New_York"
 
+
 main() {
-    if ((BASH_VERSINFO[0] < 4))
-    then
+    require git
+    require npm
+    require npx
+    require python3
+    require pip
+    require docker
+
+    if ((BASH_VERSINFO[0] < 4)); then
         echo "Please update to at least bash-4.0 to run this script."
         exit 1
     fi
 
-    prompt "Clean install?"
-    if [[ $RESULT ]]; then
+    if prompt "Clean install?" "N"; then
         echo ""
         git clean -dfX
-        echo ""
     fi
 
     init
     setup_tool PYTHON
-    setup_tool POSTGRES
-    setup_tool DOCKER
     setup_tool TRADING_BOT
+    setup_tool DOCKER
+    setup_tool POSTGRES
+}
+
+# Usage: require <program>
+require() {
+    local program=$1
+
+    if command -v "$program" > /dev/null; then
+        true
+        #echo "$program installed!"
+    else
+        echo "Please install $program!"
+        exit
+    fi
 }
 
 init() {
     mkdir -p $SECRETS_DIR
+    echo ""
 }
 
 # Usage: add_env <file> <key> <value>
@@ -56,18 +77,19 @@ add_env() {
     mv "temp.env" "$file"
 }
 
-# Usage: prompt <prompt_string>
-# Return: 1: True, 0: False
+# Usage: prompt <prompt_string> <default: {YN} = Y>
 prompt() {
     local prompt_string=$1
+    local default=${2:-"Y"}
 
-    prompt_string="$prompt_string [Y/n] "
-
-    read -rp "$prompt_string" -n 1
-    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-        RESULT=1
+    if [ "$default" == "Y" ]; then
+        prompt_string="$prompt_string [Y/n] "
+        read -rp "$prompt_string" -n 1
+        [[ ! $REPLY =~ ^[Nn]$ ]]
     else
-        RESULT=0
+        prompt_string="$prompt_string [y/N] "
+        read -rp "$prompt_string" -n 1
+        [[ $REPLY =~ ^[Yy]$ ]]
     fi
 }
 
@@ -75,15 +97,15 @@ prompt() {
 setup_tool() {
     local tool=$1
 
-    prompt "Setup $tool?"
-    if [[ $RESULT ]]; then
+    if prompt "Setup $tool?"; then
         echo ""
         echo "Setting up $tool..."
         $tool
+
+        cd $ROOT
+        echo "Done!"
     fi
 
-    cd $ROOT
-    echo "Done!"
     echo ""
 }
 
@@ -98,18 +120,12 @@ PYTHON() {
     deactivate
 }
 
-# Sets up
-POSTGRES() {
-    cd "$SECRETS_DIR"
+TRADING_BOT() {
+    cd "$TRADING_BOT_DIR/client"
+    npm install
 
-    read -rep $'Postgres Password:\n > ' -i $DEFAULT_PG_PASSWORD postgres_password
-    read -rep $'Postgres Database:\n > ' -i $DEFAULT_PG_DATABASE postgres_database
-    read -rep $'Postgres Data Path:\n > ' -i $DEFAULT_PG_DATA postgres_data
-
-    add_env "$POSTGRES_ENV" "POSTGRES_PASSWORD" "$postgres_password"
-    add_env "$POSTGRES_ENV" "POSTGRES_DB" "$postgres_database"
-    add_env "$POSTGRES_ENV" "PGDATA" "$postgres_data"
-    add_env "$DOCKER_ENV" "PGDATA" "$postgres_data"
+    cd "$TRADING_BOT_DIR/server"
+    npm install
 }
 
 DOCKER() {
@@ -121,12 +137,51 @@ DOCKER() {
     sudo docker compose pull
 }
 
-TRADING_BOT() {
-    cd "$TRADING_BOT_DIR/client"
-    npm install
+# Sets up
+POSTGRES() {
+    cd "$SECRETS_DIR"
 
-    cd "$TRADING_BOT_DIR/server"
-    npm install
+    read -rep $'Postgres Password:\n > ' -i $DEFAULT_PG_PASSWORD postgres_password
+    read -rep $'Postgres Database:\n > ' -i $DEFAULT_PG_DATABASE postgres_database
+    read -rep $'Postgres Data Path:\n > ' -i $DEFAULT_PG_DATA postgres_data
+    read -rep $'Postgres Port:\n > ' -i $DEFAULT_PG_PORT postgres_port
+
+    add_env "$POSTGRES_ENV" "POSTGRES_DB" "$postgres_database"
+    add_env "$POSTGRES_ENV" "PGDATA" "$postgres_data"
+    add_env "$POSTGRES_ENV" "PGPASSWORD" "$postgres_password"
+
+    add_env "$DOCKER_ENV" "PGDATA" "$postgres_data"
+    add_env "$DOCKER_ENV" "POSTGRES_PORT" "$postgres_port"
+
+    add_env "$TRADING_BOT_ENV" "DATABASE_URL" "postgresql://postgres:$postgres_password@localhost:$postgres_port/$postgres_database"
+
+    # Docker needs to be running for Prisma to do its thing
+    container_id=$(docker container ls --filter "name=postgres" --quiet)
+    [[ "$container_id" != "" ]] && postres_running=true || postgres_running=false
+
+    # If it isn't running, start it up
+    if ! $postgres_running; then
+        cd "$DOCKER_DIR"
+        echo "Starting docker containers..."
+        sudo docker compose up --detach postgres
+    else
+        echo "Postgres already running!"
+    fi
+
+    cd "$TRADING_BOT_DIR/server/prisma"
+    if ! npx prisma migrate dev > /dev/null; then
+        echo "Database out of sync! Dropping data..."
+        npx prisma migrate reset
+        npx prisma migrate dev
+    fi
+    npx prisma generate
+
+    # If docker wasn't running before the script, stop it
+    if ! $postgres_running; then
+        cd "$DOCKER_DIR"
+        echo "Stopping docker containers..."
+        sudo docker compose stop postgres
+    fi
 }
 
 main

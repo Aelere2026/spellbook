@@ -1,0 +1,73 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider        = "prisma-client"
+  output          = "./generated"
+  previewFeatures = ["strictUndefinedChecks"]
+}
+
+model Arbitrage {
+  id Int @id @default(autoincrement())
+
+  matchId           Int      @map("match_id")
+  //polymarketOutcomeId Int      @map("outcome_id_polymarket")
+  //kalshiOutcomeId     Int      @map("outcome_id_kalshi")
+  netProfit         Decimal  @map("net_profit")
+  grossProfit       Decimal  @map("gross_profit")
+  totalFee          Decimal  @map("total_fee")
+  estimatedSlippage Decimal  @map("estimaged_slippage")
+  detectionTime     DateTime @map("time_deduction")
+  executionTime     DateTime @map("time_execution")
+
+  match Match @relation(fields: [matchId], references: [id])
+}
+
+model Market {
+  id Int @id @default(autoincrement())
+
+  platformId     Int      @map("platform_id")
+  apiId          String   @map("api_id")
+  title          String
+  eventDate      DateTime @map("event_date")
+  resolutionDate DateTime @map("resolution_date")
+  status         String
+  fee            Decimal
+  category       String
+
+  platform Platform @relation(fields: [platformId], references: [id])
+  outcome  Outcome?
+
+  polymarketMatch Match? @relation("polymarket")
+  kalshiMatch     Match? @relation("kalshi")
+}
+
+model Match {
+  id Int @id @default(autoincrement())
+
+  polymarketMarketId Int   @unique @map("polymarket_id")
+  kalshiMarketId     Int   @unique @map("kalshi_id")
+  matchScore         Float @map("match_score")
+
+  arbitrages       Arbitrage[]
+  polymarketMarket Market      @relation("polymarket", fields: [polymarketMarketId], references: [id])
+  kalshiMarket     Market      @relation("kalshi", fields: [kalshiMarketId], references: [id])
+}
+
+model Outcome {
+  id Int @id @default(autoincrement())
+
+  marketId Int    @unique @map("market_id")
+  outcome  String
+
+  market Market @relation(fields: [marketId], references: [id])
+}
+
+model Platform {
+  id Int @id @default(autoincrement())
+
+  name    String
+  baseFee Decimal  @map("base_fee")
+  markets Market[]
+}
