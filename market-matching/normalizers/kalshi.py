@@ -30,7 +30,8 @@ def normalize_kalshi(m: dict) -> NormalizedMarket:
         description  = m.get("rules_primary", "") or m.get("rules_secondary", ""),
         close_time   = parse_dt(m.get("close_time")),
         outcomes     = outcomes,
-        event_title  = m.get("event_ticker"),
+        event_title  = None,
         series_title = m.get("mve_collection_ticker"),
+        is_mve       = bool(legs),
         raw          = m,
     )

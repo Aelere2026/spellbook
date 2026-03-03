@@ -20,8 +20,11 @@ class NormalizedMarket:
     outcomes: list[str]              # ["Yes", "No"] or ["Trump wins", ...]
     
     # --- Grouping / hierarchy ---
-    event_title: Optional[str]       # parent event label
+    event_title: Optional[str]       # parent event label (Polymarket only; None for Kalshi)
     series_title: Optional[str]      # recurring series label
+
+    # --- Market type flags ---
+    is_mve: bool = False             # Kalshi multi-variate/parlay markets; excluded from matching
     
     # --- Raw passthrough (for debugging) ---
     raw: dict = field(default_factory=dict, repr=False)
