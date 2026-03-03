@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from models import NormalizedMarket
+from .models import NormalizedMarket
 import json
 
 def parse_dt(s: str | None) -> datetime | None:

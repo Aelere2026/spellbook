@@ -1,8 +1,8 @@
 import time
 from datetime import datetime
 
-from polymarket import pull_polymarket
-from kalshi import pull_kalshi
+from fetchers.polymarket import pull_polymarket
+from fetchers.kalshi import pull_kalshi
 
 INTERVAL_SECONDS = 60 * 60  # 1 hour
 

@@ -1,6 +1,6 @@
 # normalizers/kalshi.py
 from datetime import datetime, timezone
-from models import NormalizedMarket
+from .models import NormalizedMarket
 
 def parse_dt(s: str | None) -> datetime | None:
     if not s:
