@@ -1,5 +1,5 @@
 import React from "react";
-import { trpc } from "./utils/trpc"
+import { api } from "./utils/api"
 
 interface StatCardProps {
   title: string;
@@ -132,7 +132,7 @@ const Dashboard: React.FC = () => {
   const profit = 8420.17; // From dashboard mockup need to import from db
 
 
-  const { data, isLoading } = trpc.platforms.get.useQuery()
+  const { data, isLoading } = api.platforms.get.useQuery()
   if (isLoading) return <div> Loading... </div>
   console.log(data)
 
