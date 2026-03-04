@@ -25,6 +25,7 @@ class NormalizedMarket:
 
     # --- Market type flags ---
     is_mve: bool = False             # Kalshi multi-variate/parlay markets; excluded from matching
+    neg_risk: bool = False           # Polymarket negRisk sub-leg (one option in a multi-choice group)
     
     # --- Raw passthrough (for debugging) ---
     raw: dict = field(default_factory=dict, repr=False)

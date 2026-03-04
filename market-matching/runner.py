@@ -5,11 +5,11 @@ from fetchers.kalshi import pull_kalshi
 from fetchers.polymarket import pull_polymarket
 from normalizers.kalshi import normalize_kalshi
 from normalizers.polymarket import normalize_polymarket
-from matchers.match import find_matches
+from matchers.match import find_matches, _is_binary
 
 OUTPUT = Path("matches.txt")
 TIME_WINDOW = timedelta(days=14)
-MIN_SCORE = 82.0
+MIN_SCORE = 83.0
 
 
 def run():
@@ -36,7 +36,11 @@ def run():
             print(f"  [warn] polymarket normalize failed for {m.get('conditionId')}: {e}")
 
     eligible_kalshi = [k for k in kalshi_markets if not k.is_mve]
-    print(f"  Kalshi after MVE filter: {len(eligible_kalshi)}")
+    binary_kalshi   = [k for k in eligible_kalshi if _is_binary(k)]
+    neg_risk_poly   = sum(1 for p in poly_markets if p.neg_risk)
+    binary_poly     = [p for p in poly_markets    if _is_binary(p)]
+    print(f"  Kalshi after MVE filter: {len(eligible_kalshi)}  |  binary: {len(binary_kalshi)}")
+    print(f"  Polymarket: {len(poly_markets)} total  |  {neg_risk_poly} negRisk dropped  |  {len(binary_poly)} binary")
 
     matches = find_matches(kalshi_markets, poly_markets,
                            min_score=MIN_SCORE, max_time_delta=TIME_WINDOW)
@@ -44,8 +48,8 @@ def run():
 
     lines = [
         f"Generated:   {now.isoformat()}",
-        f"Kalshi:      {len(raw_kalshi)} fetched  |  {len(eligible_kalshi)} after MVE filter",
-        f"Polymarket:  {len(raw_poly)} fetched",
+        f"Kalshi:      {len(raw_kalshi)} fetched  |  {len(eligible_kalshi)} non-MVE  |  {len(binary_kalshi)} binary",
+        f"Polymarket:  {len(raw_poly)} fetched  |  {neg_risk_poly} negRisk  |  {len(binary_poly)} binary",
         f"Time window: ±{TIME_WINDOW.days} days",
         f"Min score:   {MIN_SCORE}",
         f"Matches:     {len(matches)}",

@@ -1,11 +1,16 @@
 from datetime import datetime, timedelta, timezone
 from normalizers.models import NormalizedMarket
-from matchers.match import find_matches, MatchResult, _canon
+from matchers.match import find_matches, MatchResult
+from matchers.utils import canon
+from matchers.event import event_candidates
 
 T = datetime(2026, 6, 1, tzinfo=timezone.utc)
 
 
-def market(platform: str, pid: str, title: str, close_time=T, is_mve=False) -> NormalizedMarket:
+def market(
+    platform: str, pid: str, title: str,
+    close_time=T, is_mve=False, event_title=None,
+) -> NormalizedMarket:
     return NormalizedMarket(
         platform=platform,
         platform_id=pid,
@@ -13,7 +18,7 @@ def market(platform: str, pid: str, title: str, close_time=T, is_mve=False) -> N
         description="",
         close_time=close_time,
         outcomes=["Yes", "No"],
-        event_title=None,
+        event_title=event_title,
         series_title=None,
         is_mve=is_mve,
     )
@@ -125,19 +130,55 @@ results = find_matches([k_num], [p_num])
 assert len(results) == 1, f"expected number-format match, got {len(results)}"
 assert results[0].score >= 82.0
 
+# --- Event-level blocking ---
+
+LATE = T + timedelta(days=30)  # outside ±14 day time window
+
+# Matching event titles → pair matched even though close_times are 30 days apart
+k_ev = market("kalshi",     "K-EV", "Will candidate X win the primary?",
+               close_time=T,    event_title="2028 Democratic Primary")
+p_ev = market("polymarket", "P-EV", "Will candidate X win the 2028 Democratic primary?",
+               close_time=LATE, event_title="2028 Democratic Election Primary")
+
+results = find_matches([k_ev], [p_ev])
+assert len(results) == 1, "event-matched pair should be included despite time gap"
+
+# No event title on either side → falls back to time gate (original behavior)
+k_no_ev = market("kalshi",     "K-NO-EV", "Will the Fed cut rates in June 2026?")
+p_no_ev = market("polymarket", "P-NO-EV", "Will the Federal Reserve cut interest rates in June 2026?")
+results = find_matches([k_no_ev], [p_no_ev])
+assert len(results) == 1, "no-event markets should still match via time gate"
+
+# Non-matching event titles → falls through to time gate; outside window → excluded
+k_mismatch = market("kalshi",     "K-MIS", "Will candidate X win the primary?",
+                     close_time=T,    event_title="Completely Unrelated Kalshi Event ZYXWV")
+p_mismatch  = market("polymarket", "P-MIS", "Will candidate X win the 2028 Democratic primary?",
+                     close_time=LATE, event_title="2028 Democratic Election Primary")
+results = find_matches([k_mismatch], [p_mismatch])
+assert len(results) == 0, "non-matching event + outside time window → excluded"
+
+# event_candidates unit test
+pairs = event_candidates([k_ev], [p_ev], min_event_score=70.0)
+assert len(pairs) == 1
+assert pairs[0] == (k_ev, p_ev)
+
+# event titles below threshold → no pairs
+pairs = event_candidates([k_mismatch], [p_mismatch], min_event_score=70.0)
+assert len(pairs) == 0
+
 # --- _canon unit tests ---
 
-assert _canon("Will Bitcoin exceed $100,000 by 2026?") == "will bitcoin exceed $100000 by 2026?"
-assert _canon("Will Bitcoin exceed $100k by 2026?")    == "will bitcoin exceed $100000 by 2026?"
-assert _canon("Will Bitcoin exceed $1.5k by 2026?")    == "will bitcoin exceed $1500 by 2026?"
-assert _canon("Will X win the NBA Championship?")      == "will x win the nba champion?"
-assert _canon("Will X be NBA champion?")               == "will x be nba champion?"
-assert _canon("Will Team A beat Team B?")              == "will team a beat team b?"
-assert _canon("Will Team A beats Team B?")             == "will team a beat team b?"
-assert _canon("Will unemployment exceed 5%?")          == "will unemployment exceed 5%?"
-assert _canon("Will unemployment exceeded 5%?")        == "will unemployment exceed 5%?"
-assert _canon("Will the bill pass?")                   == "will the bill pass?"
-assert _canon("Will the bill passes?")                 == "will the bill pass?"
-assert _canon("Will they reach $1,500?")               == "will they reach $1500?"
+assert canon("Will Bitcoin exceed $100,000 by 2026?") == "will bitcoin exceed $100000 by 2026?"
+assert canon("Will Bitcoin exceed $100k by 2026?")    == "will bitcoin exceed $100000 by 2026?"
+assert canon("Will Bitcoin exceed $1.5k by 2026?")    == "will bitcoin exceed $1500 by 2026?"
+assert canon("Will X win the NBA Championship?")      == "will x win the nba champion?"
+assert canon("Will X be NBA champion?")               == "will x be nba champion?"
+assert canon("Will Team A beat Team B?")              == "will team a beat team b?"
+assert canon("Will Team A beats Team B?")             == "will team a beat team b?"
+assert canon("Will unemployment exceed 5%?")          == "will unemployment exceed 5%?"
+assert canon("Will unemployment exceeded 5%?")        == "will unemployment exceed 5%?"
+assert canon("Will the bill pass?")                   == "will the bill pass?"
+assert canon("Will the bill passes?")                 == "will the bill pass?"
+assert canon("Will they reach $1,500?")               == "will they reach $1500?"
 
 print("All tests passed.")

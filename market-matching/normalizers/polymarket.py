@@ -24,5 +24,6 @@ def normalize_polymarket(m: dict) -> NormalizedMarket:
         outcomes     = outcomes,
         event_title  = event.get("title"),
         series_title = series.get("title"),
+        neg_risk     = bool(m.get("negRisk", False)),
         raw          = m,
     )

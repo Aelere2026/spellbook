@@ -1,8 +1,8 @@
-Generated:   2026-03-04T00:21:15.831253
-Kalshi:      3409 fetched  |  3409 after MVE filter
-Polymarket:  500 fetched
+Generated:   2026-03-04T01:15:55.778743
+Kalshi:      3409 fetched  |  3409 non-MVE  |  2369 binary
+Polymarket:  500 fetched  |  471 negRisk  |  500 binary
 Time window: ±14 days
-Min score:   82.0
+Min score:   83.0
 Matches:     35
 
 [1] score=86.8
@@ -30,40 +30,40 @@ Matches:     35
      0xdce84960dce38aa4a5800a5eba7c9ac34d2ce49ba9d44c42572c472d468af264  |  closes 2028-11-07
 
 [5] score=84.8
-  K  Will John Fetterman be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-JF  |  closes 2028-11-07
-  P  Will John Fetterman win the 2028 Democratic presidential nomination?
-     0xca1d1139b0c3a29983407f499476ae642482788e841a277eb86faeeb9fa4a85c  |  closes 2028-11-07
-
-[6] score=84.8
   K  Will Bernie Sanders be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-BS  |  closes 2028-11-07
   P  Will Bernie Sanders win the 2028 Democratic presidential nomination?
      0x30cfb887558b20373a984da60c372fe5a90c0296aa6d8bb413a8aa7543846da2  |  closes 2028-11-07
 
-[7] score=84.8
-  K  Will James Talarico be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-JTAL  |  closes 2028-11-07
-  P  Will James Talarico win the 2028 Democratic presidential nomination?
-     0xb91be12388b3d4079c3ed9b5783cb42d8c33051d37746a49300227e0f45fc089  |  closes 2028-11-07
+[6] score=84.8
+  K  Will Pete Buttigieg be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-PB  |  closes 2028-11-07
+  P  Will Pete Buttigieg win the 2028 Democratic presidential nomination?
+     0x4c325469d9b516ef4e6b8f73a81a12607dec075e3c2fd454f91765aaeafc4760  |  closes 2028-11-07
 
-[8] score=84.8
+[7] score=84.8
   K  Will Michelle Obama be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-MO  |  closes 2028-11-07
   P  Will Michelle Obama win the 2028 Democratic presidential nomination?
      0x3e218c99a1335641b3a5ee6c887521d19b0c28fddd6b99c254a07968e35c0b1b  |  closes 2028-11-07
 
-[9] score=84.8
+[8] score=84.8
   K  Will Zohran Mamdani be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-ZMAM  |  closes 2028-11-07
   P  Will Zohran Mamdani win the 2028 Democratic presidential nomination?
      0x3535fb2f4aef6619dde8b367cb5e5d209526bb496d5d9778428c58a0252435e3  |  closes 2028-11-07
 
+[9] score=84.8
+  K  Will James Talarico be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-JTAL  |  closes 2028-11-07
+  P  Will James Talarico win the 2028 Democratic presidential nomination?
+     0xb91be12388b3d4079c3ed9b5783cb42d8c33051d37746a49300227e0f45fc089  |  closes 2028-11-07
+
 [10] score=84.8
-  K  Will Pete Buttigieg be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-PB  |  closes 2028-11-07
-  P  Will Pete Buttigieg win the 2028 Democratic presidential nomination?
-     0x4c325469d9b516ef4e6b8f73a81a12607dec075e3c2fd454f91765aaeafc4760  |  closes 2028-11-07
+  K  Will John Fetterman be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-JF  |  closes 2028-11-07
+  P  Will John Fetterman win the 2028 Democratic presidential nomination?
+     0xca1d1139b0c3a29983407f499476ae642482788e841a277eb86faeeb9fa4a85c  |  closes 2028-11-07
 
 [11] score=84.6
   K  Will Kamala Harris be the Democratic Presidential nominee in 2028?
@@ -144,22 +144,22 @@ Matches:     35
      0x663b88d3a8f2341bb8d878709dc78632bcaf7512e577bd15521e5d8ed933efbc  |  closes 2028-11-07
 
 [24] score=84.1
+  K  Will Jon Stewart be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-JSTE  |  closes 2028-11-07
+  P  Will Jon Stewart win the 2028 Democratic presidential nomination?
+     0xfee07be730188c94cd3644ed6f107fa3ea2dfab9989ce8d39aeeae064766abe3  |  closes 2028-11-07
+
+[25] score=84.1
   K  Will Jared Polis be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-JP  |  closes 2028-11-07
   P  Will Jared Polis win the 2028 Democratic presidential nomination?
      0x8fbcb151e2c988df5a43abb02298014b7daf34c008f3eed9188dd16a2a19bec1  |  closes 2028-11-07
 
-[25] score=84.1
+[26] score=84.1
   K  Will Phil Murphy be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-PHI  |  closes 2028-11-07
   P  Will Phil Murphy win the 2028 Democratic presidential nomination?
      0x29283b56d3eec6d1d89fff51793d9d2e01579d2379b1d3e9ebda175d3561e809  |  closes 2028-11-07
-
-[26] score=84.1
-  K  Will Jon Stewart be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-JSTE  |  closes 2028-11-07
-  P  Will Jon Stewart win the 2028 Democratic presidential nomination?
-     0xfee07be730188c94cd3644ed6f107fa3ea2dfab9989ce8d39aeeae064766abe3  |  closes 2028-11-07
 
 [27] score=84.1
   K  Will Cory Booker be the Democratic Presidential nominee in 2028?
