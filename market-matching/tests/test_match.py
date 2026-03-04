@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from normalizers.models import NormalizedMarket
-from matchers.match import find_matches, MatchResult
+from matchers.match import find_matches, MatchResult, _canon
 
 T = datetime(2026, 6, 1, tzinfo=timezone.utc)
 
@@ -47,6 +47,20 @@ k_phil  = market("kalshi",     "K-PHIL", "Will Phil Murphy be the Democratic Pre
                  close_time=datetime(2028, 11, 7, tzinfo=timezone.utc))
 p_chris = market("polymarket", "P-CHRIS","Will Chris Murphy win the 2028 Democratic presidential nomination?",
                  close_time=datetime(2028, 11, 7, tzinfo=timezone.utc))
+
+# --- Canonicalization: different verb forms / number formats ---
+
+# championship vs champion
+k_nba   = market("kalshi",     "K-NBA",
+                  "Will the Golden State Warriors win the NBA Championship in 2026?",
+                  close_time=datetime(2026, 6, 20, tzinfo=timezone.utc))
+p_nba   = market("polymarket", "P-NBA",
+                  "Will the Golden State Warriors be NBA champion in 2026?",
+                  close_time=datetime(2026, 6, 20, tzinfo=timezone.utc))
+
+# number format: $100k vs $100,000 with different verb (hit vs reach)
+k_num   = market("kalshi",     "K-NUM",  "Will Bitcoin hit $100,000 by end of 2026?")
+p_num   = market("polymarket", "P-NUM",  "Will Bitcoin reach $100k by end of 2026?")
 
 # --- Other pipeline filters ---
 
@@ -100,5 +114,30 @@ assert len(results) == 0, "market outside time window must be excluded"
 results = find_matches([k_fed, k_btc], [p_fed, p_btc])
 assert len(results) == 2
 assert results[0].score >= results[1].score
+
+# championship/champion normalization → included
+results = find_matches([k_nba], [p_nba])
+assert len(results) == 1, f"expected championship/champion match, got {len(results)}"
+assert results[0].score >= 82.0
+
+# number format normalization ($100,000 vs $100k) with different verb → included
+results = find_matches([k_num], [p_num])
+assert len(results) == 1, f"expected number-format match, got {len(results)}"
+assert results[0].score >= 82.0
+
+# --- _canon unit tests ---
+
+assert _canon("Will Bitcoin exceed $100,000 by 2026?") == "will bitcoin exceed $100000 by 2026?"
+assert _canon("Will Bitcoin exceed $100k by 2026?")    == "will bitcoin exceed $100000 by 2026?"
+assert _canon("Will Bitcoin exceed $1.5k by 2026?")    == "will bitcoin exceed $1500 by 2026?"
+assert _canon("Will X win the NBA Championship?")      == "will x win the nba champion?"
+assert _canon("Will X be NBA champion?")               == "will x be nba champion?"
+assert _canon("Will Team A beat Team B?")              == "will team a beat team b?"
+assert _canon("Will Team A beats Team B?")             == "will team a beat team b?"
+assert _canon("Will unemployment exceed 5%?")          == "will unemployment exceed 5%?"
+assert _canon("Will unemployment exceeded 5%?")        == "will unemployment exceed 5%?"
+assert _canon("Will the bill pass?")                   == "will the bill pass?"
+assert _canon("Will the bill passes?")                 == "will the bill pass?"
+assert _canon("Will they reach $1,500?")               == "will they reach $1500?"
 
 print("All tests passed.")
