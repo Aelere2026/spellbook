@@ -9,7 +9,7 @@ from matchers.match import find_matches
 
 OUTPUT = Path("matches.txt")
 TIME_WINDOW = timedelta(days=14)
-MIN_SCORE = 75.0
+MIN_SCORE = 82.0
 
 
 def run():
