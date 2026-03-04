@@ -1,4 +1,5 @@
 import React from "react";
+import { trpc } from "./utils/trpc"
 
 interface StatCardProps {
   title: string;
@@ -126,8 +127,14 @@ const colors = (n: number) =>
       ? "bg-rose-50 text-rose-700 ring-rose-200"
       : "bg-slate-50 text-slate-700 ring-slate-200";
 
+
 const Dashboard: React.FC = () => {
-  const profit = -8420.17; // From dashboard mockup need to import from db
+  const profit = 8420.17; // From dashboard mockup need to import from db
+
+
+  const { data, isLoading } = trpc.platforms.get.useQuery()
+  if (isLoading) return <div> Loading... </div>
+  console.log(data)
 
   return (
     <div className="min-h-screen w-full">
@@ -135,7 +142,7 @@ const Dashboard: React.FC = () => {
         {/* hehe logo ! (i think its the logo) */}
       <div className="top-4 left-8 flex items-center gap-2 bg-white rounded-2xl pl-4">
         <img src="/favicon.ico" className="w-17 h-17 " />
-        <span className="text-3xl font-semibold tracking-wide ">
+        <span className="text-3xl font-semibold tracking-wide text-black">
           SPeLLbook
         </span>
       </div>
@@ -216,11 +223,11 @@ const Dashboard: React.FC = () => {
               <tbody>
                 {trades.map((t) => (
                   <tr key={t.id} className="hover:bg-slate-900/5">
-                    <td className="px-3 py-2 text-sm sm:px-4">{t.id}</td>
+                    <td className="px-3 py-2 text-sm text-slate-700 sm:px-4">{t.id}</td>
                     <td className="px-3 py-2 text-sm text-slate-700 sm:px-4">
                       {t.timestamp}
                     </td>
-                    <td className="px-3 py-2 text-sm sm:px-4">{t.market}</td>
+                    <td className="px-3 py-2 text-sm text-slate-700 sm:px-4">{t.market}</td>
                     <td className="px-3 py-2 text-sm text-slate-700 sm:px-4">
                       {t.exchangePair}
                     </td>
@@ -235,7 +242,7 @@ const Dashboard: React.FC = () => {
                         {fmtPct(t.edgePct)}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-sm sm:px-4">
+                    <td className="px-3 py-2 text-sm text-slate-700 sm:px-4">
                       {fmtMoney(t.capital)}
                     </td>
                     <td className="px-3 py-2 text-sm text-slate-700 sm:px-4">
