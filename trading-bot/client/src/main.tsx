@@ -9,8 +9,6 @@ import { api, apiClient} from "./utils/api.ts"
 const queryClient = new QueryClient()
 
 
-
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <api.Provider client={apiClient} queryClient={queryClient}>

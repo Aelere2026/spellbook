@@ -1,5 +1,5 @@
 import React from "react";
-import { api } from "./utils/api"
+import { api } from "../utils/api"
 
 interface StatCardProps {
   title: string;
@@ -170,12 +170,12 @@ const Dashboard: React.FC = () => {
           >
             <div className="px-6 py-6 sm:px-8">
               <div className="text-center text-sm tracking-wide text-slate-500">
-                Profit
+                PROFIT
               </div>
               <div
                 className={[
                   "mt-6 text-center text-4xl font-semibold sm:text-5xl",
-                  profit >= 0 ? "text-emerald-700" : "text-rose-600",
+                  profit >= 0 ? "text-emerald-600" : "text-rose-600",
                 ].join(" ")}
               >
                 {profit >= 0 ? "+" : ""}
