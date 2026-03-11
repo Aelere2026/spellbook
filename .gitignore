@@ -6,7 +6,7 @@ dist/
 node_modules/
 /secrets/
 
-/trading-bot/server/prisma/generated/
+/trading/prisma/generated/
 
 market-matching/matches.txt
 
