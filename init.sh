@@ -14,7 +14,7 @@ TRADING_BOT_ENV="bot.env"
 
 DEFAULT_PG_PASSWORD="postgres"
 DEFAULT_PG_DATABASE="spellbookdb"
-DEFAULT_PG_DATA="/var/lib/postgresql/18/docker"
+DEFAULT_PG_DATA="/var/lib/postgresql/data"
 DEFAULT_PG_PORT="5432"
 DEFAULT_TIMEZONE="America/New_York"
 
@@ -31,8 +31,22 @@ main() {
         exit 1
     fi
 
+    cleaned=false
     if prompt "Clean install?" "N"; then
-        clean
+        echo ""
+        if prompt "Are you sure? This will drop the database!" "N"; then
+            echo ""
+            read -rep $'Please type "CONFIRM" to confirm:\n > '
+            if [[ "$REPLY" == "CONFIRM" ]]; then
+                clean
+                cleaned=true
+            fi
+        fi
+    fi
+
+    if ! "$cleaned"; then
+        echo ""
+        echo "Skipping clean..."
     fi
 
     init
@@ -63,7 +77,7 @@ clean() {
 
     echo "Removing docker containers..."
     cd "$DOCKER_DIR"
-    sudo docker compose down
+    sudo docker compose down --volumes --rmi "all"
 
     cd $ROOT_DIR
 }
@@ -96,11 +110,11 @@ prompt() {
     if [ "$default" == "Y" ]; then
         prompt_string="$prompt_string [Y/n] "
         read -rp "$prompt_string" -n 1
-        [[ ! $REPLY =~ ^[Nn]$ ]]
+        [[ ! "$REPLY" =~ ^[Nn]$ ]]
     else
         prompt_string="$prompt_string [y/N] "
         read -rp "$prompt_string" -n 1
-        [[ $REPLY =~ ^[Yy]$ ]]
+        [[ "$REPLY" =~ ^[Yy]$ ]]
     fi
 }
 
@@ -160,13 +174,14 @@ POSTGRES() {
     add_env "$POSTGRES_ENV" "POSTGRES_DB" "$postgres_database"
     add_env "$POSTGRES_ENV" "PGDATA" "$postgres_data"
     add_env "$POSTGRES_ENV" "PGPASSWORD" "$postgres_password"
+    add_env "$POSTGRES_ENV" "POSTGRES_PASSWORD" "$postgres_password"
 
-    add_env "$DOCKER_ENV" "PGDATA" "$postgres_data"
-    add_env "$DOCKER_ENV" "POSTGRES_PORT" "$postgres_port"
+    add_env "$DOCKER_ENV" "PG_PORT" "$postgres_port"
 
     add_env "$TRADING_BOT_ENV" "DATABASE_URL" "postgresql://postgres:$postgres_password@localhost:$postgres_port/$postgres_database"
 
     # Docker needs to be running for Prisma to do its thing
+    # The second line here is just a weird way to set postgres_running to be true or false
     container_id=$(docker container ls --filter "name=postgres" --quiet)
     [[ "$container_id" != "" ]] && postres_running=true || postgres_running=false
 
@@ -176,8 +191,12 @@ POSTGRES() {
         echo "Starting docker containers..."
         sudo docker compose up --detach postgres
     else
-        echo "Postgres already running!"
+        echo "Postgres already running! Recreating in case of env updates..."
+        sudo docker compose up --detach postgres
     fi
+
+    # Give the container some time to finish starting up
+    sleep 2
 
     cd "$TRADING_BOT_DIR/server/prisma"
     if ! npx prisma migrate dev > /dev/null; then

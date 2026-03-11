@@ -8,14 +8,13 @@ services:
     hostname: postgres.internal
     restart: unless-stopped
     ports:
-      - ${POSTGRES_PORT}:5432
+      - ${POSTGRES_PORT:-5432}:5432
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - postgres:/var/lib/postgresql/18/docker:delegated
     env_file:
       - ../secrets/postgres.env
     environment:
-      - TZ=${TIMEZONE}
+      - TZ=${TIMEZONE:-America/New_York}
     security_opt:
       - no-new-privileges:true
   adminer:
