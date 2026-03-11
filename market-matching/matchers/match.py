@@ -82,6 +82,9 @@ def find_matches(
         if key in seen:
             continue
         seen.add(key)
+        if (k.close_time and p.close_time
+                and abs(k.close_time - p.close_time) > max_time_delta):
+            continue
         score = _score(k.title, p.title)
         if score >= min_score:
             results.append(MatchResult(k, p, round(score, 1)))
