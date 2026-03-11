@@ -20,6 +20,7 @@ model Arbitrage {
   estimatedSlippage Decimal  @map("estimaged_slippage")
   detectionTime     DateTime @map("time_deduction")
   executionTime     DateTime @map("time_execution")
+  createdAt         DateTime @default(now()) @map("created_at")
 
   match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
 }
@@ -35,6 +36,7 @@ model Market {
   status         String
   fee            Decimal
   category       String
+  createdAt      DateTime @default(now()) @map("created_at")
 
   platform Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
   outcome  Outcome?
@@ -46,9 +48,10 @@ model Market {
 model Match {
   id Int @id @default(autoincrement())
 
-  polymarketMarketId Int   @unique @map("polymarket_id")
-  kalshiMarketId     Int   @unique @map("kalshi_id")
-  matchScore         Float @map("match_score")
+  polymarketMarketId Int      @unique @map("polymarket_id")
+  kalshiMarketId     Int      @unique @map("kalshi_id")
+  matchScore         Float    @map("match_score")
+  createdAt          DateTime @default(now()) @map("created_at")
 
   arbitrages       Arbitrage[]
   polymarketMarket Market      @relation("polymarket", fields: [polymarketMarketId], references: [id], onDelete: Cascade)
@@ -58,8 +61,9 @@ model Match {
 model Outcome {
   id Int @id @default(autoincrement())
 
-  marketId Int    @unique @map("market_id")
-  outcome  String
+  marketId  Int      @unique @map("market_id")
+  outcome   String
+  createdAt DateTime @default(now()) @map("created_at")
 
   market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
 }
@@ -67,7 +71,8 @@ model Outcome {
 model Platform {
   id Int @id @default(autoincrement())
 
-  name    String
-  baseFee Decimal  @map("base_fee")
-  markets Market[]
+  name      String
+  baseFee   Decimal  @map("base_fee")
+  createdAt DateTime @default(now()) @map("created_at")
+  markets   Market[]
 }

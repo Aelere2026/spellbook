@@ -5,7 +5,7 @@ import { prisma } from "src/util/prisma"
 const platformRouter = router({
     get: publicProcedure
         .query(async () => {
-            return prisma.platform.findMany()
+            return await prisma.platform.findMany()
         }),
 })
 
