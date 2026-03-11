@@ -46,6 +46,13 @@ def run():
                            min_score=MIN_SCORE, max_time_delta=TIME_WINDOW)
     print(f"  Matches found: {len(matches)}")
 
+    try:
+        from db import persist_matches
+        saved = persist_matches(matches)
+        print(f"  Persisted to DB: {saved} matches")
+    except Exception as e:
+        print(f"  [warn] DB persist failed: {e}")
+
     lines = [
         f"Generated:   {now.isoformat()}",
         f"Kalshi:      {len(raw_kalshi)} fetched  |  {len(eligible_kalshi)} non-MVE  |  {len(binary_kalshi)} binary",

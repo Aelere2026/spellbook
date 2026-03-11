@@ -8,5 +8,7 @@ node_modules/
 
 /trading-bot/server/prisma/generated/
 
+market-matching/matches.txt
+
 # Just a symlink. Safe to commit!!
 !docker/.env
