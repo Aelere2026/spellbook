@@ -12,3 +12,4 @@ market-matching/matches.txt
 
 # Just a symlink. Safe to commit!!
 !docker/.env
+!trading/prisma/.envg
