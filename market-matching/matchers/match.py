@@ -86,4 +86,17 @@ def find_matches(
         if score >= min_score:
             results.append(MatchResult(k, p, round(score, 1)))
 
-    return sorted(results, key=lambda r: r.score, reverse=True)
+    results.sort(key=lambda r: r.score, reverse=True)
+
+    # Greedy 1-to-1 assignment: iterate best-first, keep a match only if
+    # neither market has already been claimed.  O(n) after the sort.
+    used_k: set[str] = set()
+    used_p: set[str] = set()
+    one_to_one: list[MatchResult] = []
+    for r in results:
+        if r.kalshi.platform_id not in used_k and r.polymarket.platform_id not in used_p:
+            one_to_one.append(r)
+            used_k.add(r.kalshi.platform_id)
+            used_p.add(r.polymarket.platform_id)
+
+    return one_to_one
