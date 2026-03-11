@@ -1,215 +1,455 @@
-Generated:   2026-03-04T01:15:55.778743
-Kalshi:      3409 fetched  |  3409 non-MVE  |  2369 binary
+Generated:   2026-03-11T13:46:59.591013
+Kalshi:      3358 fetched  |  3358 non-MVE  |  2335 binary
 Polymarket:  500 fetched  |  471 negRisk  |  500 binary
 Time window: ±14 days
 Min score:   83.0
-Matches:     35
+Matches:     75
 
-[1] score=86.8
+[1] score=89.2
+  K  Will Historic Pact win above 31 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A31  |  closes 2027-03-08
+  P  Will PH win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x71da12db4aea759acbf68b2777c44b21caf6a5ee9ac335106ced647b53fb9a40  |  closes 2026-03-08
+
+[2] score=89.2
+  K  Will Historic Pact win above 28 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A28  |  closes 2027-03-08
+  P  Will PH win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x71da12db4aea759acbf68b2777c44b21caf6a5ee9ac335106ced647b53fb9a40  |  closes 2026-03-08
+
+[3] score=89.2
+  K  Will Historic Pact win above 34 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A34  |  closes 2027-03-08
+  P  Will PH win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x71da12db4aea759acbf68b2777c44b21caf6a5ee9ac335106ced647b53fb9a40  |  closes 2026-03-08
+
+[4] score=89.2
+  K  Will Historic Pact win above 37 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A37  |  closes 2027-03-08
+  P  Will PH win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x71da12db4aea759acbf68b2777c44b21caf6a5ee9ac335106ced647b53fb9a40  |  closes 2026-03-08
+
+[5] score=89.2
+  K  Will Historic Pact win above 25 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A25  |  closes 2027-03-08
+  P  Will PH win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x71da12db4aea759acbf68b2777c44b21caf6a5ee9ac335106ced647b53fb9a40  |  closes 2026-03-08
+
+[6] score=89.1
+  K  Will Historic Pact win above 31 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A31  |  closes 2027-03-08
+  P  Will PLC win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x52a713aa3016b83b376f6c75f09f16780fc9f0948e83ef8d7bfe66f9b96c80ae  |  closes 2026-03-08
+
+[7] score=89.1
+  K  Will Historic Pact win above 28 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A28  |  closes 2027-03-08
+  P  Will PLC win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x52a713aa3016b83b376f6c75f09f16780fc9f0948e83ef8d7bfe66f9b96c80ae  |  closes 2026-03-08
+
+[8] score=89.1
+  K  Will Historic Pact win above 34 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A34  |  closes 2027-03-08
+  P  Will PLC win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x52a713aa3016b83b376f6c75f09f16780fc9f0948e83ef8d7bfe66f9b96c80ae  |  closes 2026-03-08
+
+[9] score=89.1
+  K  Will Historic Pact win above 37 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A37  |  closes 2027-03-08
+  P  Will PLC win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x52a713aa3016b83b376f6c75f09f16780fc9f0948e83ef8d7bfe66f9b96c80ae  |  closes 2026-03-08
+
+[10] score=89.1
+  K  Will Historic Pact win above 25 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A25  |  closes 2027-03-08
+  P  Will PLC win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x52a713aa3016b83b376f6c75f09f16780fc9f0948e83ef8d7bfe66f9b96c80ae  |  closes 2026-03-08
+
+[11] score=88.9
+  K  Will Historic Pact win above 31 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A31  |  closes 2027-03-08
+  P  Will CD win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x0a999ae98b3c9e593cbbd33e2f940df1b071ac0ab9ede42ed12eeb8f7eef461e  |  closes 2026-03-08
+
+[12] score=88.9
+  K  Will Historic Pact win above 28 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A28  |  closes 2027-03-08
+  P  Will CD win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x0a999ae98b3c9e593cbbd33e2f940df1b071ac0ab9ede42ed12eeb8f7eef461e  |  closes 2026-03-08
+
+[13] score=88.9
+  K  Will Historic Pact win above 34 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A34  |  closes 2027-03-08
+  P  Will CD win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x0a999ae98b3c9e593cbbd33e2f940df1b071ac0ab9ede42ed12eeb8f7eef461e  |  closes 2026-03-08
+
+[14] score=88.9
+  K  Will Historic Pact win above 37 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A37  |  closes 2027-03-08
+  P  Will CD win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x0a999ae98b3c9e593cbbd33e2f940df1b071ac0ab9ede42ed12eeb8f7eef461e  |  closes 2026-03-08
+
+[15] score=88.9
+  K  Will Historic Pact win above 25 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A25  |  closes 2027-03-08
+  P  Will CD win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x0a999ae98b3c9e593cbbd33e2f940df1b071ac0ab9ede42ed12eeb8f7eef461e  |  closes 2026-03-08
+
+[16] score=88.5
+  K  Will Historic Pact win above 31 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A31  |  closes 2027-03-08
+  P  Will CR win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x4a48f9a1e2cd2a274ff636ba53326479cafad09e21ce526aa7b07e3add67575a  |  closes 2026-03-08
+
+[17] score=88.5
+  K  Will Historic Pact win above 28 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A28  |  closes 2027-03-08
+  P  Will CR win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x4a48f9a1e2cd2a274ff636ba53326479cafad09e21ce526aa7b07e3add67575a  |  closes 2026-03-08
+
+[18] score=88.5
+  K  Will Historic Pact win above 34 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A34  |  closes 2027-03-08
+  P  Will CR win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x4a48f9a1e2cd2a274ff636ba53326479cafad09e21ce526aa7b07e3add67575a  |  closes 2026-03-08
+
+[19] score=88.5
+  K  Will Historic Pact win above 37 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A37  |  closes 2027-03-08
+  P  Will CR win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x4a48f9a1e2cd2a274ff636ba53326479cafad09e21ce526aa7b07e3add67575a  |  closes 2026-03-08
+
+[20] score=88.5
+  K  Will Historic Pact win above 25 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A25  |  closes 2027-03-08
+  P  Will CR win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x4a48f9a1e2cd2a274ff636ba53326479cafad09e21ce526aa7b07e3add67575a  |  closes 2026-03-08
+
+[21] score=87.4
+  K  Will Historic Pact win above 31 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A31  |  closes 2027-03-08
+  P  Will La U win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x5dbc37250e4e7f0b64d0d68f2f88f039029687c31be1c5ac91a166f9fc27951d  |  closes 2026-03-08
+
+[22] score=87.4
+  K  Will Historic Pact win above 28 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A28  |  closes 2027-03-08
+  P  Will La U win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x5dbc37250e4e7f0b64d0d68f2f88f039029687c31be1c5ac91a166f9fc27951d  |  closes 2026-03-08
+
+[23] score=87.4
+  K  Will Historic Pact win above 34 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A34  |  closes 2027-03-08
+  P  Will La U win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x5dbc37250e4e7f0b64d0d68f2f88f039029687c31be1c5ac91a166f9fc27951d  |  closes 2026-03-08
+
+[24] score=87.4
+  K  Will Historic Pact win above 37 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A37  |  closes 2027-03-08
+  P  Will La U win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x5dbc37250e4e7f0b64d0d68f2f88f039029687c31be1c5ac91a166f9fc27951d  |  closes 2026-03-08
+
+[25] score=87.4
+  K  Will Historic Pact win above 25 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A25  |  closes 2027-03-08
+  P  Will La U win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x5dbc37250e4e7f0b64d0d68f2f88f039029687c31be1c5ac91a166f9fc27951d  |  closes 2026-03-08
+
+[26] score=87.1
   K  Will Alexandria Ocasio-Cortez be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-AOC  |  closes 2028-11-07
   P  Will Alexandria Ocasio-Cortez win the 2028 Democratic presidential nomination?
      0xe6bcc2f1dd025ce5e1833190f7c60a71171c94f805df55b9ab0ded695ec93565  |  closes 2028-11-07
 
-[2] score=85.3
-  K  Will Stephen A. Smith be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-SAS  |  closes 2028-11-07
-  P  Will Stephen A. Smith win the 2028 Democratic presidential nomination?
-     0xc8f1cf5d4f26e0fd9c8fe89f2a7b3263b902cf14fde7bfccef525753bb492e47  |  closes 2028-11-07
+[27] score=86.1
+  K  Will Historic Pact win above 31 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A31  |  closes 2027-03-08
+  P  Will MIRA‑CJL win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0xf762826151b1754c3e0f78bdd0354ad39a58573661dd60c8f124d0de02b70c61  |  closes 2026-03-08
 
-[3] score=85.3
+[28] score=86.1
+  K  Will Historic Pact win above 28 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A28  |  closes 2027-03-08
+  P  Will MIRA‑CJL win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0xf762826151b1754c3e0f78bdd0354ad39a58573661dd60c8f124d0de02b70c61  |  closes 2026-03-08
+
+[29] score=86.1
+  K  Will Historic Pact win above 34 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A34  |  closes 2027-03-08
+  P  Will MIRA‑CJL win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0xf762826151b1754c3e0f78bdd0354ad39a58573661dd60c8f124d0de02b70c61  |  closes 2026-03-08
+
+[30] score=86.1
+  K  Will Historic Pact win above 37 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A37  |  closes 2027-03-08
+  P  Will MIRA‑CJL win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0xf762826151b1754c3e0f78bdd0354ad39a58573661dd60c8f124d0de02b70c61  |  closes 2026-03-08
+
+[31] score=86.1
+  K  Will Historic Pact win above 25 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A25  |  closes 2027-03-08
+  P  Will MIRA‑CJL win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0xf762826151b1754c3e0f78bdd0354ad39a58573661dd60c8f124d0de02b70c61  |  closes 2026-03-08
+
+[32] score=85.6
   K  Will Gretchen Whitmer be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-GW  |  closes 2028-11-07
   P  Will Gretchen Whitmer win the 2028 Democratic presidential nomination?
      0xe39adea057926dc197fe30a441f57a340b2a232d5a687010f78bba9b6e02620f  |  closes 2028-11-07
 
-[4] score=85.1
+[33] score=85.6
+  K  Will Stephen A. Smith be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-SAS  |  closes 2028-11-07
+  P  Will Stephen A. Smith win the 2028 Democratic presidential nomination?
+     0xc8f1cf5d4f26e0fd9c8fe89f2a7b3263b902cf14fde7bfccef525753bb492e47  |  closes 2028-11-07
+
+[34] score=85.4
   K  Will Raphael Warnock be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-RW  |  closes 2028-11-07
   P  Will Raphael Warnock win the 2028 Democratic presidential nomination?
      0xdce84960dce38aa4a5800a5eba7c9ac34d2ce49ba9d44c42572c472d468af264  |  closes 2028-11-07
 
-[5] score=84.8
-  K  Will Bernie Sanders be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-BS  |  closes 2028-11-07
-  P  Will Bernie Sanders win the 2028 Democratic presidential nomination?
-     0x30cfb887558b20373a984da60c372fe5a90c0296aa6d8bb413a8aa7543846da2  |  closes 2028-11-07
-
-[6] score=84.8
+[35] score=85.2
   K  Will Pete Buttigieg be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-PB  |  closes 2028-11-07
   P  Will Pete Buttigieg win the 2028 Democratic presidential nomination?
      0x4c325469d9b516ef4e6b8f73a81a12607dec075e3c2fd454f91765aaeafc4760  |  closes 2028-11-07
 
-[7] score=84.8
-  K  Will Michelle Obama be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-MO  |  closes 2028-11-07
-  P  Will Michelle Obama win the 2028 Democratic presidential nomination?
-     0x3e218c99a1335641b3a5ee6c887521d19b0c28fddd6b99c254a07968e35c0b1b  |  closes 2028-11-07
-
-[8] score=84.8
-  K  Will Zohran Mamdani be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-ZMAM  |  closes 2028-11-07
-  P  Will Zohran Mamdani win the 2028 Democratic presidential nomination?
-     0x3535fb2f4aef6619dde8b367cb5e5d209526bb496d5d9778428c58a0252435e3  |  closes 2028-11-07
-
-[9] score=84.8
+[36] score=85.2
   K  Will James Talarico be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-JTAL  |  closes 2028-11-07
   P  Will James Talarico win the 2028 Democratic presidential nomination?
      0xb91be12388b3d4079c3ed9b5783cb42d8c33051d37746a49300227e0f45fc089  |  closes 2028-11-07
 
-[10] score=84.8
+[37] score=85.2
+  K  Will Zohran Mamdani be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-ZMAM  |  closes 2028-11-07
+  P  Will Zohran Mamdani win the 2028 Democratic presidential nomination?
+     0x3535fb2f4aef6619dde8b367cb5e5d209526bb496d5d9778428c58a0252435e3  |  closes 2028-11-07
+
+[38] score=85.2
   K  Will John Fetterman be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-JF  |  closes 2028-11-07
   P  Will John Fetterman win the 2028 Democratic presidential nomination?
      0xca1d1139b0c3a29983407f499476ae642482788e841a277eb86faeeb9fa4a85c  |  closes 2028-11-07
 
-[11] score=84.6
-  K  Will Kamala Harris be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-KH  |  closes 2028-11-07
-  P  Will Kamala Harris win the 2028 Democratic presidential nomination?
-     0x909659c9436228e2be56d5582ba6188166f2f8bf3c596335512c8f2e380d01ec  |  closes 2028-11-07
+[39] score=85.2
+  K  Will Bernie Sanders be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-BS  |  closes 2028-11-07
+  P  Will Bernie Sanders win the 2028 Democratic presidential nomination?
+     0x30cfb887558b20373a984da60c372fe5a90c0296aa6d8bb413a8aa7543846da2  |  closes 2028-11-07
 
-[12] score=84.6
+[40] score=85.2
+  K  Will Michelle Obama be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-MO  |  closes 2028-11-07
+  P  Will Michelle Obama win the 2028 Democratic presidential nomination?
+     0x3e218c99a1335641b3a5ee6c887521d19b0c28fddd6b99c254a07968e35c0b1b  |  closes 2028-11-07
+
+[41] score=85.0
   K  Will Gina Raimondo be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-GR  |  closes 2028-11-07
   P  Will Gina Raimondo win the 2028 Democratic presidential nomination?
      0xcb239105ed21a2420ba4d85090b9bc32755c56601ffdc528afd17fd6282fe930  |  closes 2028-11-07
 
-[13] score=84.6
-  K  Will J.B. Pritzker be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-JBP  |  closes 2028-11-07
-  P  Will J.B. Pritzker win the 2028 Democratic presidential nomination?
-     0xe883f2fda25a605a184bb5fe583afce6cc21ea0b348b6a3728ec3067553c548d  |  closes 2028-11-07
+[42] score=85.0
+  K  Will Kamala Harris be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-KH  |  closes 2028-11-07
+  P  Will Kamala Harris win the 2028 Democratic presidential nomination?
+     0x909659c9436228e2be56d5582ba6188166f2f8bf3c596335512c8f2e380d01ec  |  closes 2028-11-07
 
-[14] score=84.6
+[43] score=85.0
   K  Will Ruben Gallego be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-RGAL  |  closes 2028-11-07
   P  Will Ruben Gallego win the 2028 Democratic presidential nomination?
      0x98933c78b5e277b62d91a6c174b412218de000b54c4c67ec8673bf561cec6e81  |  closes 2028-11-07
 
-[15] score=84.3
-  K  Will Josh Shapiro be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-JS  |  closes 2028-11-07
-  P  Will Josh Shapiro win the 2028 Democratic presidential nomination?
-     0xd65891729ce093cc12236856837eba1a0872fc7998fd4294c21346f7db68079c  |  closes 2028-11-07
+[44] score=85.0
+  K  Will J.B. Pritzker be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-JBP  |  closes 2028-11-07
+  P  Will J.B. Pritzker win the 2028 Democratic presidential nomination?
+     0xe883f2fda25a605a184bb5fe583afce6cc21ea0b348b6a3728ec3067553c548d  |  closes 2028-11-07
 
-[16] score=84.3
+[45] score=84.7
   K  Will Hunter Biden be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-HBID  |  closes 2028-11-07
   P  Will Hunter Biden win the 2028 Democratic presidential nomination?
      0x1945a8b23e313ed7423b6b6fd556f9ab5578900376b565a61dc480a5f4f35d21  |  closes 2028-11-07
 
-[17] score=84.3
-  K  Will Chris Murphy be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-CMUR  |  closes 2028-11-07
-  P  Will Chris Murphy win the 2028 Democratic presidential nomination?
-     0xc720fcfa9e29346a976902f87e0f0f3bdc31d43af501b4fdef4f1780a30dd359  |  closes 2028-11-07
-
-[18] score=84.3
-  K  Will Lebron James be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-LJAM  |  closes 2028-11-07
-  P  Will LeBron James win the 2028 Democratic presidential nomination?
-     0x8b203037c7c0e21b500314f8398d2a8ea294b7ce1f4f9185f426425a3505bc45  |  closes 2028-11-07
-
-[19] score=84.3
-  K  Will Barack Obama be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-BOBA  |  closes 2028-11-07
-  P  Will Barack Obama win the 2028 Democratic presidential nomination?
-     0x88d67705780a3d922317ecb0c78a947a306174d0510df2ae89394d5abfb28206  |  closes 2028-11-07
-
-[20] score=84.3
-  K  Will Rahm Emanuel be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-REMA  |  closes 2028-11-07
-  P  Will Rahm Emanuel win the 2028 Democratic presidential nomination?
-     0x3dc47a72ac6bb265e9cefebd2a2eeed00966394cb2d07245b5c94138b60e82a3  |  closes 2028-11-07
-
-[21] score=84.3
+[46] score=84.7
   K  Will Gavin Newsom be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-GN  |  closes 2028-11-07
   P  Will Gavin Newsom win the 2028 Democratic presidential nomination?
      0x0f49db97f71c68b1e42a6d16e3de93d85dbf7d4148e3f018eb79e88554be9f75  |  closes 2028-11-07
 
-[22] score=84.3
+[47] score=84.7
+  K  Will Lebron James be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-LJAM  |  closes 2028-11-07
+  P  Will LeBron James win the 2028 Democratic presidential nomination?
+     0x8b203037c7c0e21b500314f8398d2a8ea294b7ce1f4f9185f426425a3505bc45  |  closes 2028-11-07
+
+[48] score=84.7
+  K  Will Josh Shapiro be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-JS  |  closes 2028-11-07
+  P  Will Josh Shapiro win the 2028 Democratic presidential nomination?
+     0xd65891729ce093cc12236856837eba1a0872fc7998fd4294c21346f7db68079c  |  closes 2028-11-07
+
+[49] score=84.7
+  K  Will Chris Murphy be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-CMUR  |  closes 2028-11-07
+  P  Will Chris Murphy win the 2028 Democratic presidential nomination?
+     0xc720fcfa9e29346a976902f87e0f0f3bdc31d43af501b4fdef4f1780a30dd359  |  closes 2028-11-07
+
+[50] score=84.7
+  K  Will Barack Obama be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-BOBA  |  closes 2028-11-07
+  P  Will Barack Obama win the 2028 Democratic presidential nomination?
+     0x88d67705780a3d922317ecb0c78a947a306174d0510df2ae89394d5abfb28206  |  closes 2028-11-07
+
+[51] score=84.7
   K  Will Andy Beshear be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-AB  |  closes 2028-11-07
   P  Will Andy Beshear win the 2028 Democratic presidential nomination?
      0x1d519b87999e3d4e90e1e8f57b5eee73a0ba488ff3fdb70867f294733aba84a9  |  closes 2028-11-07
 
-[23] score=84.2
+[52] score=84.7
+  K  Will Rahm Emanuel be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-REMA  |  closes 2028-11-07
+  P  Will Rahm Emanuel win the 2028 Democratic presidential nomination?
+     0x3dc47a72ac6bb265e9cefebd2a2eeed00966394cb2d07245b5c94138b60e82a3  |  closes 2028-11-07
+
+[53] score=84.6
   K  Will Hilary Clinton be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-HCLI  |  closes 2028-11-07
   P  Will Hillary Clinton win the 2028 Democratic presidential nomination?
      0x663b88d3a8f2341bb8d878709dc78632bcaf7512e577bd15521e5d8ed933efbc  |  closes 2028-11-07
 
-[24] score=84.1
-  K  Will Jon Stewart be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-JSTE  |  closes 2028-11-07
-  P  Will Jon Stewart win the 2028 Democratic presidential nomination?
-     0xfee07be730188c94cd3644ed6f107fa3ea2dfab9989ce8d39aeeae064766abe3  |  closes 2028-11-07
-
-[25] score=84.1
-  K  Will Jared Polis be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-JP  |  closes 2028-11-07
-  P  Will Jared Polis win the 2028 Democratic presidential nomination?
-     0x8fbcb151e2c988df5a43abb02298014b7daf34c008f3eed9188dd16a2a19bec1  |  closes 2028-11-07
-
-[26] score=84.1
+[54] score=84.5
   K  Will Phil Murphy be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-PHI  |  closes 2028-11-07
   P  Will Phil Murphy win the 2028 Democratic presidential nomination?
      0x29283b56d3eec6d1d89fff51793d9d2e01579d2379b1d3e9ebda175d3561e809  |  closes 2028-11-07
 
-[27] score=84.1
+[55] score=84.5
   K  Will Cory Booker be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-CBOO  |  closes 2028-11-07
   P  Will Cory Booker win the 2028 Democratic presidential nomination?
      0x1970bcce75e3674660917ae4685b433a9b1e0152d810a8d7c346dfd5e00694c2  |  closes 2028-11-07
 
-[28] score=83.8
-  K  Will Jon Ossoff be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-JOSS  |  closes 2028-11-07
-  P  Will Jon Ossoff win the 2028 Democratic presidential nomination?
-     0x74dba1ce1ae9dd535414e85f2d9ab5ea32c0fb1acc9b7130b67e6d91217e24e1  |  closes 2028-11-07
+[56] score=84.5
+  K  Will Jon Stewart be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-JSTE  |  closes 2028-11-07
+  P  Will Jon Stewart win the 2028 Democratic presidential nomination?
+     0xfee07be730188c94cd3644ed6f107fa3ea2dfab9989ce8d39aeeae064766abe3  |  closes 2028-11-07
 
-[29] score=83.8
-  K  Will Roy Cooper be the Democratic Presidential nominee in 2028?
-     KXPRESNOMD-28-RC  |  closes 2028-11-07
-  P  Will Roy Cooper win the 2028 Democratic presidential nomination?
-     0x939eeb2dea216749bd409bedde483c3f2bfb0e24d4f2d34461c0b21c6e91f010  |  closes 2028-11-07
+[57] score=84.5
+  K  Will Jared Polis be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-JP  |  closes 2028-11-07
+  P  Will Jared Polis win the 2028 Democratic presidential nomination?
+     0x8fbcb151e2c988df5a43abb02298014b7daf34c008f3eed9188dd16a2a19bec1  |  closes 2028-11-07
 
-[30] score=83.8
+[58] score=84.3
+  K  Will Historic Pact win above 31 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A31  |  closes 2027-03-08
+  P  Will Green Alliance win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0xa89818f5e5173682ba0ed1deb470b2426fc1ba257a5bd188f31aff39f16772c8  |  closes 2026-03-08
+
+[59] score=84.3
+  K  Will Historic Pact win above 28 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A28  |  closes 2027-03-08
+  P  Will Green Alliance win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0xa89818f5e5173682ba0ed1deb470b2426fc1ba257a5bd188f31aff39f16772c8  |  closes 2026-03-08
+
+[60] score=84.3
+  K  Will Historic Pact win above 34 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A34  |  closes 2027-03-08
+  P  Will Green Alliance win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0xa89818f5e5173682ba0ed1deb470b2426fc1ba257a5bd188f31aff39f16772c8  |  closes 2026-03-08
+
+[61] score=84.3
+  K  Will Historic Pact win above 37 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A37  |  closes 2027-03-08
+  P  Will Green Alliance win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0xa89818f5e5173682ba0ed1deb470b2426fc1ba257a5bd188f31aff39f16772c8  |  closes 2026-03-08
+
+[62] score=84.3
+  K  Will Historic Pact win above 25 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A25  |  closes 2027-03-08
+  P  Will Green Alliance win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0xa89818f5e5173682ba0ed1deb470b2426fc1ba257a5bd188f31aff39f16772c8  |  closes 2026-03-08
+
+[63] score=84.2
   K  Will Liz Cheney be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-LC  |  closes 2028-11-07
   P  Will Liz Cheney win the 2028 Democratic presidential nomination?
      0x46dbd48d6bde5b81edb480e0f676a2cdda6c6b592c4d86a9367c7ad5a9870195  |  closes 2028-11-07
 
-[31] score=83.8
+[64] score=84.2
   K  Will Mark Kelly be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-MK  |  closes 2028-11-07
   P  Will Mark Kelly win the 2028 Democratic presidential nomination?
      0x36db77c539bcc8c7bf0686c1b99f30c5a5eed1f53d3b3a27a071550c81f83701  |  closes 2028-11-07
 
-[32] score=83.8
+[65] score=84.2
+  K  Will Roy Cooper be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-RC  |  closes 2028-11-07
+  P  Will Roy Cooper win the 2028 Democratic presidential nomination?
+     0x939eeb2dea216749bd409bedde483c3f2bfb0e24d4f2d34461c0b21c6e91f010  |  closes 2028-11-07
+
+[66] score=84.2
+  K  Will Jon Ossoff be the Democratic Presidential nominee in 2028?
+     KXPRESNOMD-28-JOSS  |  closes 2028-11-07
+  P  Will Jon Ossoff win the 2028 Democratic presidential nomination?
+     0x74dba1ce1ae9dd535414e85f2d9ab5ea32c0fb1acc9b7130b67e6d91217e24e1  |  closes 2028-11-07
+
+[67] score=84.2
   K  Will Mark Cuban be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-MC  |  closes 2028-11-07
   P  Will Mark Cuban win the 2028 Democratic presidential nomination?
      0x9d4f94f82de9d13ff1d3318639ab9000ee2533949e525343156f374fb00bd9b1  |  closes 2028-11-07
 
-[33] score=83.6
+[68] score=84.0
   K  Will Ro Khanna be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-RKHA  |  closes 2028-11-07
   P  Will Ro Khanna win the 2028 Democratic presidential nomination?
      0x20d0bc282552ac5ec6f61cd7101cb42a5948cae07e7651bdf40ede1a8b2c5eac  |  closes 2028-11-07
 
-[34] score=83.6
+[69] score=84.0
   K  Will Wes Moore be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-WM  |  closes 2028-11-07
   P  Will Wes Moore win the 2028 Democratic presidential nomination?
      0x61d9486c0f7e14ed98f3b177b6adcb3cd45646c92e8bbfbf209789b86472d4b6  |  closes 2028-11-07
 
-[35] score=83.3
+[70] score=84.0
+  K  Will Historic Pact win above 31 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A31  |  closes 2027-03-08
+  P  Will Conservative win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x9873e438b51f8a9586fbc0b629ca92ec74d02ac3ef809ee7842855981c5970fe  |  closes 2026-03-08
+
+[71] score=84.0
+  K  Will Historic Pact win above 28 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A28  |  closes 2027-03-08
+  P  Will Conservative win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x9873e438b51f8a9586fbc0b629ca92ec74d02ac3ef809ee7842855981c5970fe  |  closes 2026-03-08
+
+[72] score=84.0
+  K  Will Historic Pact win above 34 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A34  |  closes 2027-03-08
+  P  Will Conservative win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x9873e438b51f8a9586fbc0b629ca92ec74d02ac3ef809ee7842855981c5970fe  |  closes 2026-03-08
+
+[73] score=84.0
+  K  Will Historic Pact win above 37 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A37  |  closes 2027-03-08
+  P  Will Conservative win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x9873e438b51f8a9586fbc0b629ca92ec74d02ac3ef809ee7842855981c5970fe  |  closes 2026-03-08
+
+[74] score=84.0
+  K  Will Historic Pact win above 25 seats in the the 2026 Colombian Chamber of Representatives election?
+     KXHISTORICPACTSEATS-26MAR08-A25  |  closes 2027-03-08
+  P  Will Conservative win the most seats in the 2026 Colombian Chamber of Representatives election?
+     0x9873e438b51f8a9586fbc0b629ca92ec74d02ac3ef809ee7842855981c5970fe  |  closes 2026-03-08
+
+[75] score=83.7
   K  Will Tim Walz be the Democratic Presidential nominee in 2028?
      KXPRESNOMD-28-TW  |  closes 2028-11-07
   P  Will Tim Walz win the 2028 Democratic presidential nomination?

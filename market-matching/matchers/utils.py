@@ -38,5 +38,23 @@ def canon(title: str) -> str:
 
 
 def fuzzy_score(a: str, b: str) -> float:
-    """(token_set_ratio + partial_ratio) / 2 on already-canonicalized strings."""
-    return (fuzz.token_set_ratio(a, b) + fuzz.partial_ratio(a, b)) / 2
+    """Blended fuzzy score on already-canonicalized strings.
+
+    Averages three metrics:
+      - token_set_ratio:  handles word-order and subset differences well, but is
+                          too lenient when titles share a long boilerplate template
+                          yet differ in the discriminating tokens (e.g. a threshold
+                          question vs a "most seats" question in the same election).
+      - token_sort_ratio: sorts tokens before comparing, so it still tolerates
+                          word-order variation but keeps ALL tokens in the
+                          comparison — penalizing titles that differ in key words.
+      - partial_ratio:    substring match; catches cases where one title is a
+                          shorter restatement of the other.
+
+    Using all three together rewards genuine paraphrases while down-scoring pairs
+    that only share a common template (e.g. "…2026 Colombian Chamber election").
+    """
+    tset  = fuzz.token_set_ratio(a, b)
+    tsort = fuzz.token_sort_ratio(a, b)
+    part  = fuzz.partial_ratio(a, b)
+    return (tset + tsort + part) / 3

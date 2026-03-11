@@ -13,7 +13,7 @@ from matchers.event import event_candidates
 class MatchResult:
     kalshi: NormalizedMarket
     polymarket: NormalizedMarket
-    score: float  # 0–100, average of token_set_ratio and partial_ratio
+    score: float  # 0–100, average of token_set_ratio, token_sort_ratio, and partial_ratio
 
 
 # Titles starting with open-ended question words indicate a multi-choice
