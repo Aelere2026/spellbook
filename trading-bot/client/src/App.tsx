@@ -1,12 +1,15 @@
 import "./App.css";
 import Dashboard from "./Pages/Dashboard";
+import GainLoss from "./Pages/GainLoss";
+import {Routes,Route} from "react-router-dom";
+
 
 function App() {
   return (
-    <>
-      
-      <Dashboard />
-    </>
+    <Routes>
+      <Route path="/" element={<Dashboard/>} />
+      <Route path="/gain-loss" element={<GainLoss />} />
+    </Routes>
   );
 }
 

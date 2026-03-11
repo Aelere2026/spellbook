@@ -1,17 +1,19 @@
 import React from "react";
-import { api } from "../utils/api"
+import { useNavigate } from "react-router-dom";
+import { api } from "../utils/api";
 
 interface StatCardProps {
   title: string;
   value: string | number;
   tone?: "neutral" | "positive" | "negative";
   className?: string;
+  onClick?: () => void;
 }
 
 const toneStyles: Record<NonNullable<StatCardProps["tone"]>, string> = {
-  neutral: "text-slate-800",
-  positive: "text-emerald-600",
-  negative: "text-rose-600",
+  neutral: "text-violet-100",
+  positive: "text-emerald-300",
+  negative: "text-rose-300",
 };
 
 const StatCard: React.FC<StatCardProps> = ({
@@ -19,24 +21,38 @@ const StatCard: React.FC<StatCardProps> = ({
   value,
   tone = "neutral",
   className,
+  onClick,
 }) => (
-  <div
+  <button
+    type="button"
+    onClick={onClick}
     className={[
-      "rounded-xl border border-slate-200/70 bg-white/70",
-      "shadow-[0_10px_30px_rgba(2,6,23,0.08)] backdrop-blur-md",
-      "px-4 py-3",
+      "group w-full text-left rounded-2xl border border-violet-300/15",
+      "bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22]",
+      "shadow-[0_18px_45px_rgba(10,6,30,0.45)] backdrop-blur-xl",
+      "px-4 py-4 transition-all duration-200",
+      "hover:-translate-y-1 hover:border-violet-300/35 hover:shadow-[0_22px_60px_rgba(76,29,149,0.35)]",
+      "active:translate-y-0 active:scale-[0.99]",
+      "focus:outline-none focus:ring-2 focus:ring-violet-400/50",
       className ?? "",
     ].join(" ")}
   >
-    <div className="text-[11px] uppercase tracking-wider text-slate-500">
+    <div className="text-[11px] uppercase tracking-[0.22em] text-violet-200/65">
       {title}
     </div>
     <div
-      className={["mt-1 text-2xl font-semibold", toneStyles[tone]].join(" ")}
+      className={[
+        "mt-2 text-2xl font-semibold transition-colors duration-200",
+        "group-hover:text-white",
+        toneStyles[tone],
+      ].join(" ")}
     >
       {value}
     </div>
-  </div>
+    <div className="mt-3 text-[11px] text-violet-200/45 group-hover:text-violet-200/70">
+      Click to explore
+    </div>
+  </button>
 );
 
 interface Trade {
@@ -122,91 +138,132 @@ const fmtPct = (n: number) => `${n.toFixed(2)}%`;
 
 const colors = (n: number) =>
   n > 0
-    ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+    ? "bg-emerald-500/10 text-emerald-300 ring-emerald-400/20"
     : n < 0
-      ? "bg-rose-50 text-rose-700 ring-rose-200"
-      : "bg-slate-50 text-slate-700 ring-slate-200";
-
+      ? "bg-rose-500/10 text-rose-300 ring-rose-400/20"
+      : "bg-violet-500/10 text-violet-200 ring-violet-400/20";
 
 const Dashboard: React.FC = () => {
-  const profit = 8420.17; // From dashboard mockup need to import from db
+  const navigate = useNavigate();
+  const profit = 8420.17;
 
+  const { data, isLoading } = api.platforms.get.useQuery();
 
-  const { data, isLoading } = api.platforms.get.useQuery()
-  if (isLoading) return <div> Loading... </div>
-  console.log(data)
+  {/*if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0814] text-violet-100">
+        Loading...
+      </div>
+    );
+  }*/}
+
+  console.log(data);
 
   return (
-    <div className="min-h-screen w-full">
-        
-        {/* hehe logo ! (i think its the logo) */}
-      <div className="top-4 left-8 flex items-center gap-2 bg-white rounded-2xl pl-4">
-        <img src="/favicon.ico" className="w-17 h-17 " />
-        <span className="text-3xl font-semibold tracking-wide text-black">
-          SPeLLbook
-        </span>
-      </div>
+    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_rgba(135,58,237,0.18),_transparent_28%),linear-gradient(180deg,_#0b0915_0%,_#120d22_50%,_#09070f_100%)] text-violet-50">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(136, 84, 255, 0.14),transparent_22%),radial-gradient(circle_at_80%_0%,rgba(178, 96, 255, 0.1),transparent_20%)]" />
 
-      <div className="pointer-events-none fixed inset-0"></div>
-
-      <div className="relative mx-auto w-full px-10 py-6 sm:px-10 lg:px-10">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.05fr_1.6fr_1.05fr]">
-          {/*All values from the mock up dashboard*/}
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard title="Gain/Loss" value="1.35" />
-            <StatCard title="Opportunities" value="2,740" />
-            <StatCard title="Frequency" value="18" />
-            <StatCard title="Avg Trade Time" value="0.18 h" />
-          </div>
-
-          {/*Profit part */}
-          <div
-            className={[
-              "rounded-2xl border border-slate-200/70 shadow-[0_18px_60px_rgba(2,6,23,0.08)] backdrop-blur-md",
-              profit >= 0
-                ? "bg-[oklch(0.982_0.018_155)]"
-                : "bg-[oklch(0.969_0.015_0.124)]",
-            ].join(" ")}
-          >
-            <div className="px-6 py-6 sm:px-8">
-              <div className="text-center text-sm tracking-wide text-slate-500">
-                PROFIT
-              </div>
-              <div
-                className={[
-                  "mt-6 text-center text-4xl font-semibold sm:text-5xl",
-                  profit >= 0 ? "text-emerald-600" : "text-rose-600",
-                ].join(" ")}
-              >
-                {profit >= 0 ? "+" : ""}
-                {fmtMoney(profit)}
-              </div>
+      <div className="relative mx-auto w-full px-6 py-6 sm:px-8 lg:px-10">
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-violet-300/10 bg-white/2 px-5 py-4 shadow-[0_12px_35px_rgba(10,6,30,0.35)] backdrop-blur-xl">
+          <img src="/favicon.ico" className="h-12 w-12 rounded-xl" />
+          <div>
+            <div className="text-3xl font-semibold tracking-wide text-white">
+              SPeLLbook
             </div>
-          </div>
 
-          {/*All values from the mock up dashboard -- right side */}
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard title="Total Fee Loss" value="$3,912" />
-            <StatCard title="Avg ROI" value="0.42%" />
-            <StatCard title="Avg Slippage" value="0.031" />
-            <StatCard title="Exposure" value="0.87" />
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-slate-200/70 bg-white/70 shadow-[0_18px_60px_rgba(2,6,23,0.08)] backdrop-blur-md">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.05fr_1.6fr_1.05fr]">
+          <div className="grid grid-cols-2 gap-3">
+            <StatCard
+              title="Gain/Loss"
+              value="1.35"
+              onClick={() => navigate("/gain-loss")}
+            />
+            <StatCard
+              title="Opportunities"
+              value="2,740"
+              //onClick={() => navigate("/opportunities")}
+            />
+            <StatCard
+              title="Frequency"
+              value="18"
+              //onClick={() => navigate("/frequency")}
+            />
+            <StatCard
+              title="Avg Trade Time"
+              value="0.18 h"
+              //onClick={() => navigate("/trade-time")}
+            />
+          </div>
+
+          <button
+            type="button"
+            //onClick={() => navigate("/profit")}
+            className={[
+              "rounded-3xl border border-violet-400/15",
+              "bg-gradient-to-br from-[#1a1230] via-[#25183f] to-[#110c1f]",
+              "shadow-[0_22px_70px_rgba(20,10,50,0.45)] backdrop-blur-xl",
+              "px-6 py-6 text-left transition-all duration-200",
+              "hover:-translate-y-1 hover:border-violet-300/35 hover:shadow-[0_24px_80px_rgba(91,33,182,0.35)]",
+              "active:translate-y-0 active:scale-[0.995]",
+            ].join(" ")}
+          >
+            <div className="text-center text-sm tracking-[0.25em] text-violet-200/60">
+              PROFIT
+            </div>
+            <div
+              className={[
+                "mt-6 text-center text-4xl font-semibold sm:text-5xl",
+                profit >= 0 ? "text-emerald-300" : "text-rose-300",
+              ].join(" ")}
+            >
+              {profit >= 0 ? "+" : ""}
+              {fmtMoney(profit)}
+            </div>
+            <div className="mt-4 text-center text-sm text-violet-200/45">
+              Click to view performance details
+            </div>
+          </button>
+
+          <div className="grid grid-cols-2 gap-3">
+            <StatCard
+              title="Total Fee Loss"
+              value="$3,912"
+              //onClick={() => navigate("/fees")}
+            />
+            <StatCard
+              title="Avg ROI"
+              value="0.42%"
+              //onClick={() => navigate("/roi")}
+            />
+            <StatCard
+              title="Avg Slippage"
+              value="0.031"
+              //onClick={() => navigate("/slippage")}
+            />
+            <StatCard
+              title="Exposure"
+              value="0.87"
+              //onClick={() => navigate("/exposure")}
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-3xl border border-violet-400/12 bg-white/2 shadow-[0_18px_60px_rgba(10,6,30,0.35)] backdrop-blur-xl">
           <div className="flex items-center justify-between px-5 py-4 sm:px-6">
-            <div>
-              <div className="text-sm font-semibold text-slate-900">
+            <div> 
+              <div className="text-sm font-semibold text-white">
                 Trade History
               </div>
             </div>
           </div>
 
-          {/* Table part with trade history -- also from mock up */}
           <div className="overflow-x-auto px-2 pb-4 sm:px-4">
             <table className="min-w-full">
               <thead>
-                <tr className="text-left text-[11px] uppercase tracking-wider text-slate-500">
+                <tr className="text-left text-[11px] uppercase tracking-[0.22em] text-violet-200/55">
                   <th className="px-3 py-2 sm:px-4">Trade ID</th>
                   <th className="px-3 py-2 sm:px-4">Timestamp</th>
                   <th className="px-3 py-2 sm:px-4">Market</th>
@@ -222,16 +279,23 @@ const Dashboard: React.FC = () => {
 
               <tbody>
                 {trades.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-900/5">
-                    <td className="px-3 py-2 text-sm text-slate-700 sm:px-4">{t.id}</td>
-                    <td className="px-3 py-2 text-sm text-slate-700 sm:px-4">
+                  <tr
+                    key={t.id}
+                    className="border-t border-violet-400/8 transition-colors hover:bg-white/5"
+                  >
+                    <td className="px-3 py-3 text-sm text-violet-100/90 sm:px-4">
+                      {t.id}
+                    </td>
+                    <td className="px-3 py-3 text-sm text-violet-100/70 sm:px-4">
                       {t.timestamp}
                     </td>
-                    <td className="px-3 py-2 text-sm text-slate-700 sm:px-4">{t.market}</td>
-                    <td className="px-3 py-2 text-sm text-slate-700 sm:px-4">
+                    <td className="px-3 py-3 text-sm text-violet-100/90 sm:px-4">
+                      {t.market}
+                    </td>
+                    <td className="px-3 py-3 text-sm text-violet-100/70 sm:px-4">
                       {t.exchangePair}
                     </td>
-                    <td className="px-3 py-2 text-sm sm:px-4">
+                    <td className="px-3 py-3 text-sm sm:px-4">
                       <span
                         className={[
                           "inline-flex items-center rounded-md px-2 py-1 text-xs ring-1",
@@ -242,24 +306,24 @@ const Dashboard: React.FC = () => {
                         {fmtPct(t.edgePct)}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-sm text-slate-700 sm:px-4">
+                    <td className="px-3 py-3 text-sm text-violet-100/70 sm:px-4">
                       {fmtMoney(t.capital)}
                     </td>
-                    <td className="px-3 py-2 text-sm text-slate-700 sm:px-4">
+                    <td className="px-3 py-3 text-sm text-violet-100/70 sm:px-4">
                       {fmtMoney(t.costs)}
                     </td>
-                    <td className="px-3 py-2 text-sm sm:px-4">
+                    <td className="px-3 py-3 text-sm sm:px-4">
                       <span
                         className={[
                           "font-semibold",
-                          t.netPnl >= 0 ? "text-emerald-600" : "text-rose-600",
+                          t.netPnl >= 0 ? "text-emerald-300" : "text-rose-300",
                         ].join(" ")}
                       >
                         {t.netPnl >= 0 ? "+" : ""}
                         {fmtMoney(t.netPnl)}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-sm sm:px-4">
+                    <td className="px-3 py-3 text-sm sm:px-4">
                       <span
                         className={[
                           "inline-flex items-center rounded-md px-2 py-1 text-xs ring-1",
@@ -270,7 +334,7 @@ const Dashboard: React.FC = () => {
                         {fmtPct(t.roiPct)}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-sm text-slate-700 sm:px-4">
+                    <td className="px-3 py-3 text-sm text-violet-100/70 sm:px-4">
                       {t.durationMin}m
                     </td>
                   </tr>

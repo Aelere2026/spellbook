@@ -1,9 +1,8 @@
 #root {
   width: 100%;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
-  background-color: oklch(94.3% 0.029 294.588);
+  background-color: oklch(0% 0 0);
 }
 
 .logo {
