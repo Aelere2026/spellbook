@@ -6,6 +6,7 @@ def event_candidates(
     kalshi: list[NormalizedMarket],
     polymarket: list[NormalizedMarket],
     min_event_score: float = 70.0,
+    max_group_pairs: int = 400,
 ) -> list[tuple[NormalizedMarket, NormalizedMarket]]:
     """Return (kalshi, polymarket) pairs blocked by event-title similarity.
 
@@ -40,8 +41,19 @@ def event_candidates(
             key=lambda t: t[0],
         )
         if best_score >= min_event_score:
-            for k in k_markets:
-                for p in p_groups[best_p_event]:
+            p_markets = p_groups[best_p_event]
+            # Cap the cross-product to avoid O(n²) explosion from large event groups
+            # (e.g. 50-leg elections events). Truncate the larger side first.
+            k_side = k_markets
+            p_side = p_markets
+            if len(k_side) * len(p_side) > max_group_pairs:
+                cap = max(1, max_group_pairs // max(len(k_side), len(p_side)))
+                if len(k_side) >= len(p_side):
+                    k_side = k_side[:cap]
+                else:
+                    p_side = p_side[:cap]
+            for k in k_side:
+                for p in p_side:
                     results.append((k, p))
 
     return results

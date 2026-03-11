@@ -1,4 +1,5 @@
 import re
+from functools import lru_cache
 
 from rapidfuzz import fuzz
 
@@ -18,6 +19,7 @@ _SYNONYMS: list[tuple[re.Pattern, str]] = [
 ]
 
 
+@lru_cache(maxsize=8192)
 def canon(title: str) -> str:
     """Return a canonicalized title for fuzzy scoring.
 

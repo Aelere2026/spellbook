@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -16,8 +17,12 @@ def run():
     now = datetime.now()
     print(f"[{now.isoformat()}] Fetching markets...")
 
-    raw_kalshi = pull_kalshi(limit=500)
-    raw_poly   = pull_polymarket(limit=500)
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        fut_kalshi = ex.submit(pull_kalshi)
+        fut_poly   = ex.submit(pull_polymarket)
+        raw_kalshi = fut_kalshi.result()
+        raw_poly   = fut_poly.result()
+
     print(f"  Kalshi:     {len(raw_kalshi)} raw")
     print(f"  Polymarket: {len(raw_poly)} raw")
 
