@@ -23,15 +23,22 @@ def normalize_kalshi(m: dict) -> NormalizedMarket:
     # Outcomes for binary markets
     outcomes = ["Yes", "No"] if m.get("market_type") == "binary" else []
 
+    # expected_expiration_time is when the event resolves (Kalshi-specific);
+    # close_time is just when trading stops — different concept.
+    resolution_date = parse_dt(
+        m.get("expected_expiration_time") or m.get("expiration_time")
+    )
+
     return NormalizedMarket(
-        platform     = "kalshi",
-        platform_id  = m["ticker"],
-        title        = title,
-        description  = m.get("rules_primary", "") or m.get("rules_secondary", ""),
-        close_time   = parse_dt(m.get("close_time")),
-        outcomes     = outcomes,
-        event_title  = m.get("event_title"),
-        series_title = m.get("mve_collection_ticker"),
-        is_mve       = bool(legs),
-        raw          = m,
+        platform        = "kalshi",
+        platform_id     = m["ticker"],
+        title           = title,
+        description     = m.get("rules_primary", "") or m.get("rules_secondary", ""),
+        close_time      = parse_dt(m.get("close_time")),
+        resolution_date = resolution_date,
+        outcomes        = outcomes,
+        event_title     = m.get("event_title"),
+        series_title    = m.get("mve_collection_ticker"),
+        is_mve          = bool(legs),
+        raw             = m,
     )

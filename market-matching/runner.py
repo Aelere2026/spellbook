@@ -9,7 +9,7 @@ from normalizers.polymarket import normalize_polymarket
 from matchers.match import find_matches, _is_binary
 
 OUTPUT = Path("matches.txt")
-TIME_WINDOW = timedelta(days=14)
+TIME_WINDOW = timedelta(days=1)
 MIN_SCORE = 83.0
 
 

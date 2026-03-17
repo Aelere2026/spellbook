@@ -36,6 +36,10 @@ def ensure_platforms(cur) -> dict[str, int]:
         row = cur.fetchone()
         if row:
             ids[name] = row[0]
+            cur.execute(
+                'UPDATE "Platform" SET base_fee = %s WHERE id = %s',
+                (fee, row[0]),
+            )
         else:
             cur.execute(
                 'INSERT INTO "Platform" (name, base_fee) VALUES (%s, %s) RETURNING id',
@@ -46,18 +50,28 @@ def ensure_platforms(cur) -> dict[str, int]:
 
 
 def upsert_market(cur, market: NormalizedMarket, platform_db_id: int) -> int:
-    """Return the DB id for this market, inserting if not present."""
+    """Return the DB id for this market, inserting or updating as needed."""
+    now = datetime.now()
+    event_date      = market.close_time or now
+    resolution_date = market.resolution_date or market.close_time or now
+    category = market.event_title or market.series_title or "Uncategorized"
+
     cur.execute(
         'SELECT id FROM "Market" WHERE platform_id = %s AND api_id = %s',
         (platform_db_id, market.platform_id),
     )
     row = cur.fetchone()
     if row:
-        return row[0]
-
-    now = datetime.now()
-    event_date = market.close_time or now
-    category = market.event_title or market.series_title or "Uncategorized"
+        market_id = row[0]
+        cur.execute(
+            """
+            UPDATE "Market"
+               SET title = %s, event_date = %s, resolution_date = %s, category = %s
+             WHERE id = %s
+            """,
+            (market.title, event_date, resolution_date, category, market_id),
+        )
+        return market_id
 
     cur.execute(
         """
@@ -71,7 +85,7 @@ def upsert_market(cur, market: NormalizedMarket, platform_db_id: int) -> int:
             market.platform_id,
             market.title,
             event_date,
-            event_date,
+            resolution_date,
             "open",
             0,
             category,

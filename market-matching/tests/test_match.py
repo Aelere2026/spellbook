@@ -9,7 +9,7 @@ T = datetime(2026, 6, 1, tzinfo=timezone.utc)
 
 def market(
     platform: str, pid: str, title: str,
-    close_time=T, is_mve=False, event_title=None,
+    close_time=T, is_mve=False, event_title=None, resolution_date=None,
 ) -> NormalizedMarket:
     return NormalizedMarket(
         platform=platform,
@@ -17,6 +17,7 @@ def market(
         title=title,
         description="",
         close_time=close_time,
+        resolution_date=resolution_date,
         outcomes=["Yes", "No"],
         event_title=event_title,
         series_title=None,
@@ -76,7 +77,7 @@ p_other = market("polymarket", "P-OTHER",  "Will Argentina win the 2026 World Cu
 # MVE market — excluded regardless of title
 k_mve   = market("kalshi",     "K-MVE",    "Will the Fed cut rates in June 2026?", is_mve=True)
 
-# Outside time window
+# Outside time window (no resolution_date set → falls back to close_time)
 k_late  = market("kalshi",     "K-LATE",   "Will the Fed cut rates in June 2026?",
                  close_time=T + timedelta(days=20))
 
@@ -132,16 +133,31 @@ assert results[0].score >= 82.0
 
 # --- Event-level blocking ---
 
-LATE = T + timedelta(days=30)  # outside ±14 day time window
+LATE = T + timedelta(days=30)  # far-apart close_times
 
-# Matching event titles → pair matched even though close_times are 30 days apart
+# Event-matched pair: close_times are 30 days apart but resolution_dates are within 1 day.
+# Proves the gate compares resolution_date, not close_time.
 k_ev = market("kalshi",     "K-EV", "Will candidate X win the primary?",
-               close_time=T,    event_title="2028 Democratic Primary")
+               close_time=T,    event_title="2028 Democratic Primary",
+               resolution_date=T)
 p_ev = market("polymarket", "P-EV", "Will candidate X win the 2028 Democratic primary?",
-               close_time=LATE, event_title="2028 Democratic Election Primary")
+               close_time=LATE, event_title="2028 Democratic Election Primary",
+               resolution_date=T + timedelta(hours=12))
 
 results = find_matches([k_ev], [p_ev])
-assert len(results) == 1, "event-matched pair should be included despite time gap"
+assert len(results) == 1, "event-matched pair with close resolution_dates should match"
+
+# Event-matched pair where resolution_dates are also far apart → excluded.
+# Shared event title is not enough; the markets must actually resolve together.
+k_ev_far = market("kalshi",     "K-EV-FAR", "Will candidate X win the primary?",
+                   close_time=T,    event_title="2028 Democratic Primary",
+                   resolution_date=T)
+p_ev_far = market("polymarket", "P-EV-FAR", "Will candidate X win the 2028 Democratic primary?",
+                   close_time=LATE, event_title="2028 Democratic Election Primary",
+                   resolution_date=LATE)
+
+results = find_matches([k_ev_far], [p_ev_far])
+assert len(results) == 0, "event-matched pair with far resolution_dates must be excluded"
 
 # No event title on either side → falls back to time gate (original behavior)
 k_no_ev = market("kalshi",     "K-NO-EV", "Will the Fed cut rates in June 2026?")

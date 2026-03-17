@@ -14,11 +14,11 @@ class NormalizedMarket:
     description: str                 # full description text
     
     # --- Time ---
-    close_time: Optional[datetime]
-    
+    close_time: Optional[datetime]   # when trading stops (platform-specific)
+
     # --- Outcomes ---
     outcomes: list[str]              # ["Yes", "No"] or ["Trump wins", ...]
-    
+
     # --- Grouping / hierarchy ---
     event_title: Optional[str]       # parent event label (Polymarket only; None for Kalshi)
     series_title: Optional[str]      # recurring series label
@@ -26,6 +26,7 @@ class NormalizedMarket:
     # --- Market type flags ---
     is_mve: bool = False             # Kalshi multi-variate/parlay markets; excluded from matching
     neg_risk: bool = False           # Polymarket negRisk sub-leg (one option in a multi-choice group)
+    resolution_date: Optional[datetime] = None  # when the market actually resolves (vs close_time = trading stop)
     
     # --- Raw passthrough (for debugging) ---
     raw: dict = field(default_factory=dict, repr=False)

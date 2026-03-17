@@ -15,15 +15,20 @@ def normalize_polymarket(m: dict) -> NormalizedMarket:
     raw_outcomes = m.get("outcomes", "[]")
     outcomes = json.loads(raw_outcomes) if isinstance(raw_outcomes, str) else raw_outcomes
 
+    # On Polymarket, endDate is the resolution date. close_time is the same —
+    # there's no separate trading-close concept exposed by the API.
+    end = parse_dt(m.get("endDate"))
+
     return NormalizedMarket(
-        platform     = "polymarket",
-        platform_id  = m["conditionId"],
-        title        = m.get("question", ""),
-        description  = m.get("description", ""),
-        close_time   = parse_dt(m.get("endDate")),
-        outcomes     = outcomes,
-        event_title  = event.get("title"),
-        series_title = series.get("title"),
-        neg_risk     = bool(m.get("negRisk", False)),
-        raw          = m,
+        platform        = "polymarket",
+        platform_id     = m["conditionId"],
+        title           = m.get("question", ""),
+        description     = m.get("description", ""),
+        close_time      = end,
+        resolution_date = end,
+        outcomes        = outcomes,
+        event_title     = event.get("title"),
+        series_title    = series.get("title"),
+        neg_risk        = bool(m.get("negRisk", False)),
+        raw             = m,
     )
