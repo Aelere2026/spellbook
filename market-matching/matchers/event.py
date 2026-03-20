@@ -5,7 +5,7 @@ from matchers.utils import canon, fuzzy_score
 def event_candidates(
     kalshi: list[NormalizedMarket],
     polymarket: list[NormalizedMarket],
-    min_event_score: float = 70.0,
+    min_event_score: float = 80.0,
 ) -> list[tuple[NormalizedMarket, NormalizedMarket]]:
     """Return (kalshi, polymarket) pairs blocked by event-title similarity.
 

@@ -23,7 +23,7 @@ class MatchResult:
 _OPEN_QUESTION = re.compile(r'^(who|what|which|how|when|where)\b', re.IGNORECASE)
 
 
-def _is_binary(m: NormalizedMarket) -> bool:
+def is_binary(m: NormalizedMarket) -> bool:
     """True iff the market is a genuine Yes/No binary question.
 
     Rejects:
@@ -57,22 +57,23 @@ def find_matches(
       1. Drop any non-binary (non Yes/No) market on either side.
       2. Event-title blocking: group by event_title, fuzzy-match event groups
          (threshold min_event_score), collect all within-group (k, p) pairs.
-      3. Time-gate fallback: for Kalshi markets not covered by event matching,
-         use ±max_time_delta against all Polymarket markets.
+      3. Time-gate fallback: for all eligible Kalshi markets, use ±max_time_delta
+         against all Polymarket markets (runs even on event-matched markets so a
+         false-positive event match never permanently suppresses a valid pair).
       4. Score each unique candidate pair with (token_set_ratio + token_sort_ratio + partial_ratio) / 3
          on canonicalized titles.
       5. Keep pairs at or above min_score, sorted best-first.
     """
-    eligible = [k for k in kalshi if _is_binary(k)]
-    poly_binary = [p for p in polymarket if _is_binary(p)]
+    eligible = [k for k in kalshi if is_binary(k)]
+    poly_binary = [p for p in polymarket if is_binary(p)]
 
     # Layer 1: event-title blocking
     ev_pairs = event_candidates(eligible, poly_binary, min_event_score)
 
     # Layer 2: time-gate fallback for all eligible Kalshi markets.
     # Running on all eligible (not just ungrouped) ensures that a false-positive
-    # event match at the 70.0 threshold doesn't permanently suppress a market's
-    # second chance. The seen set below prevents any pair from being scored twice.
+    # event match doesn't permanently suppress a market's second chance.
+    # The seen set below prevents any pair from being scored twice.
     time_pairs = close_time_gate(eligible, poly_binary, max_time_delta)
 
     # Score all unique (k, p) candidates

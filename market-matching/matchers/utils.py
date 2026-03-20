@@ -28,7 +28,7 @@ _SYNONYMS: list[tuple[re.Pattern, str]] = [
     (re.compile(r'\bfalls?\b|\bfell\b|\bfallen\b|\bfalling\b'),   'fall'),
     (re.compile(r'\bdrops?\b|\bdropped\b|\bdropping\b'),          'drop'),
     (re.compile(r'\braises?\b|\braised\b|\braising\b'),            'raise'),
-    (re.compile(r'\bcuts?\b|\bcut\b|\bcutting\b'),                 'cut'),
+    (re.compile(r'\bcuts?\b|\bcutting\b'),                         'cut'),
     (re.compile(r'\bpasses?\b|\bpassed\b|\bpassing\b'),            'pass'),
 
     # Policy / appointment verbs

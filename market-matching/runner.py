@@ -6,7 +6,7 @@ from fetchers.kalshi import pull_kalshi
 from fetchers.polymarket import pull_polymarket
 from normalizers.kalshi import normalize_kalshi
 from normalizers.polymarket import normalize_polymarket
-from matchers.match import find_matches, _is_binary
+from matchers.match import find_matches, is_binary
 
 OUTPUT = Path("matches.txt")
 TIME_WINDOW = timedelta(days=7)
@@ -40,9 +40,9 @@ def run():
         except Exception as e:
             print(f"  [warn] polymarket normalize failed for {m.get('conditionId')}: {e}")
 
-    binary_kalshi   = [k for k in kalshi_markets if _is_binary(k)]
+    binary_kalshi   = [k for k in kalshi_markets if is_binary(k)]
     neg_risk_poly   = sum(1 for p in poly_markets if p.neg_risk)
-    binary_poly     = [p for p in poly_markets    if _is_binary(p)]
+    binary_poly     = [p for p in poly_markets    if is_binary(p)]
     print(f"  Kalshi binary: {len(binary_kalshi)}")
     print(f"  Polymarket: {len(poly_markets)} total  |  {neg_risk_poly} negRisk  |  {len(binary_poly)} binary")
 
