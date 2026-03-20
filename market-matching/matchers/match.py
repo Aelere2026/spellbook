@@ -49,7 +49,7 @@ def find_matches(
     polymarket: list[NormalizedMarket],
     min_score: float = 83.0,
     max_time_delta: timedelta = timedelta(days=14),
-    min_event_score: float = 70.0,
+    min_event_score: float = 80.0,
 ) -> list[MatchResult]:
     """Return scored (kalshi, polymarket) pairs that likely describe the same event.
 
