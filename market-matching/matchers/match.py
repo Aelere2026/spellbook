@@ -59,7 +59,7 @@ def find_matches(
          (threshold min_event_score), collect all within-group (k, p) pairs.
       3. Time-gate fallback: for Kalshi markets not covered by event matching,
          use ±max_time_delta against all Polymarket markets.
-      4. Score each unique candidate pair with (token_set_ratio + partial_ratio) / 2
+      4. Score each unique candidate pair with (token_set_ratio + token_sort_ratio + partial_ratio) / 3
          on canonicalized titles.
       5. Keep pairs at or above min_score, sorted best-first.
     """
