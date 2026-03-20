@@ -24,7 +24,6 @@ class NormalizedMarket:
     series_title: Optional[str]      # recurring series label
 
     # --- Market type flags ---
-    is_mve: bool = False             # Kalshi multi-variate/parlay markets; excluded from matching
     neg_risk: bool = False           # Polymarket negRisk sub-leg (one option in a multi-choice group)
     resolution_date: Optional[datetime] = None  # when the market actually resolves (vs close_time = trading stop)
     

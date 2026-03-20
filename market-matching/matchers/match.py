@@ -54,7 +54,7 @@ def find_matches(
     """Return scored (kalshi, polymarket) pairs that likely describe the same event.
 
     Pipeline:
-      1. Drop Kalshi MVE markets and any non-binary (non Yes/No) market on either side.
+      1. Drop any non-binary (non Yes/No) market on either side.
       2. Event-title blocking: group by event_title, fuzzy-match event groups
          (threshold min_event_score), collect all within-group (k, p) pairs.
       3. Time-gate fallback: for Kalshi markets not covered by event matching,
@@ -63,7 +63,7 @@ def find_matches(
          on canonicalized titles.
       5. Keep pairs at or above min_score, sorted best-first.
     """
-    eligible = [k for k in kalshi if not k.is_mve and _is_binary(k)]
+    eligible = [k for k in kalshi if _is_binary(k)]
     poly_binary = [p for p in polymarket if _is_binary(p)]
 
     # Layer 1: event-title blocking

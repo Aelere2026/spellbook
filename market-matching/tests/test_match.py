@@ -9,7 +9,7 @@ T = datetime(2026, 6, 1, tzinfo=timezone.utc)
 
 def market(
     platform: str, pid: str, title: str,
-    close_time=T, is_mve=False, event_title=None, resolution_date=None,
+    close_time=T, event_title=None, resolution_date=None,
 ) -> NormalizedMarket:
     return NormalizedMarket(
         platform=platform,
@@ -21,7 +21,6 @@ def market(
         outcomes=["Yes", "No"],
         event_title=event_title,
         series_title=None,
-        is_mve=is_mve,
     )
 
 
@@ -74,9 +73,6 @@ p_num   = market("polymarket", "P-NUM",  "Will Bitcoin reach $100k by end of 202
 k_other = market("kalshi",     "K-OTHER",  "Will the S&P 500 close above 6000 in June 2026?")
 p_other = market("polymarket", "P-OTHER",  "Will Argentina win the 2026 World Cup?")
 
-# MVE market — excluded regardless of title
-k_mve   = market("kalshi",     "K-MVE",    "Will the Fed cut rates in June 2026?", is_mve=True)
-
 # Outside time window (no resolution_date set → falls back to close_time)
 k_late  = market("kalshi",     "K-LATE",   "Will the Fed cut rates in June 2026?",
                  close_time=T + timedelta(days=20))
@@ -107,10 +103,6 @@ assert len(results) == 0, "different candidates (Phil vs Chris Murphy) should no
 # Unrelated topics → excluded
 results = find_matches([k_other], [p_other])
 assert len(results) == 0, "unrelated topics should not match"
-
-# MVE market excluded even when title matches
-results = find_matches([k_mve], [p_fed])
-assert len(results) == 0, "MVE market must be excluded"
 
 # Outside time window excluded
 results = find_matches([k_late], [p_fed])
