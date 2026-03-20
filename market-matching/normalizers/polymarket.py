@@ -12,7 +12,7 @@ def normalize_polymarket(m: dict) -> NormalizedMarket:
     series = (event.get("series") or [{}])[0]
 
     # Outcomes: stored as JSON string "[\"Yes\", \"No\"]"
-    raw_outcomes = m.get("outcomes", "[]")
+    raw_outcomes = m.get("outcomes") or "[]"
     outcomes = json.loads(raw_outcomes) if isinstance(raw_outcomes, str) else raw_outcomes
 
     # On Polymarket, endDate is the resolution date. close_time is the same —
