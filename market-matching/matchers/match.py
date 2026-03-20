@@ -67,11 +67,12 @@ def find_matches(
 
     # Layer 1: event-title blocking
     ev_pairs = event_candidates(eligible, poly_binary, min_event_score)
-    ev_k_ids = {k.platform_id for k, _ in ev_pairs}
 
-    # Layer 2: time-gate for Kalshi markets not covered by any matched event group
-    ungrouped_k = [k for k in eligible if k.platform_id not in ev_k_ids]
-    time_pairs = close_time_gate(ungrouped_k, poly_binary, max_time_delta)
+    # Layer 2: time-gate fallback for all eligible Kalshi markets.
+    # Running on all eligible (not just ungrouped) ensures that a false-positive
+    # event match at the 70.0 threshold doesn't permanently suppress a market's
+    # second chance. The seen set below prevents any pair from being scored twice.
+    time_pairs = close_time_gate(eligible, poly_binary, max_time_delta)
 
     # Score all unique (k, p) candidates
     seen: set[tuple[str, str]] = set()
