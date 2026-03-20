@@ -10,12 +10,37 @@ _NUM_COM = re.compile(r'\d{1,3}(?:,\d{3})+')                    # 1,000,000 → 
 # Deliberately excludes nominee/nomination — collapsing them inflates
 # token_set_ratio for same-surname different-candidate pairs.
 _SYNONYMS: list[tuple[re.Pattern, str]] = [
-    (re.compile(r'\bwins?\b|\bwinning\b|\bwinner\b'),        'win'),
-    (re.compile(r'\bbeats?\b|\bbeaten\b|\bbeating\b'),       'beat'),
-    (re.compile(r'\bexceeds?\b|\bexceeded\b|\bexceeding\b'), 'exceed'),
-    (re.compile(r'\bpasses?\b|\bpassed\b|\bpassing\b'),      'pass'),
-    (re.compile(r'\breaches?\b|\breached\b|\breaching\b'),   'reach'),
-    (re.compile(r'\bchampionship\b'),                        'champion'),
+    # Election / outcome verbs
+    (re.compile(r'\bwins?\b|\bwinning\b|\bwinner\b'),               'win'),
+    (re.compile(r'\bbeats?\b|\bbeaten\b|\bbeating\b'),              'beat'),
+    (re.compile(r'\bloses?\b|\blost\b|\blosing\b'),                 'lose'),
+    (re.compile(r'\bleads?\b|\bled\b|\bleading\b'),                 'lead'),
+    (re.compile(r'\bflips?\b|\bflipped\b|\bflipping\b'),           'flip'),
+    (re.compile(r'\bretains?\b|\bretained\b|\bretaining\b'),        'retain'),
+    (re.compile(r'\bbecomes?\b|\bbecame\b|\bbecoming\b'),          'become'),
+    (re.compile(r'\bholds?\b|\bheld\b|\bholding\b'),               'hold'),
+    (re.compile(r'\bgains?\b|\bgained\b|\bgaining\b'),             'gain'),
+
+    # Numeric / market movement verbs
+    (re.compile(r'\bexceeds?\b|\bexceeded\b|\bexceeding\b'),       'exceed'),
+    (re.compile(r'\breaches?\b|\breached\b|\breaching\b'),         'reach'),
+    (re.compile(r'\brises?\b|\brose\b|\brisen\b|\brising\b'),      'rise'),
+    (re.compile(r'\bfalls?\b|\bfell\b|\bfallen\b|\bfalling\b'),   'fall'),
+    (re.compile(r'\bdrops?\b|\bdropped\b|\bdropping\b'),          'drop'),
+    (re.compile(r'\braises?\b|\braised\b|\braising\b'),            'raise'),
+    (re.compile(r'\bcuts?\b|\bcut\b|\bcutting\b'),                 'cut'),
+    (re.compile(r'\bpasses?\b|\bpassed\b|\bpassing\b'),            'pass'),
+
+    # Policy / appointment verbs
+    (re.compile(r'\bapproves?\b|\bapproved\b|\bapproving\b'),      'approve'),
+    (re.compile(r'\benacts?\b|\benacted\b|\benacting\b'),          'enact'),
+    (re.compile(r'\bconfirms?\b|\bconfirmed\b|\bconfirming\b'),    'confirm'),
+    (re.compile(r'\bappoints?\b|\bappointed\b|\bappointing\b'),    'appoint'),
+    (re.compile(r'\bsecures?\b|\bsecured\b|\bsecuring\b'),        'secure'),
+
+    # Noun/title normalization
+    (re.compile(r'\bgovernorship\b'),                              'governor'),
+    (re.compile(r'\bchampionship\b'),                              'champion'),
 ]
 
 

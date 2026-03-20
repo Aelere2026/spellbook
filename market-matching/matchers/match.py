@@ -3,6 +3,7 @@ import re
 from dataclasses import dataclass
 from datetime import timedelta
 
+
 from normalizers.models import NormalizedMarket
 from matchers.utils import canon, fuzzy_score
 from matchers.gate import close_time_gate
