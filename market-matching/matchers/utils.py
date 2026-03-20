@@ -44,7 +44,7 @@ _SYNONYMS: list[tuple[re.Pattern, str]] = [
 ]
 
 
-@lru_cache(maxsize=8192)
+@lru_cache(maxsize=32768)
 def canon(title: str) -> str:
     """Return a canonicalized title for fuzzy scoring.
 
