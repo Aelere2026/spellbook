@@ -95,10 +95,21 @@ def upsert_market(cur, market: NormalizedMarket, platform_db_id: int) -> int:
 
 
 def upsert_match(cur, kalshi_db_id: int, poly_db_id: int, score: float) -> None:
-    # Remove any stale rows that conflict on either unique FK before inserting
+    # If this exact pair already exists, update the score in place (preserves createdAt).
     cur.execute(
-        'DELETE FROM "Match" WHERE polymarket_id = %s OR kalshi_id = %s',
-        (poly_db_id, kalshi_db_id),
+        'SELECT id FROM "Match" WHERE kalshi_id = %s AND polymarket_id = %s',
+        (kalshi_db_id, poly_db_id),
+    )
+    if cur.fetchone():
+        cur.execute(
+            'UPDATE "Match" SET match_score = %s WHERE kalshi_id = %s AND polymarket_id = %s',
+            (score, kalshi_db_id, poly_db_id),
+        )
+        return
+    # Remove stale rows where either market is now paired with a different partner.
+    cur.execute(
+        'DELETE FROM "Match" WHERE kalshi_id = %s OR polymarket_id = %s',
+        (kalshi_db_id, poly_db_id),
     )
     cur.execute(
         'INSERT INTO "Match" (polymarket_id, kalshi_id, match_score) VALUES (%s, %s, %s)',
