@@ -149,6 +149,8 @@ const Dashboard: React.FC = () => {
 
   const { data, isLoading } = api.markets.get.useQuery();
   const { data: arbit, isLoading: isArbitLoading } = api.arbitrages.get.useQuery();
+  const { data: match, isLoading: isMatchLoading } = api.arbitrages.get.useQuery();
+
 
   {/*if (isLoading) {
     return (
@@ -160,6 +162,8 @@ const Dashboard: React.FC = () => {
 
   console.log(data);
   console.log(arbit)
+  console.log(match)
+
 
   return (
     <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_rgba(135,58,237,0.18),_transparent_28%),linear-gradient(180deg,_#0b0915_0%,_#120d22_50%,_#09070f_100%)] text-violet-50">
