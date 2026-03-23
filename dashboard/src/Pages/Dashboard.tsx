@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const profit = 8420.17;
 
-  const { data, isLoading } = api.platforms.get.useQuery();
+  const { data, isLoading } = api.markets.get.useQuery();
 
   {/*if (isLoading) {
     return (
