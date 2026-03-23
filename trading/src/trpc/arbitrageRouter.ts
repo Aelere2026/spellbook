@@ -15,8 +15,8 @@ const arbitrageRouter = router({
         }))
         .query(async (opts) => {
             return await prisma.arbitrage.findMany({
-                where: {
-                    detectionTime: opts.input.category
+                orderBy: {
+                    detectionTime: "desc"
                 }
             })
         }),
