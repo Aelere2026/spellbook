@@ -55,81 +55,6 @@ const StatCard: React.FC<StatCardProps> = ({
   </button>
 );
 
-interface Trade {
-  id: number;
-  market: string;
-  exchangePair: string;
-  edgePct: number;
-  capital: number;
-  costs: number;
-  netPnl: number;
-  roiPct: number;
-  durationMin: number;
-  timestamp: string;
-}
-
-const trades: Trade[] = [
-  {
-    id: 30520,
-    market: "US Election 2028 - Dem Win",
-    exchangePair: "Polymarket / Kalshi",
-    edgePct: 0.48,
-    capital: 820,
-    costs: 2.31,
-    netPnl: 1.62,
-    roiPct: 0.2,
-    durationMin: 11,
-    timestamp: "2026-03-03 22:11",
-  },
-  {
-    id: 30519,
-    market: "Fed Rate Cut - March",
-    exchangePair: "Polymarket / Kalshi",
-    edgePct: 0.35,
-    capital: 640,
-    costs: 1.52,
-    netPnl: 0.79,
-    roiPct: 0.12,
-    durationMin: 8,
-    timestamp: "2026-03-03 22:10",
-  },
-  {
-    id: 30518,
-    market: "BTC > $75k by June",
-    exchangePair: "Polymarket / Kalshi",
-    edgePct: 0.55,
-    capital: 5000,
-    costs: 1.56,
-    netPnl: 2.13,
-    roiPct: 0.43,
-    durationMin: 9,
-    timestamp: "2026-03-03 22:08",
-  },
-  {
-    id: 30517,
-    market: "CPI Above 3.0%",
-    exchangePair: "Polymarket / Kalshi",
-    edgePct: -0.29,
-    capital: 580,
-    costs: 1.09,
-    netPnl: 0.58,
-    roiPct: 0.1,
-    durationMin: 6,
-    timestamp: "2026-03-03 22:06",
-  },
-  {
-    id: 30516,
-    market: "ETH ETF Approval",
-    exchangePair: "Polymarket / Kalshi",
-    edgePct: -0.42,
-    capital: 910,
-    costs: 2.47,
-    netPnl: -1.35,
-    roiPct: -0.15,
-    durationMin: 13,
-    timestamp: "2026-03-03 22:05",
-  },
-];
 
 const fmtMoney = (n: number) =>
   n.toLocaleString(undefined, { style: "currency", currency: "USD" });
@@ -147,23 +72,72 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const profit = 8420.17;
 
-  const { data, isLoading } = api.markets.get.useQuery();
-  const { data: arbit, isLoading: isArbitLoading } = api.arbitrages.get.useQuery();
-  const { data: match, isLoading: isMatchLoading } = api.arbitrages.get.useQuery();
+  const { data: mar, isLoading: isMarketLoading } = api.markets.get.useQuery();
+  const { data: arb, isLoading: isArbitLoading } = api.arbitrages.get.useQuery();
+  const { data: mat, isLoading: isMatchLoading } = api.matches.get.useQuery();
 
+  const market = mar ?? [];
+  const arbit = arb ?? [];
+  const match = mat ?? [];
 
-  {/*if (isLoading) {
+  {
+    /*if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0a0814] text-violet-100">
         Loading...
       </div>
     );
-  }*/}
+  }*/
+  }
 
-  console.log(data);
-  console.log(arbit)
-  console.log(match)
+  console.log(market);
+  console.log(arbit);
+  console.log(match);
 
+  const trades = arbit.map((a) => {
+    const grossProfit = Number(a.grossProfit);
+    const netProfit = Number(a.netProfit);
+    const totalFee = Number(a.totalFee);
+    const slippage = Number(a.estimatedSlippage);
+
+    const matched = match.find((m) => m.id === a.matchId);
+    const matchScore = Number(matched?.matchScore);
+
+    const deduction = new Date(a.detectionTime);
+    const execution = new Date(a.executionTime);
+
+    const durationMin = Math.max(
+      0,
+      Math.round((execution.getTime() - deduction.getTime()) / 60000),
+    );
+
+    const capital = grossProfit * 100;
+    const costs = totalFee + slippage;
+    const roiPct = capital > 0 ? (netProfit / capital) * 100 : 0;
+
+    //to get the title
+    // get the match id using the a.matchID
+    const pairMatch = match.find((m) => m.id === a.matchId);
+    // use that entry id matches to find the polymarketMatchId
+    const polymarket_id = Number(pairMatch?.polymarketMarketId);
+    // find the entry in markets with that polymarketMatchId
+    const pairMarket = market.find((p) => p.id === polymarket_id);
+    // get the title
+    const title = pairMarket?.title;
+
+    return {
+      id: a.id,
+      market: title,
+      exchangePair: "Polymarket / Kalshi",
+      edgePct: matchScore * 100,
+      capital,
+      costs,
+      netPnl: netProfit,
+      roiPct,
+      durationMin,
+      timestamp: execution.toLocaleString(),
+    };
+  });
 
   return (
     <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_rgba(135,58,237,0.18),_transparent_28%),linear-gradient(180deg,_#0b0915_0%,_#120d22_50%,_#09070f_100%)] text-violet-50">
@@ -176,7 +150,6 @@ const Dashboard: React.FC = () => {
             <div className="text-3xl font-semibold tracking-wide text-white">
               SPeLLbook
             </div>
-
           </div>
         </div>
 
@@ -259,7 +232,7 @@ const Dashboard: React.FC = () => {
 
         <div className="mt-6 rounded-3xl border border-violet-400/12 bg-white/2 shadow-[0_18px_60px_rgba(10,6,30,0.35)] backdrop-blur-xl">
           <div className="flex items-center justify-between px-5 py-4 sm:px-6">
-            <div> 
+            <div>
               <div className="text-sm font-semibold text-white">
                 Trade History
               </div>
