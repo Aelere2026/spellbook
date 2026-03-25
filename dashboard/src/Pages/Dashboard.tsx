@@ -55,7 +55,6 @@ const StatCard: React.FC<StatCardProps> = ({
   </button>
 );
 
-
 const fmtMoney = (n: number) =>
   n.toLocaleString(undefined, { style: "currency", currency: "USD" });
 
@@ -73,8 +72,11 @@ const Dashboard: React.FC = () => {
   const profit = 8420.17;
 
   const { data: mar, isLoading: isMarketLoading } = api.markets.get.useQuery();
-  const { data: arb, isLoading: isArbitLoading } = api.arbitrages.get.useQuery();
+  const { data: arb, isLoading: isArbitLoading } =
+    api.arbitrages.get.useQuery();
   const { data: mat, isLoading: isMatchLoading } = api.matches.get.useQuery();
+  const { data: stats, isLoading: isStatsLoading } =
+    api.arbitrages.stats.useQuery();
 
   const market = mar ?? [];
   const arbit = arb ?? [];
@@ -93,6 +95,7 @@ const Dashboard: React.FC = () => {
   console.log(market);
   console.log(arbit);
   console.log(match);
+  console.log(stats);
 
   const trades = arbit.map((a) => {
     const grossProfit = Number(a.grossProfit);
@@ -111,7 +114,7 @@ const Dashboard: React.FC = () => {
       Math.round((execution.getTime() - deduction.getTime()) / 60000),
     );
 
-    const capital = grossProfit * 100;
+    const capital = grossProfit;
     const costs = totalFee + slippage;
     const roiPct = capital > 0 ? (netProfit / capital) * 100 : 0;
 
@@ -125,11 +128,17 @@ const Dashboard: React.FC = () => {
     // get the title
     const title = pairMarket?.title;
 
+    //get the edge
+    const edge_percent = Number(
+      (1 - (Number(a.yesPrice) + Number(a.noPrice))) * 100,
+    );
+
     return {
       id: a.id,
       market: title,
       exchangePair: "Polymarket / Kalshi",
-      edgePct: matchScore * 100,
+      edgePct: edge_percent,
+      matchScore: matchScore,
       capital,
       costs,
       netPnl: netProfit,
@@ -157,29 +166,19 @@ const Dashboard: React.FC = () => {
           <div className="grid grid-cols-2 gap-3">
             <StatCard
               title="Gain/Loss"
-              value="1.35"
+              value={stats?.gainLoss ?? 0}
               onClick={() => navigate("/gain-loss")}
             />
-            <StatCard
-              title="Opportunities"
-              value="2,740"
-              //onClick={() => navigate("/opportunities")}
-            />
-            <StatCard
-              title="Frequency"
-              value="18"
-              //onClick={() => navigate("/frequency")}
-            />
+            <StatCard title="Opportunities" value={stats?.opportunities ?? 0} />
+            <StatCard title="Frequency" value={stats?.frequency ?? 0} />
             <StatCard
               title="Avg Trade Time"
-              value="0.18 h"
-              //onClick={() => navigate("/trade-time")}
+              value={`${stats?.avgTradeTime ?? 0} h`}
             />
           </div>
 
           <button
             type="button"
-            //onClick={() => navigate("/profit")}
             className={[
               "rounded-3xl border border-violet-400/15",
               "bg-gradient-to-br from-[#1a1230] via-[#25183f] to-[#110c1f]",
@@ -195,11 +194,13 @@ const Dashboard: React.FC = () => {
             <div
               className={[
                 "mt-6 text-center text-4xl font-semibold sm:text-5xl",
-                profit >= 0 ? "text-emerald-300" : "text-rose-300",
+                (stats?.profit ?? 0) >= 0
+                  ? "text-emerald-300"
+                  : "text-rose-300",
               ].join(" ")}
             >
-              {profit >= 0 ? "+" : ""}
-              {fmtMoney(profit)}
+              {(stats?.profit ?? 0) >= 0 ? "+" : ""}
+              {fmtMoney(stats?.profit ?? 0)}
             </div>
             <div className="mt-4 text-center text-sm text-violet-200/45">
               Click to view performance details
@@ -209,24 +210,11 @@ const Dashboard: React.FC = () => {
           <div className="grid grid-cols-2 gap-3">
             <StatCard
               title="Total Fee Loss"
-              value="$3,912"
-              //onClick={() => navigate("/fees")}
+              value={fmtMoney(stats?.totalFeeLoss ?? 0)}
             />
-            <StatCard
-              title="Avg ROI"
-              value="0.42%"
-              //onClick={() => navigate("/roi")}
-            />
-            <StatCard
-              title="Avg Slippage"
-              value="0.031"
-              //onClick={() => navigate("/slippage")}
-            />
-            <StatCard
-              title="Exposure"
-              value="0.87"
-              //onClick={() => navigate("/exposure")}
-            />
+            <StatCard title="Avg ROI" value={`${stats?.avgRoi ?? 0}%`} />
+            <StatCard title="Avg Slippage" value={stats?.avgSlippage ?? 0} />
+            <StatCard title="Exposure" value={fmtMoney(stats?.exposure ?? 0)} />
           </div>
         </div>
 
@@ -247,6 +235,7 @@ const Dashboard: React.FC = () => {
                   <th className="px-3 py-2 sm:px-4">Timestamp</th>
                   <th className="px-3 py-2 sm:px-4">Market</th>
                   <th className="px-3 py-2 sm:px-4">Exchange Pair</th>
+                  <th className="px-3 py-2 sm:px-4">Match Score</th>
                   <th className="px-3 py-2 sm:px-4">Edge %</th>
                   <th className="px-3 py-2 sm:px-4">Capital</th>
                   <th className="px-3 py-2 sm:px-4">Costs</th>
@@ -273,6 +262,19 @@ const Dashboard: React.FC = () => {
                     </td>
                     <td className="px-3 py-3 text-sm text-violet-100/70 sm:px-4">
                       {t.exchangePair}
+                    </td>
+                    <td className="px-3 py-3 text-sm sm:px-4">
+                      <span
+                        className={[
+                          "font-semibold",
+                          t.matchScore >= 0
+                            ? "text-emerald-300"
+                            : "text-rose-300",
+                        ].join(" ")}
+                      >
+                        {t.matchScore}
+                        {"%"}
+                      </span>
                     </td>
                     <td className="px-3 py-3 text-sm sm:px-4">
                       <span
