@@ -19,6 +19,8 @@ async function loadPlatformFees(): Promise<void> {
   const kal = platforms.find((p) => p.id === 2);
 
   if (!poly || !kal) {
+    KALSHI_FEE = 0.00
+    POLYMARKET_FEE = 0.02
     throw new Error("Could not find platform fee records");
   }
 

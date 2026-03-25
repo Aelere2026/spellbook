@@ -72,11 +72,9 @@ const Dashboard: React.FC = () => {
   const profit = 8420.17;
 
   const { data: mar, isLoading: isMarketLoading } = api.markets.get.useQuery();
-  const { data: arb, isLoading: isArbitLoading } =
-    api.arbitrages.get.useQuery();
+  const { data: arb, isLoading: isArbitLoading } = api.arbitrages.get.useQuery();
   const { data: mat, isLoading: isMatchLoading } = api.matches.get.useQuery();
-  const { data: stats, isLoading: isStatsLoading } =
-    api.arbitrages.stats.useQuery();
+  const { data: stats, isLoading: isStatsLoading } = api.arbitrages.stats.useQuery();
 
   const market = mar ?? [];
   const arbit = arb ?? [];
