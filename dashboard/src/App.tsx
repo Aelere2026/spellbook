@@ -1,40 +1,44 @@
 import "./App.css";
 import Dashboard from "./Pages/Dashboard";
 import GainLoss from "./Pages/GainLoss";
-import {Routes,Route} from "react-router-dom";
+import Layout from "./Pages/Layout";
+import { Routes, Route } from "react-router-dom";
 
-
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { httpBatchLink, splitLink, httpSubscriptionLink } from '@trpc/client'
-import { useState } from 'react'
-import { api } from './utils/api'
-import superjson from "superjson"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { httpBatchLink, splitLink, httpSubscriptionLink } from "@trpc/client";
+import { useState } from "react";
+import { api } from "./utils/api";
+import superjson from "superjson";
 
 function App() {
-  const [queryClient] = useState(() => new QueryClient())
-  const [apiClient] = useState(() => api.createClient({
-    links: [
-      //loggerLink(),
-      splitLink({
-        condition: (op) => op.type === "subscription",
-        true: httpSubscriptionLink({
-          url: "http://localhost:3000/trpc",
-          transformer: superjson
+  const [queryClient] = useState(() => new QueryClient());
+  const [apiClient] = useState(() =>
+    api.createClient({
+      links: [
+        //loggerLink(),
+        splitLink({
+          condition: (op) => op.type === "subscription",
+          true: httpSubscriptionLink({
+            url: "http://localhost:3000/trpc",
+            transformer: superjson,
+          }),
+          false: httpBatchLink({
+            url: "http://localhost:3000/trpc",
+            transformer: superjson,
+          }),
         }),
-        false: httpBatchLink({
-          url: "http://localhost:3000/trpc",
-          transformer: superjson
-        }),
-      }),
-    ]
-  }))
+      ],
+    }),
+  );
 
   return (
     <api.Provider client={apiClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <Routes>
-          <Route path="/" element={<Dashboard/>} />
-          <Route path="/gain-loss" element={<GainLoss />} />
+          <Route element={<Layout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/gain-loss" element={<GainLoss />} />
+          </Route>
         </Routes>
       </QueryClientProvider>
     </api.Provider>

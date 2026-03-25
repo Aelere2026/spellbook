@@ -149,18 +149,19 @@ const Dashboard: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_rgba(135,58,237,0.18),_transparent_28%),linear-gradient(180deg,_#0b0915_0%,_#120d22_50%,_#09070f_100%)] text-violet-50">
+    <div className="relative">
+    {/* <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_rgba(135,58,237,0.18),_transparent_28%),linear-gradient(180deg,_#0b0915_0%,_#120d22_50%,_#09070f_100%)] text-violet-50">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(136, 84, 255, 0.14),transparent_22%),radial-gradient(circle_at_80%_0%,rgba(178, 96, 255, 0.1),transparent_20%)]" />
 
-      <div className="relative mx-auto w-full px-6 py-6 sm:px-8 lg:px-10">
-        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-violet-300/10 bg-white/2 px-5 py-4 shadow-[0_12px_35px_rgba(10,6,30,0.35)] backdrop-blur-xl">
+      <div className="relative mx-auto w-full px-6 py-6 sm:px-8 lg:px-10"> */}
+        {/* <div className="mb-6 flex items-center gap-3 rounded-2xl border border-violet-300/10 bg-white/2 px-5 py-4 shadow-[0_12px_35px_rgba(10,6,30,0.35)] backdrop-blur-xl">
           <img src="/favicon.ico" className="h-12 w-12 rounded-xl" />
           <div>
             <div className="text-3xl font-semibold tracking-wide text-white">
               SPeLLbook
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.05fr_1.6fr_1.05fr]">
           <div className="grid grid-cols-2 gap-3">
@@ -323,9 +324,10 @@ const Dashboard: React.FC = () => {
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </div>
+        {/* </div>
+      </div> */}
+    </div> 
+  </div>
   );
 };
 
