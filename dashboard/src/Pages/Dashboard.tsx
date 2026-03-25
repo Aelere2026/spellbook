@@ -46,7 +46,7 @@ const StatCard: React.FC<StatCardProps> = ({
       <div className={`text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-200/65" : "text-violet-400"}`}>
         {title}
       </div>
-      <div className={`mt-2 text-2xl font-semibold transition-colors duration-200 group-hover:${isDark ? "text-white" : "text-violet-900"} ${toneStyle}`}>
+      <div className={`mt-2 text-2xl font-semibold transition-colors duration-200 ${toneStyle}`}>
         {value}
       </div>
       <div className={`mt-3 text-[11px] ${isDark ? "text-violet-200/45 group-hover:text-violet-200/70" : "text-violet-300 group-hover:text-violet-500"}`}>
@@ -79,10 +79,24 @@ const Dashboard: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const { data: mar } = api.markets.get.useQuery();
-  const { data: arb } = api.arbitrages.get.useQuery();
-  const { data: mat } = api.matches.get.useQuery();
-  const { data: stats } = api.arbitrages.stats.useQuery();
+  const { data: mar, isLoading: isMarketLoading } = api.markets.get.useQuery();
+  const { data: arb, isLoading: isArbitLoading } = api.arbitrages.get.useQuery(
+    undefined,
+    {
+      refetchInterval: 5000,
+      refetchOnWindowFocus: true,
+      notifyOnChangeProps: "all",
+    },
+  );
+  const { data: mat, isLoading: isMatchLoading } = api.matches.get.useQuery();
+  const { data: stats, isLoading: isStatsLoading } = api.arbitrages.stats.useQuery(
+    undefined,
+    {
+      refetchInterval: 5000,
+      refetchOnWindowFocus: true,
+      notifyOnChangeProps: "all",
+    },
+  );
 
   const market = mar ?? [];
   const arbit = arb ?? [];

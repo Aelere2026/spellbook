@@ -1,12 +1,32 @@
 import { prisma } from "./util/prisma";
 import * as log from "./util/log";
- 
+import { api } from "../../dashboard/src/utils/api";
+
+
 // ─── Config ────────────────────────────────────────────────────────────────
  
-const POLL_INTERVAL_MS = 5_000; // how often to check prices (5 seconds)
-const KALSHI_FEE = 0.00;        // Kalshi base fee
-const POLYMARKET_FEE = 0.02;    // Polymarket base fee
-const SLIPPAGE_ESTIMATE = 0.005; // 0.5% estimated slippage per side ???
+const POLL_INTERVAL_MS = 5_000; // how often to check prices
+const SLIPPAGE_ESTIMATE = 0.005; // 0.5% estimated slippage per side
+
+let KALSHI_FEE = 0; 
+let POLYMARKET_FEE = 0;
+
+//get the fees from stored values in database in case they change ever 
+async function loadPlatformFees(): Promise<void> {
+  const platforms = await prisma.platform.findMany();
+
+  const poly = platforms.find((p) => p.id === 1);
+  const kal = platforms.find((p) => p.id === 2);
+
+  if (!poly || !kal) {
+    KALSHI_FEE = 0.00
+    POLYMARKET_FEE = 0.02
+    throw new Error("Could not find platform fee records");
+  }
+
+  POLYMARKET_FEE = Number(poly.baseFee); 
+  KALSHI_FEE = Number(kal.baseFee);
+}
  
 // ─── Types ─────────────────────────────────────────────────────────────────
  
@@ -196,6 +216,7 @@ async function persistArbitrage(opp: ArbOpportunity): Promise<void> {
 // ─── Main Loop ─────────────────────────────────────────────────────────────
  
 async function runDetector(): Promise<void> {
+  await loadPlatformFees();
   log.info("Arbitrage detector starting...");
  
   while (true) {
