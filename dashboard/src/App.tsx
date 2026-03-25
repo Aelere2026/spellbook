@@ -4,6 +4,7 @@ import GainLoss from "./Pages/GainLoss";
 import Layout from "./Pages/Layout";
 import Home from "./Pages/Home"
 import { Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "./context/ThemeContext";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, splitLink, httpSubscriptionLink } from "@trpc/client";
@@ -33,17 +34,19 @@ function App() {
   );
 
   return (
-    <api.Provider client={apiClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/home" element={<Home />} />
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/gain-loss" element={<GainLoss />} />
-          </Route>
-        </Routes>
-      </QueryClientProvider>
-    </api.Provider>
+    <ThemeProvider>
+      <api.Provider client={apiClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/home" element={<Home />} />
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/gain-loss" element={<GainLoss />} />
+            </Route>
+          </Routes>
+        </QueryClientProvider>
+      </api.Provider>
+    </ThemeProvider>
   );
 }
 
