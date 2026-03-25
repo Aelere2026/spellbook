@@ -10,6 +10,6 @@ export default defineConfig({
     path: "migrations",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: "postgresql://postgres:postgres@localhost:5432/spellbookdb",
   },
 });
