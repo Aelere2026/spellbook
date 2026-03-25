@@ -6,7 +6,8 @@ const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
 
-  const linkBase = "rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200";
+  const linkBase =
+    "rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200";
   const linkInactive = isDark
     ? "text-violet-200/75 hover:bg-white/5 hover:text-white"
     : "text-violet-600 hover:bg-violet-100 hover:text-violet-900";
@@ -15,10 +16,13 @@ const Navbar: React.FC = () => {
     : "bg-violet-200/60 text-violet-900 ring-1 ring-violet-300/50";
 
   return (
-    <header className={isDark
-      ? "sticky top-0 z-50 border-b border-violet-300/10 bg-[#0b0915]/80 backdrop-blur-xl"
-      : "sticky top-0 z-50 border-b border-violet-200 bg-[#f5f0ff]/80 backdrop-blur-xl"
-    }>
+    <header
+      className={
+        isDark
+          ? "sticky top-0 z-50 border-b border-violet-300/10 bg-[#0b0915]/80 backdrop-blur-xl"
+          : "sticky top-0 z-50 border-b border-violet-200 bg-[#f5f0ff]/80 backdrop-blur-xl"
+      }
+    >
       <div className="mx-auto flex w-full items-center justify-between px-6 py-4 sm:px-8 lg:px-10">
         <Link
           to="/home"
@@ -27,38 +31,66 @@ const Navbar: React.FC = () => {
           <img
             src="/favicon.ico"
             alt="SPeLLbook"
-            className="h-10 w-10 rounded-xl"
+            className="h-12 w-12 rounded-xl"
           />
-          <div className={`text-xl font-semibold tracking-wide ${isDark ? "text-white" : "text-violet-900"}`}>
+          <div
+            className={`text-2xl font-semibold tracking-wide ${isDark ? "text-white" : "text-violet-900"}`}
+          >
             SPeLLbook
           </div>
         </Link>
 
         <nav className="flex items-center gap-2">
-          <NavLink to="/home" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : linkInactive}`}>
+          <NavLink
+            to="/home"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
             Home
           </NavLink>
-          <NavLink to="/" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : linkInactive}`}>
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
             Dashboard
           </NavLink>
-          <NavLink to="/gain-loss" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : linkInactive}`}>
+          <NavLink
+            to="/gain-loss"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
             Gain / Loss
           </NavLink>
-          <NavLink to="/somewhere" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : linkInactive}`}>
+          <NavLink
+            to="/somewhere"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
             Something
           </NavLink>
-          <NavLink to="/somewher" className={({ isActive }) => `${linkBase} ${isActive ? linkActive : linkInactive}`}>
+          <NavLink
+            to="/somewherew"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
             Something
           </NavLink>
           <button
             onClick={toggleTheme}
-            className={`ml-2 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${
+            className={`ml-2 inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium backdrop-blur-xl transition-all duration-200 ${
               isDark
-                ? "text-violet-200/75 hover:bg-white/5 hover:text-white"
-                : "text-violet-600 hover:bg-violet-100 hover:text-violet-900"
+                ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
+                : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
             }`}
           >
-            {isDark ? "☀️ Light" : "🌙 Dark"}
+            <span className="text-base">{isDark ? "☀️" : "🌙"}</span>
+            <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
           </button>
         </nav>
       </div>
