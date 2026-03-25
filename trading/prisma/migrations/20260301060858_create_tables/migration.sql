@@ -8,6 +8,9 @@ CREATE TABLE "Arbitrage" (
     "estimaged_slippage" DECIMAL(65,30) NOT NULL,
     "time_deduction" TIMESTAMP(3) NOT NULL,
     "time_execution" TIMESTAMP(3) NOT NULL,
+    "yes_price" DECIMAL(65,30) NOT NULL, 
+    "no_price" DECIMAL(65,30) NOT NULL,
+    "polymarket_yes" BOOLEAN,
 
     CONSTRAINT "Arbitrage_pkey" PRIMARY KEY ("id")
 );
