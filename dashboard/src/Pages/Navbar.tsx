@@ -37,21 +37,21 @@ const Navbar: React.FC = () => {
     ? [
         "inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium",
         "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22]",
-        "text-violet-100 shadow-[0_12px_35px_rgba(10,6,30,0.35)] backdrop-blur-xl",
+        "text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] backdrop-blur-xl",
         "transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300/35",
         "hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]",
         isAnalyticsActive || analyticsOpen
-          ? "ring-1 ring-violet-300/25 border-violet-300/30 text-white"
+          ? "ring-1 ring-violet-300/25 border-violet-300/30 text-[#646cff]"
           : "",
       ].join(" ")
     : [
         "inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium",
         "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff]",
-        "text-violet-700 shadow-sm backdrop-blur-xl",
+        "text-[#646cff] shadow-sm backdrop-blur-xl",
         "transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300",
         "hover:text-violet-900 hover:shadow-md",
         isAnalyticsActive || analyticsOpen
-          ? "ring-1 ring-violet-300/50 border-violet-300 text-violet-900"
+          ? "ring-1 ring-violet-300/50 border-violet-300 text-[#646cff]"
           : "",
       ].join(" ");
 
@@ -101,6 +101,15 @@ const Navbar: React.FC = () => {
             Dashboard
           </NavLink>
 
+          <NavLink
+            to="/somewhere"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
+            Profit
+          </NavLink>
+
           <div
             className="relative inline-block"
             onMouseEnter={() => setAnalyticsOpen(true)}
@@ -126,7 +135,7 @@ const Navbar: React.FC = () => {
                 <div
                   className={[
                     "absolute right-0 top-full mt-0 z-50 min-w-[240px]",
-                    "rounded-2xl border p-2 shadow-2xl backdrop-blur-xl",
+                    "rounded-2xl border p-2 shadow-2xl backdrop-blur-xl ",
                     isDark
                       ? "border-violet-400/10 bg-[#120d22]/95"
                       : "border-violet-200 bg-white/95",
@@ -144,8 +153,8 @@ const Navbar: React.FC = () => {
                             "rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200",
                             active
                               ? isDark
-                                ? "bg-violet-500/15 text-white ring-1 ring-violet-300/20"
-                                : "bg-violet-200/60 text-violet-900 ring-1 ring-violet-300/50"
+                                ? "bg-violet-500/15 text-[#646cff] ring-1 ring-violet-300/20"
+                                : "bg-violet-200/60 text-[#646cff] ring-1 ring-violet-300/50"
                               : isDark
                                 ? "text-violet-200/75 hover:bg-white/5 hover:text-white"
                                 : "text-violet-600 hover:bg-violet-100 hover:text-violet-900",
@@ -161,15 +170,6 @@ const Navbar: React.FC = () => {
               </div>
             )}
           </div>
-
-          <NavLink
-            to="/somewhere"
-            className={({ isActive }) =>
-              `${linkBase} ${isActive ? linkActive : linkInactive}`
-            }
-          >
-            Profit
-          </NavLink>
 
           <button
             onClick={toggleTheme}
