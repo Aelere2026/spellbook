@@ -168,6 +168,7 @@ const Dashboard: React.FC = () => {
 
         <button
           type="button"
+          
           style={!isDark ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" } : undefined}
           className={[
             "rounded-3xl border px-6 py-6 text-left transition-all duration-200",
@@ -187,9 +188,11 @@ const Dashboard: React.FC = () => {
                 ? isDark ? "text-emerald-300" : "text-emerald-600"
                 : isDark ? "text-rose-300" : "text-rose-600",
             ].join(" ")}
+            onClick={() => navigate("/profit")}
           >
             {(stats?.profit ?? 0) >= 0 ? "+" : ""}
             {fmtMoney(stats?.profit ?? 0)}
+            
           </div>
           <div className={`mt-4 text-center text-sm ${isDark ? "text-violet-200/45" : "text-violet-400"}`}>
             Click to view performance details

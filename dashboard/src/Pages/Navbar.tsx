@@ -102,7 +102,7 @@ const Navbar: React.FC = () => {
           </NavLink>
 
           <NavLink
-            to="/somewhere"
+            to="/profit"
             className={({ isActive }) =>
               `${linkBase} ${isActive ? linkActive : linkInactive}`
             }
