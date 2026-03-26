@@ -1,6 +1,7 @@
 import "./App.css";
 import Dashboard from "./Pages/Dashboard";
 import GainLoss from "./Pages/GainLoss";
+import Opportunities from "./Pages/Opportunities";
 import Layout from "./Pages/Layout";
 import Home from "./Pages/Home"
 import { Routes, Route } from "react-router-dom";
@@ -42,6 +43,7 @@ function App() {
               <Route path="/home" element={<Home />} />
               <Route path="/" element={<Dashboard />} />
               <Route path="/gain-loss" element={<GainLoss />} />
+              <Route path="/opportunities" element={<Opportunities />} />
             </Route>
           </Routes>
         </QueryClientProvider>

@@ -1,10 +1,12 @@
-import React from "react";
-import { Link, NavLink } from "react-router-dom";
+import React, { useMemo, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 
 const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
+  const location = useLocation();
+  const [analyticsOpen, setAnalyticsOpen] = useState(false);
 
   const linkBase =
     "rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200";
@@ -14,6 +16,44 @@ const Navbar: React.FC = () => {
   const linkActive = isDark
     ? "bg-violet-500/15 text-white ring-1 ring-violet-300/20"
     : "bg-violet-200/60 text-violet-900 ring-1 ring-violet-300/50";
+
+  const metricLinks = [
+    { to: "/gain-loss", label: "Gain/Loss" },
+    { to: "/opportunities", label: "Opportunities" },
+    { to: "/frequency", label: "Frequency" },
+    { to: "/avg-trade-time", label: "Avg Trade Time" },
+    { to: "/total-fee-loss", label: "Total Fee Loss" },
+    { to: "/avg-roi", label: "Avg ROI" },
+    { to: "/avg-slippage", label: "Avg Slippage" },
+    { to: "/exposure", label: "Exposure" },
+  ];
+
+  const isAnalyticsActive = useMemo(
+    () => metricLinks.some((item) => location.pathname === item.to),
+    [location.pathname],
+  );
+
+  const analyticsButtonClass = isDark
+    ? [
+        "inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium",
+        "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22]",
+        "text-violet-100 shadow-[0_12px_35px_rgba(10,6,30,0.35)] backdrop-blur-xl",
+        "transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300/35",
+        "hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]",
+        isAnalyticsActive || analyticsOpen
+          ? "ring-1 ring-violet-300/25 border-violet-300/30 text-white"
+          : "",
+      ].join(" ")
+    : [
+        "inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium",
+        "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff]",
+        "text-violet-700 shadow-sm backdrop-blur-xl",
+        "transition-all duration-200 hover:-translate-y-0.5 hover:border-violet-300",
+        "hover:text-violet-900 hover:shadow-md",
+        isAnalyticsActive || analyticsOpen
+          ? "ring-1 ring-violet-300/50 border-violet-300 text-violet-900"
+          : "",
+      ].join(" ");
 
   return (
     <header
@@ -34,7 +74,9 @@ const Navbar: React.FC = () => {
             className="h-12 w-12 rounded-xl"
           />
           <div
-            className={`text-2xl font-semibold tracking-wide ${isDark ? "text-white" : "text-violet-900"}`}
+            className={`text-2xl font-semibold tracking-wide ${
+              isDark ? "text-white" : "text-violet-900"
+            }`}
           >
             SPeLLbook
           </div>
@@ -49,6 +91,7 @@ const Navbar: React.FC = () => {
           >
             Home
           </NavLink>
+
           <NavLink
             to="/"
             className={({ isActive }) =>
@@ -57,30 +100,77 @@ const Navbar: React.FC = () => {
           >
             Dashboard
           </NavLink>
-          <NavLink
-            to="/gain-loss"
-            className={({ isActive }) =>
-              `${linkBase} ${isActive ? linkActive : linkInactive}`
-            }
+
+          <div
+            className="relative inline-block"
+            onMouseEnter={() => setAnalyticsOpen(true)}
+            onMouseLeave={() => setAnalyticsOpen(false)}
           >
-            Gain / Loss
-          </NavLink>
+            <button
+              type="button"
+              onClick={() => setAnalyticsOpen((prev) => !prev)}
+              className={analyticsButtonClass}
+            >
+              <span>Analytics</span>
+              <span
+                className={`text-[10px] transition-transform duration-200 ${
+                  analyticsOpen ? "rotate-180" : ""
+                }`}
+              >
+                ▼
+              </span>
+            </button>
+
+            {analyticsOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50 min-w-[240px] pt-2">
+                <div
+                  className={[
+                    "absolute right-0 top-full mt-0 z-50 min-w-[240px]",
+                    "rounded-2xl border p-2 shadow-2xl backdrop-blur-xl",
+                    isDark
+                      ? "border-violet-400/10 bg-[#120d22]/95"
+                      : "border-violet-200 bg-white/95",
+                  ].join(" ")}
+                >
+                  <div className="grid gap-1">
+                    {metricLinks.map((item) => {
+                      const active = location.pathname === item.to;
+
+                      return (
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          className={[
+                            "rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200",
+                            active
+                              ? isDark
+                                ? "bg-violet-500/15 text-white ring-1 ring-violet-300/20"
+                                : "bg-violet-200/60 text-violet-900 ring-1 ring-violet-300/50"
+                              : isDark
+                                ? "text-violet-200/75 hover:bg-white/5 hover:text-white"
+                                : "text-violet-600 hover:bg-violet-100 hover:text-violet-900",
+                          ].join(" ")}
+                          onClick={() => setAnalyticsOpen(false)}
+                        >
+                          {item.label}
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <NavLink
             to="/somewhere"
             className={({ isActive }) =>
               `${linkBase} ${isActive ? linkActive : linkInactive}`
             }
           >
-            Something
+            Profit
           </NavLink>
-          <NavLink
-            to="/somewherew"
-            className={({ isActive }) =>
-              `${linkBase} ${isActive ? linkActive : linkInactive}`
-            }
-          >
-            Something
-          </NavLink>
+
           <button
             onClick={toggleTheme}
             className={`ml-2 inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium backdrop-blur-xl transition-all duration-200 ${

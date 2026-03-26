@@ -157,7 +157,7 @@ const Dashboard: React.FC = () => {
             value={stats?.gainLoss ?? 0}
             onClick={() => navigate("/gain-loss")}
           />
-          <StatCard isDark={isDark} title="Opportunities" value={stats?.opportunities ?? 0} />
+          <StatCard isDark={isDark} title="Opportunities" value={stats?.opportunities ?? 0} onClick={() => navigate("/opportunities")}/>
           <StatCard isDark={isDark} title="Frequency" value={stats?.frequency ?? 0} />
           <StatCard
             isDark={isDark}
