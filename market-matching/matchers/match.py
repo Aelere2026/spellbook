@@ -50,6 +50,7 @@ def find_matches(
     min_score: float = 83.0,
     max_time_delta: timedelta = timedelta(days=14),
     min_event_score: float = 80.0,
+    score_cache: dict[tuple[str, str], float] | None = None,
 ) -> list[MatchResult]:
     """Return scored (kalshi, polymarket) pairs that likely describe the same event.
 
@@ -61,7 +62,8 @@ def find_matches(
          against all Polymarket markets (runs even on event-matched markets so a
          false-positive event match never permanently suppresses a valid pair).
       4. Score each unique candidate pair with (token_set_ratio + token_sort_ratio + partial_ratio) / 3
-         on canonicalized titles.
+         on canonicalized titles. If score_cache is provided and contains the pair,
+         the cached score is used instead of recomputing.
       5. Keep pairs at or above min_score, sorted best-first.
     """
     eligible = [k for k in kalshi if is_binary(k)]
@@ -89,7 +91,8 @@ def find_matches(
         p_date = p.resolution_date or p.close_time
         if (k_date and p_date and abs(k_date - p_date) > max_time_delta):
             continue
-        score = _score(k.title, p.title)
+        cached = score_cache.get(key) if score_cache is not None else None
+        score = cached if cached is not None else _score(k.title, p.title)
         if score >= min_score:
             results.append(MatchResult(k, p, round(score, 1)))
 
