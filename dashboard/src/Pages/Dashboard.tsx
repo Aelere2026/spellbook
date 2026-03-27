@@ -96,22 +96,17 @@ const Dashboard: React.FC = () => {
   const isDark = theme === "dark";
 
   const { data: mar } = api.markets.get.useQuery();
-  const { data: arb } = api.arbitrages.get.useQuery(
-    undefined,
-    {
-      refetchInterval: 5000,
-      refetchOnWindowFocus: true,
-      notifyOnChangeProps: "all",
-    },
-  );
+  const { data: arb } = api.arbitrages.get.useQuery(undefined, {
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+    notifyOnChangeProps: "all",
+  });
   const { data: mat } = api.matches.get.useQuery();
-  const { data: stats } = api.arbitrages.stats.useQuery(
-    undefined,
-    {
-      refetchInterval: 5000,
-      refetchOnWindowFocus: true,
-      notifyOnChangeProps: "all",
-    });
+  const { data: stats } = api.arbitrages.stats.useQuery(undefined, {
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+    notifyOnChangeProps: "all",
+  });
 
   const market = mar ?? [];
   const arbit = arb ?? [];
