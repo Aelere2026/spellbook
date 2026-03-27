@@ -23,6 +23,7 @@ const Profits: React.FC = () => {
   const preClose = arbitrages.filter(
     (a) => new Date(a.executionTime) < new Date(a.resolutionDate),
   );
+
   const postClose = arbitrages.filter(
     (a) => new Date(a.executionTime) >= new Date(a.resolutionDate),
   );
@@ -37,7 +38,7 @@ const Profits: React.FC = () => {
   const formatBucketLabel = (date: Date, scale: TimeScale) => {
     if (scale === "minute") {
       return new Intl.DateTimeFormat(undefined, {
-        hour: "numeric",
+        hour: "2-digit",
         minute: "2-digit",
       }).format(date);
     }
@@ -132,12 +133,42 @@ const Profits: React.FC = () => {
     );
   }, [filteredArbitrages, timeScale]);
 
-  const timeData = chartData.map((d) => d.label);
-  const netProfitData = chartData.map((d) => d.netProfit);
-  const grossProfitData = chartData.map((d) => d.grossProfit);
+  const MAX_MINUTE_POINTS = 30;
+
+  const displayData = useMemo(() => {
+    if (timeScale !== "minute") {
+      return chartData;
+    }
+
+    const n = chartData.length;
+
+    if (n <= MAX_MINUTE_POINTS) {
+      return chartData;
+    }
+
+    const step = (n - 1) / (MAX_MINUTE_POINTS - 1);
+    const sampled: typeof chartData = [];
+    const usedIndices = new Set<number>();
+
+    for (let i = 0; i < MAX_MINUTE_POINTS; i++) {
+      const index = Math.round(i * step);
+
+      if (!usedIndices.has(index) && chartData[index]) {
+        sampled.push(chartData[index]);
+        usedIndices.add(index);
+      }
+    }
+
+    return sampled.length > 0 ? sampled : chartData;
+  }, [chartData, timeScale]);
+
+  const timeData = displayData.map((d) => d.label);
+  const netProfitData = displayData.map((d) => d.netProfit);
+  const grossProfitData = displayData.map((d) => d.grossProfit);
 
   const latestNet =
     netProfitData.length > 0 ? netProfitData[netProfitData.length - 1] : 0;
+
   const latestGross =
     grossProfitData.length > 0
       ? grossProfitData[grossProfitData.length - 1]
@@ -163,16 +194,6 @@ const Profits: React.FC = () => {
         : timeScale === "week"
           ? "Week"
           : "Month";
-
-  const labelInterval = 30;
-
-  const filteredTimeData = timeData.map((label, i) => {
-    if (timeScale === "minute") return i % labelInterval === 0 ? label : "";
-    if (timeScale === "day") return i % 2 === 0 ? label : "";
-    if (timeScale === "week") return i % 1 === 0 ? label : "";
-    if (timeScale === "month") return i % 1 === 0 ? label : "";
-    return label;
-  });
 
   const totalPreNet = preClose.reduce((s, a) => s + Number(a.netProfit), 0);
   const totalPostNet = postClose.reduce((s, a) => s + Number(a.netProfit), 0);
@@ -226,7 +247,6 @@ const Profits: React.FC = () => {
               Profits Analysis
             </h1>
 
-            {/* Pre / Post closure summary */}
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div
                 style={
@@ -319,7 +339,6 @@ const Profits: React.FC = () => {
               </div>
             </div>
 
-            {/* Per-bucket stat cards */}
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div
                 style={
@@ -491,7 +510,7 @@ const Profits: React.FC = () => {
 
             <div className="flex flex-wrap items-center gap-3">
               <div
-                className={`flex rounded-xl gap-2 border p-1 ${
+                className={`flex gap-2 rounded-xl border p-1 ${
                   isDark
                     ? "border-violet-400/12 bg-violet-500/10"
                     : "border-violet-300 bg-violet-50"
@@ -557,7 +576,7 @@ const Profits: React.FC = () => {
             >
               <LineGraph
                 gainLossData={netProfitData}
-                timeData={filteredTimeData}
+                timeData={timeData}
                 xAxisLabel={scaleLabel}
                 yAxisLabel="Net Profit"
                 title={`Net Profit by ${scaleLabel}`}
@@ -574,7 +593,7 @@ const Profits: React.FC = () => {
             >
               <LineGraph
                 gainLossData={grossProfitData}
-                timeData={filteredTimeData}
+                timeData={timeData}
                 xAxisLabel={scaleLabel}
                 yAxisLabel="Gross Profit"
                 title={`Gross Profit by ${scaleLabel}`}
