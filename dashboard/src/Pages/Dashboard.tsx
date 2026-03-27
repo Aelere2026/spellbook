@@ -22,16 +22,26 @@ const StatCard: React.FC<StatCardProps> = ({
 }) => {
   const toneStyle =
     tone === "positive"
-      ? isDark ? "text-emerald-300" : "text-emerald-600"
+      ? isDark
+        ? "text-emerald-300"
+        : "text-emerald-600"
       : tone === "negative"
-        ? isDark ? "text-rose-300" : "text-rose-600"
-        : isDark ? "text-violet-100" : "text-violet-900";
+        ? isDark
+          ? "text-rose-300"
+          : "text-rose-600"
+        : isDark
+          ? "text-violet-100"
+          : "text-violet-900";
 
   return (
     <button
       type="button"
       onClick={onClick}
-      style={!isDark ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" } : undefined}
+      style={
+        !isDark
+          ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+          : undefined
+      }
       className={[
         "group w-full text-left rounded-2xl border transition-all duration-200",
         "px-4 py-4 backdrop-blur-xl",
@@ -43,13 +53,19 @@ const StatCard: React.FC<StatCardProps> = ({
         className ?? "",
       ].join(" ")}
     >
-      <div className={`text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-200/65" : "text-violet-400"}`}>
+      <div
+        className={`text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-200/65" : "text-violet-400"}`}
+      >
         {title}
       </div>
-      <div className={`mt-2 text-2xl font-semibold transition-colors duration-200 ${toneStyle}`}>
+      <div
+        className={`mt-2 text-2xl font-semibold transition-colors duration-200 ${toneStyle}`}
+      >
         {value}
       </div>
-      <div className={`mt-3 text-[11px] ${isDark ? "text-violet-200/45 group-hover:text-violet-200/70" : "text-violet-300 group-hover:text-violet-500"}`}>
+      <div
+        className={`mt-3 text-[11px] ${isDark ? "text-violet-200/45 group-hover:text-violet-200/70" : "text-violet-300 group-hover:text-violet-500"}`}
+      >
         Click to explore
       </div>
     </button>
@@ -80,27 +96,26 @@ const Dashboard: React.FC = () => {
   const isDark = theme === "dark";
 
   const { data: mar } = api.markets.get.useQuery();
-  const { data: arb } = api.arbitrages.get.useQuery(
-    undefined,
-    {
-      refetchInterval: 5000,
-      refetchOnWindowFocus: true,
-      notifyOnChangeProps: "all",
-    },
-  );
+  const { data: arb } = api.arbitrages.get.useQuery(undefined, {
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+    notifyOnChangeProps: "all",
+  });
   const { data: mat } = api.matches.get.useQuery();
-  const { data: stats } = api.arbitrages.stats.useQuery(
-    undefined,
-    {
-      refetchInterval: 5000,
-      refetchOnWindowFocus: true,
-      notifyOnChangeProps: "all",
-    },
-  );
+  const { data: stats } = api.arbitrages.stats.useQuery(undefined, {
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
+    notifyOnChangeProps: "all",
+  });
 
   const market = mar ?? [];
   const arbit = arb ?? [];
   const match = mat ?? [];
+
+  console.log(market);
+  console.log(arbit);
+  console.log(match);
+  console.log(stats);
 
   const trades = arbit.map((a) => {
     const grossProfit = Number(a.grossProfit);
@@ -157,8 +172,17 @@ const Dashboard: React.FC = () => {
             value={stats?.gainLoss ?? 0}
             onClick={() => navigate("/gain-loss")}
           />
-          <StatCard isDark={isDark} title="Opportunities" value={stats?.opportunities ?? 0} onClick={() => navigate("/opportunities")}/>
-          <StatCard isDark={isDark} title="Frequency" value={stats?.frequency ?? 0} />
+          <StatCard
+            isDark={isDark}
+            title="Opportunities"
+            value={stats?.opportunities ?? 0}
+            onClick={() => navigate("/opportunities")}
+          />
+          <StatCard
+            isDark={isDark}
+            title="Frequency"
+            value={stats?.frequency ?? 0}
+          />
           <StatCard
             isDark={isDark}
             title="Avg Trade Time"
@@ -168,8 +192,11 @@ const Dashboard: React.FC = () => {
 
         <button
           type="button"
-          
-          style={!isDark ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" } : undefined}
+          style={
+            !isDark
+              ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+              : undefined
+          }
           className={[
             "rounded-3xl border px-6 py-6 text-left transition-all duration-200",
             "hover:-translate-y-1 active:translate-y-0 active:scale-[0.995]",
@@ -178,37 +205,64 @@ const Dashboard: React.FC = () => {
               : "border-violet-200 shadow-sm hover:border-violet-400 hover:shadow-md",
           ].join(" ")}
         >
-          <div className={`text-center text-sm tracking-[0.25em] ${isDark ? "text-violet-200/60" : "text-violet-400"}`}>
+          <div
+            className={`text-center text-sm tracking-[0.25em] ${isDark ? "text-violet-200/60" : "text-violet-400"}`}
+          >
             PROFIT
           </div>
           <div
             className={[
               "mt-6 text-center text-4xl font-semibold sm:text-5xl",
               (stats?.profit ?? 0) >= 0
-                ? isDark ? "text-emerald-300" : "text-emerald-600"
-                : isDark ? "text-rose-300" : "text-rose-600",
+                ? isDark
+                  ? "text-emerald-300"
+                  : "text-emerald-600"
+                : isDark
+                  ? "text-rose-300"
+                  : "text-rose-600",
             ].join(" ")}
             onClick={() => navigate("/profit")}
           >
             {(stats?.profit ?? 0) >= 0 ? "+" : ""}
             {fmtMoney(stats?.profit ?? 0)}
-            
           </div>
-          <div className={`mt-4 text-center text-sm ${isDark ? "text-violet-200/45" : "text-violet-400"}`}>
+          <div
+            className={`mt-4 text-center text-sm ${isDark ? "text-violet-200/45" : "text-violet-400"}`}
+          >
             Click to view performance details
           </div>
         </button>
 
         <div className="grid grid-cols-2 gap-3">
-          <StatCard isDark={isDark} title="Total Fee Loss" value={fmtMoney(stats?.totalFeeLoss ?? 0)} />
-          <StatCard isDark={isDark} title="Avg ROI" value={`${stats?.avgRoi ?? 0}%`} />
-          <StatCard isDark={isDark} title="Avg Slippage" value={stats?.avgSlippage ?? 0} />
-          <StatCard isDark={isDark} title="Exposure" value={fmtMoney(stats?.exposure ?? 0)} />
+          <StatCard
+            isDark={isDark}
+            title="Total Fee Loss"
+            value={fmtMoney(stats?.totalFeeLoss ?? 0)}
+          />
+          <StatCard
+            isDark={isDark}
+            title="Avg ROI"
+            value={`${stats?.avgRoi ?? 0}%`}
+          />
+          <StatCard
+            isDark={isDark}
+            title="Avg Slippage"
+            value={stats?.avgSlippage ?? 0}
+          />
+          <StatCard
+            isDark={isDark}
+            title="Exposure"
+            value={fmtMoney(stats?.exposure ?? 0)}
+          />
         </div>
       </div>
 
       <div
-        style={!isDark ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" } : undefined}
+        style={
+          !isDark
+            ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+            : undefined
+        }
         className={[
           "mt-6 rounded-3xl border backdrop-blur-xl",
           isDark
@@ -218,7 +272,9 @@ const Dashboard: React.FC = () => {
       >
         <div className="flex items-center justify-between px-5 py-4 sm:px-6">
           <div>
-            <div className={`text-sm font-semibold ${isDark ? "text-white" : "text-violet-900"}`}>
+            <div
+              className={`text-sm font-semibold ${isDark ? "text-white" : "text-violet-900"}`}
+            >
               Trade History
             </div>
           </div>
@@ -227,7 +283,9 @@ const Dashboard: React.FC = () => {
         <div className="overflow-x-auto px-2 pb-4 sm:px-4">
           <table className="min-w-full">
             <thead>
-              <tr className={`text-left text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-200/55" : "text-violet-500"}`}>
+              <tr
+                className={`text-left text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-200/55" : "text-violet-500"}`}
+              >
                 <th className="px-3 py-2 sm:px-4">Trade ID</th>
                 <th className="px-3 py-2 sm:px-4">Timestamp</th>
                 <th className="px-3 py-2 sm:px-4">Market</th>
@@ -248,45 +306,70 @@ const Dashboard: React.FC = () => {
                   key={t.id}
                   className={`border-t transition-colors ${isDark ? "border-violet-400/8 hover:bg-white/5" : "border-violet-200/50 hover:bg-violet-100/50"}`}
                 >
-                  <td className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/90" : "text-violet-900"}`}>
+                  <td
+                    className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/90" : "text-violet-900"}`}
+                  >
                     {t.id}
                   </td>
-                  <td className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}>
+                  <td
+                    className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}
+                  >
                     {t.timestamp}
                   </td>
-                  <td className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/90" : "text-violet-900"}`}>
+                  <td
+                    className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/90" : "text-violet-900"}`}
+                  >
                     {t.market}
                   </td>
-                  <td className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}>
+                  <td
+                    className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}
+                  >
                     {t.exchangePair}
                   </td>
                   <td className="px-3 py-3 text-sm sm:px-4">
-                    <span className={`font-semibold ${t.matchScore >= 0 ? isDark ? "text-emerald-300" : "text-emerald-600" : isDark ? "text-rose-300" : "text-rose-600"}`}>
+                    <span
+                      className={`font-semibold ${t.matchScore >= 0 ? (isDark ? "text-emerald-300" : "text-emerald-600") : isDark ? "text-rose-300" : "text-rose-600"}`}
+                    >
                       {t.matchScore}%
                     </span>
                   </td>
                   <td className="px-3 py-3 text-sm sm:px-4">
-                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs ring-1 ${colors(t.edgePct, isDark)}`}>
-                      {t.edgePct > 0 ? "+" : ""}{fmtPct(t.edgePct)}
+                    <span
+                      className={`inline-flex items-center rounded-md px-2 py-1 text-xs ring-1 ${colors(t.edgePct, isDark)}`}
+                    >
+                      {t.edgePct > 0 ? "+" : ""}
+                      {fmtPct(t.edgePct)}
                     </span>
                   </td>
-                  <td className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}>
+                  <td
+                    className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}
+                  >
                     {fmtMoney(t.capital)}
                   </td>
-                  <td className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}>
+                  <td
+                    className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}
+                  >
                     {fmtMoney(t.costs)}
                   </td>
                   <td className="px-3 py-3 text-sm sm:px-4">
-                    <span className={`font-semibold ${t.netPnl >= 0 ? isDark ? "text-emerald-300" : "text-emerald-600" : isDark ? "text-rose-300" : "text-rose-600"}`}>
-                      {t.netPnl >= 0 ? "+" : ""}{fmtMoney(t.netPnl)}
+                    <span
+                      className={`font-semibold ${t.netPnl >= 0 ? (isDark ? "text-emerald-300" : "text-emerald-600") : isDark ? "text-rose-300" : "text-rose-600"}`}
+                    >
+                      {t.netPnl >= 0 ? "+" : ""}
+                      {fmtMoney(t.netPnl)}
                     </span>
                   </td>
                   <td className="px-3 py-3 text-sm sm:px-4">
-                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs ring-1 ${colors(t.roiPct, isDark)}`}>
-                      {t.roiPct > 0 ? "+" : ""}{fmtPct(t.roiPct)}
+                    <span
+                      className={`inline-flex items-center rounded-md px-2 py-1 text-xs ring-1 ${colors(t.roiPct, isDark)}`}
+                    >
+                      {t.roiPct > 0 ? "+" : ""}
+                      {fmtPct(t.roiPct)}
                     </span>
                   </td>
-                  <td className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}>
+                  <td
+                    className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}
+                  >
                     {t.durationMin}m
                   </td>
                 </tr>

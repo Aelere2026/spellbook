@@ -231,7 +231,9 @@ const Profits: React.FC = () => {
               <div
                 style={
                   !isDark
-                    ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
                     : undefined
                 }
                 className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
@@ -252,7 +254,8 @@ const Profits: React.FC = () => {
                     isDark ? "text-violet-300/50" : "text-violet-400/70"
                   }`}
                 >
-                  {preClose.length} trade{preClose.length !== 1 ? "s" : ""} · executed before market resolved
+                  {preClose.length} trade{preClose.length !== 1 ? "s" : ""} ·
+                  executed before market resolved
                 </div>
                 <div
                   className={`mt-2 text-2xl font-semibold ${
@@ -273,7 +276,9 @@ const Profits: React.FC = () => {
               <div
                 style={
                   !isDark
-                    ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
                     : undefined
                 }
                 className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
@@ -294,7 +299,8 @@ const Profits: React.FC = () => {
                     isDark ? "text-violet-300/50" : "text-violet-400/70"
                   }`}
                 >
-                  {postClose.length} trade{postClose.length !== 1 ? "s" : ""} · executed after market resolved
+                  {postClose.length} trade{postClose.length !== 1 ? "s" : ""} ·
+                  executed after market resolved
                 </div>
                 <div
                   className={`mt-2 text-2xl font-semibold ${
@@ -318,7 +324,9 @@ const Profits: React.FC = () => {
               <div
                 style={
                   !isDark
-                    ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
                     : undefined
                 }
                 className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
@@ -353,7 +361,9 @@ const Profits: React.FC = () => {
               <div
                 style={
                   !isDark
-                    ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
                     : undefined
                 }
                 className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
@@ -388,7 +398,9 @@ const Profits: React.FC = () => {
               <div
                 style={
                   !isDark
-                    ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
                     : undefined
                 }
                 className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
@@ -416,7 +428,9 @@ const Profits: React.FC = () => {
               <div
                 style={
                   !isDark
-                    ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
                     : undefined
                 }
                 className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
@@ -476,9 +490,8 @@ const Profits: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              {/* Closure filter toggle */}
               <div
-                className={`flex rounded-xl border p-1 ${
+                className={`flex rounded-xl gap-2 border p-1 ${
                   isDark
                     ? "border-violet-400/12 bg-violet-500/10"
                     : "border-violet-300 bg-violet-50"
@@ -489,11 +502,14 @@ const Profits: React.FC = () => {
                     key={opt.value}
                     onClick={() => setClosureFilter(opt.value)}
                     className={[
+                      isDark
+                        ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
+                        : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md",
                       "rounded-lg px-3 py-1 text-sm font-medium transition",
                       closureFilter === opt.value
                         ? isDark
-                          ? "bg-violet-500/40 text-violet-100"
-                          : "bg-violet-200 text-violet-900"
+                          ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
+                          : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
                         : isDark
                           ? "text-violet-300/70 hover:text-violet-200"
                           : "text-violet-500 hover:text-violet-700",
