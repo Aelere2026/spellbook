@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from normalizers.models import NormalizedMarket
 from matchers.match import find_matches, MatchResult
-from matchers.utils import canon
+from matchers.utils import canon, fuzzy_score
 from matchers.event import event_candidates
 
 T = datetime(2026, 6, 1, tzinfo=timezone.utc)
@@ -188,5 +188,14 @@ assert canon("Will unemployment exceeded 5%?")        == "will unemployment exce
 assert canon("Will the bill pass?")                   == "will the bill pass?"
 assert canon("Will the bill passes?")                 == "will the bill pass?"
 assert canon("Will they reach $1,500?")               == "will they reach $1500?"
+
+# --- fuzzy_score LRU cache ---
+
+fuzzy_score.cache_clear()
+a, b = "will the fed cut rates in june 2026", "will the federal reserve cut interest rates in june 2026"
+fuzzy_score(a, b)
+assert fuzzy_score.cache_info().hits == 0, "first call should be a miss"
+fuzzy_score(a, b)
+assert fuzzy_score.cache_info().hits == 1, "second call with same args should be a cache hit"
 
 print("All tests passed.")
