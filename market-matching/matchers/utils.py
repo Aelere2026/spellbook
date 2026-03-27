@@ -64,6 +64,7 @@ def canon(title: str) -> str:
     return t
 
 
+@lru_cache(maxsize=32768)
 def fuzzy_score(a: str, b: str) -> float:
     """Blended fuzzy score on already-canonicalized strings.
 
