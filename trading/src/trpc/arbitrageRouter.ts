@@ -30,8 +30,13 @@ const arbitrageRouter = router({
         avgRoi: 0,
         avgSlippage: 0,
         exposure: 0,
+        yesPrice: 0,
+        noPrice: 0,
       };
     }
+
+    let totalYes = 0;
+    let totalNo = 0;
 
     let gains = 0;
     let losses = 0;
@@ -46,6 +51,8 @@ const arbitrageRouter = router({
     let latestExecution = new Date(arbitrages[0].executionTime);
 
     for (const arbitrage of arbitrages) {
+      const yesPrice = Number(arbitrage.yesPrice);
+      const noPrice = Number(arbitrage.noPrice);
       const netProfit = Number(arbitrage.netProfit);
       const grossProfit = Number(arbitrage.grossProfit);
       const totalFee = Number(arbitrage.totalFee);
@@ -54,6 +61,8 @@ const arbitrageRouter = router({
       if (netProfit > 0) gains++;
       if (netProfit < 0) losses++;
 
+      totalYes += yesPrice;
+      totalNo += noPrice;
       totalProfit += netProfit;
       totalFeeLoss += totalFee;
       totalSlippage += estimatedSlippage;
@@ -83,26 +92,24 @@ const arbitrageRouter = router({
     const frequency =
       totalHours > 0 ? opportunities / totalHours : opportunities;
 
-    const avgTradeTime = totalDurationMs / arbitrages.length / (1000 * 60 * 60);
+    const avgTradeTime = totalDurationMs / arbitrages.length;
 
     const avgSlippage = totalSlippage / arbitrages.length;
 
-    // Using grossProfit as a simple exposure proxy since there is no capital column
     const exposure = totalGrossProfit;
 
-    const avgRoi =
-      exposure > 0 ? (totalProfit / exposure) * 100 : 0;
+    const avgRoi = (totalProfit / (totalYes + totalNo)) * (100) ;
 
     return {
-      gainLoss: Number(gainLoss.toFixed(2)),
+      gainLoss: Number(gainLoss.toFixed(3)),
       opportunities,
-      frequency: Number(frequency.toFixed(2)),
-      avgTradeTime: Number(avgTradeTime.toFixed(2)),
-      profit: Number(totalProfit.toFixed(2)),
-      totalFeeLoss: Number(totalFeeLoss.toFixed(2)),
-      avgRoi: Number(avgRoi.toFixed(2)),
-      avgSlippage: Number(avgSlippage.toFixed(3)),
-      exposure: Number(exposure.toFixed(2)),
+      frequency: Number(frequency.toFixed(3)),
+      avgTradeTime: Number(avgTradeTime.toFixed(3)),
+      profit: Number(totalProfit.toFixed(3)),
+      totalFeeLoss: Number(totalFeeLoss.toFixed(3)),
+      avgRoi: Number(avgRoi.toFixed(3)),
+      avgSlippage: Number(avgSlippage.toFixed(4)),
+      exposure: Number(exposure.toFixed(3)),
     };
   }),
 

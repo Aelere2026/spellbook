@@ -21,7 +21,7 @@ const TotalOpportunities: React.FC = () => {
   const formatBucketLabel = (date: Date, scale: TimeScale) => {
     if (scale === "minute") {
       return new Intl.DateTimeFormat(undefined, {
-        hour: "numeric",
+        hour: "2-digit",
         minute: "2-digit",
       }).format(date);
     }
@@ -79,7 +79,10 @@ const TotalOpportunities: React.FC = () => {
   };
 
   const chartData = useMemo(() => {
-    const grouped = new Map<string, { label: string; value: number; date: Date }>();
+    const grouped = new Map<
+      string,
+      { label: string; value: number; date: Date }
+    >();
 
     for (const a of arbitrages) {
       const executionRaw = a.executionTime;
@@ -103,8 +106,37 @@ const TotalOpportunities: React.FC = () => {
     );
   }, [arbitrages, timeScale]);
 
-  const timeData = chartData.map((d) => d.label);
-  const opportunitiesData = chartData.map((d) => d.value);
+  const MAX_MINUTE_POINTS = 30;
+
+  const displayData = useMemo(() => {
+    if (timeScale !== "minute") {
+      return chartData;
+    }
+
+    const n = chartData.length;
+
+    if (n <= MAX_MINUTE_POINTS) {
+      return chartData;
+    }
+
+    const step = (n - 1) / (MAX_MINUTE_POINTS - 1);
+    const sampled: typeof chartData = [];
+    const usedIndices = new Set<number>();
+
+    for (let i = 0; i < MAX_MINUTE_POINTS; i++) {
+      const index = Math.round(i * step);
+
+      if (!usedIndices.has(index) && chartData[index]) {
+        sampled.push(chartData[index]);
+        usedIndices.add(index);
+      }
+    }
+
+    return sampled.length > 0 ? sampled : chartData;
+  }, [chartData, timeScale]);
+
+  const timeData = displayData.map((d) => d.label);
+  const opportunitiesData = displayData.map((d) => d.value);
 
   const latest =
     opportunitiesData.length > 0
@@ -133,16 +165,6 @@ const TotalOpportunities: React.FC = () => {
           ? "Week"
           : "Month";
 
-  const labelInterval = 30;
-
-  const filteredTimeData = timeData.map((label, i) => {
-    if (timeScale === "minute") return i % labelInterval === 0 ? label : "";
-    if (timeScale === "day") return i % 2 === 0 ? label : "";
-    if (timeScale === "week") return i % 1 === 0 ? label : "";
-    if (timeScale === "month") return i % 1 === 0 ? label : "";
-    return label;
-  });
-
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-violet-100">
@@ -152,10 +174,16 @@ const TotalOpportunities: React.FC = () => {
   }
 
   return (
-    <div className={`relative min-h-screen ${isDark ? "text-violet-50" : "text-gray-900"}`}>
+    <div
+      className={`relative min-h-screen ${isDark ? "text-violet-50" : "text-gray-900"}`}
+    >
       <div className="mx-auto max-w-7xl px-6 py-8 sm:px-8 lg:px-10">
         <section
-          style={!isDark ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" } : undefined}
+          style={
+            !isDark
+              ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+              : undefined
+          }
           className={[
             "relative overflow-hidden rounded-[2rem] border px-8 py-12 backdrop-blur-xl",
             isDark
@@ -188,9 +216,17 @@ const TotalOpportunities: React.FC = () => {
 
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div
-                style={!isDark ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" } : undefined}
+                style={
+                  !isDark
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
+                    : undefined
+                }
                 className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
-                  isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
+                  isDark
+                    ? "border-violet-400/10 bg-white/5"
+                    : "border-violet-200"
                 }`}
               >
                 <div
@@ -210,9 +246,17 @@ const TotalOpportunities: React.FC = () => {
               </div>
 
               <div
-                style={!isDark ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" } : undefined}
+                style={
+                  !isDark
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
+                    : undefined
+                }
                 className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
-                  isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
+                  isDark
+                    ? "border-violet-400/10 bg-white/5"
+                    : "border-violet-200"
                 }`}
               >
                 <div
@@ -239,9 +283,17 @@ const TotalOpportunities: React.FC = () => {
               </div>
 
               <div
-                style={!isDark ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" } : undefined}
+                style={
+                  !isDark
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
+                    : undefined
+                }
                 className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
-                  isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
+                  isDark
+                    ? "border-violet-400/10 bg-white/5"
+                    : "border-violet-200"
                 }`}
               >
                 <div
@@ -264,7 +316,11 @@ const TotalOpportunities: React.FC = () => {
         </section>
 
         <section
-          style={!isDark ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" } : undefined}
+          style={
+            !isDark
+              ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+              : undefined
+          }
           className={[
             "mt-8 rounded-[2rem] border p-5 backdrop-blur-xl sm:p-6 lg:p-8",
             isDark
@@ -274,10 +330,14 @@ const TotalOpportunities: React.FC = () => {
         >
           <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className={`text-xl font-semibold ${isDark ? "text-white" : "text-violet-900"}`}>
+              <h2
+                className={`text-xl font-semibold ${isDark ? "text-white" : "text-violet-900"}`}
+              >
                 Opportunities Trend
               </h2>
-              <p className={`mt-1 text-sm ${isDark ? "text-violet-200/60" : "text-violet-500"}`}>
+              <p
+                className={`mt-1 text-sm ${isDark ? "text-violet-200/60" : "text-violet-500"}`}
+              >
                 Total opportunities grouped by the selected time scale.
               </p>
             </div>
@@ -312,12 +372,14 @@ const TotalOpportunities: React.FC = () => {
 
           <div
             className={`rounded-[1.5rem] border p-3 sm:p-4 lg:p-6 ${
-              isDark ? "border-violet-400/10 bg-[#070510]/70" : "border-violet-200 bg-white/60"
+              isDark
+                ? "border-violet-400/10 bg-[#070510]/70"
+                : "border-violet-200 bg-white/60"
             }`}
           >
             <LineGraph
               gainLossData={opportunitiesData}
-              timeData={filteredTimeData}
+              timeData={timeData}
               xAxisLabel={scaleLabel}
               yAxisLabel="Total Opportunities"
               title={`Total Opportunities by ${scaleLabel}`}

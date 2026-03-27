@@ -104,8 +104,41 @@ const GainLoss: React.FC = () => {
     );
   }, [arbitrages, timeScale]);
 
-  const timeData = chartData.map((d) => d.label);
-  const gainLossData = chartData.map((d) => d.value);
+  const MAX_MINUTE_POINTS = 30;
+
+  const displayData = useMemo(() => {
+    if (timeScale !== "minute") {
+      return chartData;
+    }
+
+    const n = chartData.length;
+
+    if (n <= MAX_MINUTE_POINTS) {
+      return chartData;
+    }
+
+    const step = (n - 1) / (MAX_MINUTE_POINTS - 1);
+    const sampled: typeof chartData = [];
+    const usedIndices = new Set<number>();
+
+    for (let i = 0; i < MAX_MINUTE_POINTS; i++) {
+      const index = Math.round(i * step);
+
+      if (!usedIndices.has(index) && chartData[index]) {
+        sampled.push(chartData[index]);
+        usedIndices.add(index);
+      }
+    }
+
+    if (sampled.length === 0) {
+      return chartData;
+    }
+
+    return sampled;
+  }, [chartData, timeScale]);
+
+  const timeData = displayData.map((d) => d.label);
+  const gainLossData = displayData.map((d) => d.value);
 
   const latest = gainLossData.length > 0 ? gainLossData[gainLossData.length - 1] : 0;
   const previous = gainLossData.length > 1 ? gainLossData[gainLossData.length - 2] : 0;
@@ -123,16 +156,6 @@ const GainLoss: React.FC = () => {
         : timeScale === "week"
           ? "Week"
           : "Month";
-
-  const labelInterval = 30;
-
-  const filteredTimeData = timeData.map((label, i) => {
-    if (timeScale === "minute") return i % labelInterval === 0 ? label : "";
-    if (timeScale === "day") return i % 2 === 0 ? label : "";
-    if (timeScale === "week") return i % 1 === 0 ? label : "";
-    if (timeScale === "month") return i % 1 === 0 ? label : "";
-    return label;
-  });
 
   if (isLoading) {
     return (
@@ -159,47 +182,94 @@ const GainLoss: React.FC = () => {
           )}
 
           <div className="relative">
-            <div className={`inline-flex items-center rounded-full border px-4 py-1 text-xs font-medium uppercase tracking-[0.22em] ${isDark ? "border-violet-400/15 bg-violet-500/10 text-violet-200/80" : "border-violet-300 bg-violet-100 text-violet-600"}`}>
+            <div
+              className={`inline-flex items-center rounded-full border px-4 py-1 text-xs font-medium uppercase tracking-[0.22em] ${
+                isDark
+                  ? "border-violet-400/15 bg-violet-500/10 text-violet-200/80"
+                  : "border-violet-300 bg-violet-100 text-violet-600"
+              }`}
+            >
               Performance Overview
             </div>
 
-            <h1 className={`mt-5 text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl ${isDark ? "text-white" : "text-violet-900"}`}>
+            <h1
+              className={`mt-5 text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl ${
+                isDark ? "text-white" : "text-violet-900"
+              }`}
+            >
               Gain/Loss Analysis
             </h1>
 
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div
                 style={!isDark ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" } : undefined}
-                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"}`}
+                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
+                  isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
+                }`}
               >
-                <div className={`text-[11px] uppercase tracking-[0.2em] ${isDark ? "text-violet-200/55" : "text-violet-400"}`}>
+                <div
+                  className={`text-[11px] uppercase tracking-[0.2em] ${
+                    isDark ? "text-violet-200/55" : "text-violet-400"
+                  }`}
+                >
                   Latest {scaleLabel}
                 </div>
-                <div className={`mt-2 text-2xl font-semibold ${isDark ? "text-white" : "text-violet-900"}`}>
+                <div
+                  className={`mt-2 text-2xl font-semibold ${
+                    isDark ? "text-white" : "text-violet-900"
+                  }`}
+                >
                   {latest.toFixed(2)}
                 </div>
               </div>
 
               <div
                 style={!isDark ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" } : undefined}
-                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"}`}
+                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
+                  isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
+                }`}
               >
-                <div className={`text-[11px] uppercase tracking-[0.2em] ${isDark ? "text-violet-200/55" : "text-violet-400"}`}>
+                <div
+                  className={`text-[11px] uppercase tracking-[0.2em] ${
+                    isDark ? "text-violet-200/55" : "text-violet-400"
+                  }`}
+                >
                   Change vs Previous
                 </div>
-                <div className={`mt-2 text-2xl font-semibold ${change >= 0 ? isDark ? "text-emerald-300" : "text-emerald-600" : isDark ? "text-rose-300" : "text-rose-600"}`}>
-                  {change >= 0 ? "+" : ""}{change.toFixed(2)}
+                <div
+                  className={`mt-2 text-2xl font-semibold ${
+                    change >= 0
+                      ? isDark
+                        ? "text-emerald-300"
+                        : "text-emerald-600"
+                      : isDark
+                        ? "text-rose-300"
+                        : "text-rose-600"
+                  }`}
+                >
+                  {change >= 0 ? "+" : ""}
+                  {change.toFixed(2)}
                 </div>
               </div>
 
               <div
                 style={!isDark ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" } : undefined}
-                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"}`}
+                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
+                  isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
+                }`}
               >
-                <div className={`text-[11px] uppercase tracking-[0.2em] ${isDark ? "text-violet-200/55" : "text-violet-400"}`}>
+                <div
+                  className={`text-[11px] uppercase tracking-[0.2em] ${
+                    isDark ? "text-violet-200/55" : "text-violet-400"
+                  }`}
+                >
                   Average {scaleLabel}
                 </div>
-                <div className={`mt-2 text-2xl font-semibold ${isDark ? "text-white" : "text-violet-900"}`}>
+                <div
+                  className={`mt-2 text-2xl font-semibold ${
+                    isDark ? "text-white" : "text-violet-900"
+                  }`}
+                >
                   {avg.toFixed(2)}
                 </div>
               </div>
@@ -227,7 +297,12 @@ const GainLoss: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <label htmlFor="timescale" className={`text-sm font-medium ${isDark ? "text-violet-200/75" : "text-violet-600"}`}>
+              <label
+                htmlFor="timescale"
+                className={`text-sm font-medium ${
+                  isDark ? "text-violet-200/75" : "text-violet-600"
+                }`}
+              >
                 Time Scale
               </label>
               <select
@@ -249,10 +324,14 @@ const GainLoss: React.FC = () => {
             </div>
           </div>
 
-          <div className={`rounded-[1.5rem] border p-3 sm:p-4 lg:p-6 ${isDark ? "border-violet-400/10 bg-[#070510]/70" : "border-violet-200 bg-white/60"}`}>
+          <div
+            className={`rounded-[1.5rem] border p-3 sm:p-4 lg:p-6 ${
+              isDark ? "border-violet-400/10 bg-[#070510]/70" : "border-violet-200 bg-white/60"
+            }`}
+          >
             <LineGraph
               gainLossData={gainLossData}
-              timeData={filteredTimeData}
+              timeData={timeData}
               xAxisLabel={scaleLabel}
               yAxisLabel="Net Profit"
               title={`Gain/Loss Trend by ${scaleLabel}`}

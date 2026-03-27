@@ -29,7 +29,7 @@ const LineGraph: React.FC<LineGraphProps> = ({
     );
   }
 
-  const margin = { top: 40, right: 30, bottom: 70, left: 80 };
+  const margin = { top: 40, right: 30, bottom: 110, left: 80 };
   const chartWidth = width - margin.left - margin.right;
   const chartHeight = height - margin.top - margin.bottom;
 
@@ -78,9 +78,13 @@ const LineGraph: React.FC<LineGraphProps> = ({
           : "border-violet-200 shadow-sm"
       }`}
     >
-      <h2 className="mb-1 text-3xl font-semibold" style={{ color: titleColor }}>{title}</h2>
-      <p className="mb-4 text-sm" style={{ color: isDark ? "rgba(196,181,253,0.6)" : "rgba(109,40,217,0.6)" }}>
-      </p>
+      <h2 className="mb-1 text-3xl font-semibold" style={{ color: titleColor }}>
+        {title}
+      </h2>
+      <p
+        className="mb-4 text-sm"
+        style={{ color: isDark ? "rgba(196,181,253,0.6)" : "rgba(109,40,217,0.6)" }}
+      ></p>
 
       <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full">
         <defs>
@@ -98,20 +102,54 @@ const LineGraph: React.FC<LineGraphProps> = ({
           const y = getY(tick);
           return (
             <g key={`y-tick-${i}`}>
-              <line x1={margin.left} y1={y} x2={margin.left + chartWidth} y2={y} stroke={gridColor} strokeWidth="1" />
-              <text x={margin.left - 12} y={y + 4} textAnchor="end" fontSize="11" fill={tickTextColor}>
+              <line
+                x1={margin.left}
+                y1={y}
+                x2={margin.left + chartWidth}
+                y2={y}
+                stroke={gridColor}
+                strokeWidth="1"
+              />
+              <text
+                x={margin.left - 12}
+                y={y + 4}
+                textAnchor="end"
+                fontSize="11"
+                fill={tickTextColor}
+              >
                 {tick.toFixed(2)}
               </text>
             </g>
           );
         })}
 
-        <line x1={margin.left} y1={margin.top} x2={margin.left} y2={margin.top + chartHeight} stroke={axisColor} strokeWidth="1.5" />
-        <line x1={margin.left} y1={margin.top + chartHeight} x2={margin.left + chartWidth} y2={margin.top + chartHeight} stroke={axisColor} strokeWidth="1.5" />
+        <line
+          x1={margin.left}
+          y1={margin.top}
+          x2={margin.left}
+          y2={margin.top + chartHeight}
+          stroke={axisColor}
+          strokeWidth="1.5"
+        />
+        <line
+          x1={margin.left}
+          y1={margin.top + chartHeight}
+          x2={margin.left + chartWidth}
+          y2={margin.top + chartHeight}
+          stroke={axisColor}
+          strokeWidth="1.5"
+        />
 
         <polygon points={areaPoints} fill="url(#areaFill)" />
 
-        <polyline points={linePoints} fill="none" stroke="url(#lineGlow)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline
+          points={linePoints}
+          fill="none"
+          stroke="url(#lineGlow)"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
 
         {gainLossData.map((value, index) => (
           <circle
@@ -126,16 +164,37 @@ const LineGraph: React.FC<LineGraphProps> = ({
         ))}
 
         {timeData.map((label, index) => (
-          <text key={`x-label-${index}`} x={getX(index)} y={margin.top + chartHeight + 22} textAnchor="middle" fontSize="11" fill={tickTextColor}>
+          <text
+            key={`x-label-${index}`}
+            x={getX(index)}
+            y={margin.top + chartHeight + 18}
+            fontSize="10"
+            fill={tickTextColor}
+            textAnchor="end"
+            transform={`rotate(-45 ${getX(index)} ${margin.top + chartHeight + 18})`}
+          >
             {label}
           </text>
         ))}
 
-        <text x={margin.left + chartWidth / 2} y={height - 18} textAnchor="middle" fontSize="15" fill={labelColor}>
+        <text
+          x={margin.left + chartWidth / 2}
+          y={height - 20}
+          textAnchor="middle"
+          fontSize="15"
+          fill={labelColor}
+        >
           {xAxisLabel}
         </text>
 
-        <text x={22} y={margin.top + chartHeight / 2} textAnchor="middle" fontSize="15" fill={labelColor} transform={`rotate(-90 22 ${margin.top + chartHeight / 2})`}>
+        <text
+          x={22}
+          y={margin.top + chartHeight / 2}
+          textAnchor="middle"
+          fontSize="15"
+          fill={labelColor}
+          transform={`rotate(-90 22 ${margin.top + chartHeight / 2})`}
+        >
           {yAxisLabel}
         </text>
       </svg>

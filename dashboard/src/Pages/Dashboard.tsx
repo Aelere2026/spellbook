@@ -73,7 +73,12 @@ const StatCard: React.FC<StatCardProps> = ({
 };
 
 const fmtMoney = (n: number) =>
-  n.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  n.toLocaleString(undefined, {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 3,
+    maximumFractionDigits: 3,
+  });
 
 const fmtPct = (n: number) => `${n.toFixed(2)}%`;
 
@@ -131,7 +136,7 @@ const Dashboard: React.FC = () => {
 
     const durationMin = Math.max(
       0,
-      Math.round((execution.getTime() - deduction.getTime()) / 60000),
+      Math.round(execution.getTime() - deduction.getTime()),
     );
 
     const capital = grossProfit;
@@ -186,7 +191,7 @@ const Dashboard: React.FC = () => {
           <StatCard
             isDark={isDark}
             title="Avg Trade Time"
-            value={`${stats?.avgTradeTime ?? 0} h`}
+            value={`${stats?.avgTradeTime ?? 0} ms`}
           />
         </div>
 
@@ -236,7 +241,7 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-2 gap-3">
           <StatCard
             isDark={isDark}
-            title="Total Fee Loss"
+            title="Total Fees"
             value={fmtMoney(stats?.totalFeeLoss ?? 0)}
           />
           <StatCard
@@ -247,11 +252,11 @@ const Dashboard: React.FC = () => {
           <StatCard
             isDark={isDark}
             title="Avg Slippage"
-            value={stats?.avgSlippage ?? 0}
+            value={`$${stats?.avgSlippage ?? 0}`}
           />
           <StatCard
             isDark={isDark}
-            title="Exposure"
+            title="Profit Before Costs"
             value={fmtMoney(stats?.exposure ?? 0)}
           />
         </div>
@@ -292,7 +297,7 @@ const Dashboard: React.FC = () => {
                 <th className="px-3 py-2 sm:px-4">Exchange Pair</th>
                 <th className="px-3 py-2 sm:px-4">Match Score</th>
                 <th className="px-3 py-2 sm:px-4">Edge %</th>
-                <th className="px-3 py-2 sm:px-4">Capital</th>
+                <th className="px-3 py-2 sm:px-4">Gross Profit</th>
                 <th className="px-3 py-2 sm:px-4">Costs</th>
                 <th className="px-3 py-2 sm:px-4">Net PnL</th>
                 <th className="px-3 py-2 sm:px-4">ROI</th>
@@ -370,7 +375,7 @@ const Dashboard: React.FC = () => {
                   <td
                     className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}
                   >
-                    {t.durationMin}m
+                    {t.durationMin}ms
                   </td>
                 </tr>
               ))}
