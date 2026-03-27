@@ -3,11 +3,11 @@ from normalizers.models import NormalizedMarket
 from matchers.gate import close_time_gate
 
 
-def market(platform: str, platform_id: str, close_time: datetime | None) -> NormalizedMarket:
+def market(platform: str, platform_id: str, close_time: datetime | None, title: str = "") -> NormalizedMarket:
     return NormalizedMarket(
         platform=platform,
         platform_id=platform_id,
-        title="",
+        title=title,
         description="",
         close_time=close_time,
         outcomes=[],
@@ -76,5 +76,27 @@ pm_unsorted = list(reversed(pm_many))
 pairs_unsorted = close_time_gate([k_mid], pm_unsorted, THRESHOLD)
 assert len(pairs_unsorted) == 7, "unsorted input should give same count"
 assert {p.platform_id for _, p in pairs_unsorted} == matched_ids, "unsorted input should give same ids"
+
+# --- top_k pre-filter ---
+
+# 7 markets in window, top_k=3 → only 3 returned, and they're the best-titled ones
+k_titled = market("kalshi", "KTIT", T + timedelta(days=15), title="Will the Fed cut rates in June?")
+pm_titled = [
+    market("polymarket", f"PT{i}", T + timedelta(days=15), title=f"Unrelated market number {i}")
+    for i in range(6)
+] + [
+    market("polymarket", "PT_BEST", T + timedelta(days=15), title="Will the Fed cut rates in June?")
+]
+pairs = close_time_gate([k_titled], pm_titled, THRESHOLD, top_k=3)
+assert len(pairs) == 3, f"top_k=3 should yield 3 pairs, got {len(pairs)}"
+assert any(p.platform_id == "PT_BEST" for _, p in pairs), "best-titled market must be in top_k"
+
+# top_k >= window size → no filtering, all candidates returned
+pairs = close_time_gate([k_titled], pm_titled, THRESHOLD, top_k=100)
+assert len(pairs) == 7, "top_k >= window size should return all candidates"
+
+# top_k=None → existing behaviour, all candidates returned
+pairs = close_time_gate([k_titled], pm_titled, THRESHOLD, top_k=None)
+assert len(pairs) == 7, "top_k=None should return all candidates"
 
 print("All tests passed.")

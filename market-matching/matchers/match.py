@@ -51,6 +51,7 @@ def find_matches(
     max_time_delta: timedelta = timedelta(days=14),
     min_event_score: float = 80.0,
     score_cache: dict[tuple[str, str], float] | None = None,
+    top_k: int | None = None,
 ) -> list[MatchResult]:
     """Return scored (kalshi, polymarket) pairs that likely describe the same event.
 
@@ -70,13 +71,13 @@ def find_matches(
     poly_binary = [p for p in polymarket if is_binary(p)]
 
     # Layer 1: event-title blocking
-    ev_pairs = event_candidates(eligible, poly_binary, min_event_score)
+    ev_pairs = event_candidates(eligible, poly_binary, min_event_score, top_k=top_k)
 
     # Layer 2: time-gate fallback for all eligible Kalshi markets.
     # Running on all eligible (not just ungrouped) ensures that a false-positive
     # event match doesn't permanently suppress a market's second chance.
     # The seen set below prevents any pair from being scored twice.
-    time_pairs = close_time_gate(eligible, poly_binary, max_time_delta)
+    time_pairs = close_time_gate(eligible, poly_binary, max_time_delta, top_k=top_k)
 
     # Score all unique (k, p) candidates
     seen: set[tuple[str, str]] = set()

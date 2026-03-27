@@ -1,3 +1,4 @@
+from rapidfuzz import fuzz
 from normalizers.models import NormalizedMarket
 from matchers.utils import canon, fuzzy_score
 
@@ -6,14 +7,16 @@ def event_candidates(
     kalshi: list[NormalizedMarket],
     polymarket: list[NormalizedMarket],
     min_event_score: float = 80.0,
+    top_k: int | None = None,
 ) -> list[tuple[NormalizedMarket, NormalizedMarket]]:
     """Return (kalshi, polymarket) pairs blocked by event-title similarity.
 
     Algorithm:
       1. Group each platform's markets by canonicalized event_title.
       2. For each Kalshi event group, find the best-scoring Polymarket event group.
-      3. If best score >= min_event_score, emit all (k, p) market pairs within
-         the two matched groups.
+      3. If best score >= min_event_score, emit market pairs within the two groups.
+         If top_k is set, each Kalshi market keeps only its top_k Polymarket
+         candidates (ranked by token_sort_ratio) instead of the full cross-product.
 
     Markets with no event_title on either side are skipped; find_matches uses
     close_time_gate as a fallback for them.
@@ -42,7 +45,16 @@ def event_candidates(
         if best_score >= min_event_score:
             p_markets = p_groups[best_p_event]
             for k in k_markets:
-                for p in p_markets:
+                if top_k is not None and len(p_markets) > top_k:
+                    k_canon = canon(k.title)
+                    filtered = sorted(
+                        p_markets,
+                        key=lambda p: fuzz.token_sort_ratio(k_canon, canon(p.title)),
+                        reverse=True,
+                    )[:top_k]
+                else:
+                    filtered = p_markets
+                for p in filtered:
                     results.append((k, p))
 
     return results
