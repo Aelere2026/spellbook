@@ -120,6 +120,30 @@ const arbitrageRouter = router({
       });
     }),
 
+  getWithMarkets: publicProcedure.query(async () => {
+    const arbitrages = await prisma.arbitrage.findMany({
+      orderBy: { detectionTime: "desc" },
+      include: {
+        match: {
+          include: {
+            polymarketMarket: { select: { resolutionDate: true } },
+            kalshiMarket: { select: { resolutionDate: true } },
+          },
+        },
+      },
+    });
+
+    return arbitrages.map((a) => ({
+      ...a,
+      resolutionDate: new Date(
+        Math.max(
+          a.match.polymarketMarket.resolutionDate.getTime(),
+          a.match.kalshiMarket.resolutionDate.getTime(),
+        ),
+      ),
+    }));
+  }),
+
   onMarketAdd: publicProcedure
     .input(
       z.object({

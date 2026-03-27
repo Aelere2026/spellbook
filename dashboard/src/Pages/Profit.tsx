@@ -4,19 +4,35 @@ import { api } from "../utils/api";
 import { useTheme } from "../context/ThemeContext";
 
 type TimeScale = "minute" | "day" | "week" | "month";
+type ClosureFilter = "all" | "pre" | "post";
 
 const Profits: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
   const [timeScale, setTimeScale] = useState<TimeScale>("day");
+  const [closureFilter, setClosureFilter] = useState<ClosureFilter>("all");
 
-  const { data: arbData, isLoading } = api.arbitrages.get.useQuery(undefined, {
+  const { data: arbData } = api.arbitrages.getWithMarkets.useQuery(undefined, {
     refetchInterval: 5000,
     refetchOnWindowFocus: true,
   });
 
   const arbitrages = arbData ?? [];
+
+  const preClose = arbitrages.filter(
+    (a) => new Date(a.executionTime) < new Date(a.resolutionDate),
+  );
+  const postClose = arbitrages.filter(
+    (a) => new Date(a.executionTime) >= new Date(a.resolutionDate),
+  );
+
+  const filteredArbitrages =
+    closureFilter === "pre"
+      ? preClose
+      : closureFilter === "post"
+        ? postClose
+        : arbitrages;
 
   const formatBucketLabel = (date: Date, scale: TimeScale) => {
     if (scale === "minute") {
@@ -84,7 +100,7 @@ const Profits: React.FC = () => {
       { label: string; netProfit: number; grossProfit: number; date: Date }
     >();
 
-    for (const a of arbitrages) {
+    for (const a of filteredArbitrages) {
       const executionRaw = a.executionTime;
       if (!executionRaw) continue;
 
@@ -114,7 +130,7 @@ const Profits: React.FC = () => {
     return Array.from(grouped.values()).sort(
       (a, b) => a.date.getTime() - b.date.getTime(),
     );
-  }, [arbitrages, timeScale]);
+  }, [filteredArbitrages, timeScale]);
 
   const timeData = chartData.map((d) => d.label);
   const netProfitData = chartData.map((d) => d.netProfit);
@@ -158,13 +174,14 @@ const Profits: React.FC = () => {
     return label;
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-violet-100">
-        Loading profits analysis...
-      </div>
-    );
-  }
+  const totalPreNet = preClose.reduce((s, a) => s + Number(a.netProfit), 0);
+  const totalPostNet = postClose.reduce((s, a) => s + Number(a.netProfit), 0);
+
+  const closureFilterOptions: { value: ClosureFilter; label: string }[] = [
+    { value: "all", label: "All" },
+    { value: "pre", label: "Pre-closure" },
+    { value: "post", label: "Post-closure" },
+  ];
 
   return (
     <div
@@ -209,7 +226,95 @@ const Profits: React.FC = () => {
               Profits Analysis
             </h1>
 
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Pre / Post closure summary */}
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div
+                style={
+                  !isDark
+                    ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
+                    : undefined
+                }
+                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
+                  isDark
+                    ? "border-violet-400/10 bg-white/5"
+                    : "border-violet-200"
+                }`}
+              >
+                <div
+                  className={`text-[11px] uppercase tracking-[0.2em] ${
+                    isDark ? "text-violet-200/55" : "text-violet-400"
+                  }`}
+                >
+                  Pre-closure Net Profit
+                </div>
+                <div
+                  className={`mt-1 text-[11px] ${
+                    isDark ? "text-violet-300/50" : "text-violet-400/70"
+                  }`}
+                >
+                  {preClose.length} trade{preClose.length !== 1 ? "s" : ""} · executed before market resolved
+                </div>
+                <div
+                  className={`mt-2 text-2xl font-semibold ${
+                    totalPreNet >= 0
+                      ? isDark
+                        ? "text-emerald-300"
+                        : "text-emerald-600"
+                      : isDark
+                        ? "text-rose-300"
+                        : "text-rose-600"
+                  }`}
+                >
+                  {totalPreNet >= 0 ? "+$" : "-$"}
+                  {Math.abs(totalPreNet).toFixed(2)}
+                </div>
+              </div>
+
+              <div
+                style={
+                  !isDark
+                    ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
+                    : undefined
+                }
+                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
+                  isDark
+                    ? "border-violet-400/10 bg-white/5"
+                    : "border-violet-200"
+                }`}
+              >
+                <div
+                  className={`text-[11px] uppercase tracking-[0.2em] ${
+                    isDark ? "text-violet-200/55" : "text-violet-400"
+                  }`}
+                >
+                  Post-closure Net Profit
+                </div>
+                <div
+                  className={`mt-1 text-[11px] ${
+                    isDark ? "text-violet-300/50" : "text-violet-400/70"
+                  }`}
+                >
+                  {postClose.length} trade{postClose.length !== 1 ? "s" : ""} · executed after market resolved
+                </div>
+                <div
+                  className={`mt-2 text-2xl font-semibold ${
+                    totalPostNet >= 0
+                      ? isDark
+                        ? "text-emerald-300"
+                        : "text-emerald-600"
+                      : isDark
+                        ? "text-rose-300"
+                        : "text-rose-600"
+                  }`}
+                >
+                  {totalPostNet >= 0 ? "+$" : "-$"}
+                  {Math.abs(totalPostNet).toFixed(2)}
+                </div>
+              </div>
+            </div>
+
+            {/* Per-bucket stat cards */}
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div
                 style={
                   !isDark
@@ -370,7 +475,35 @@ const Profits: React.FC = () => {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Closure filter toggle */}
+              <div
+                className={`flex rounded-xl border p-1 ${
+                  isDark
+                    ? "border-violet-400/12 bg-violet-500/10"
+                    : "border-violet-300 bg-violet-50"
+                }`}
+              >
+                {closureFilterOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setClosureFilter(opt.value)}
+                    className={[
+                      "rounded-lg px-3 py-1 text-sm font-medium transition",
+                      closureFilter === opt.value
+                        ? isDark
+                          ? "bg-violet-500/40 text-violet-100"
+                          : "bg-violet-200 text-violet-900"
+                        : isDark
+                          ? "text-violet-300/70 hover:text-violet-200"
+                          : "text-violet-500 hover:text-violet-700",
+                    ].join(" ")}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
               <label
                 htmlFor="timescale"
                 className={`text-sm font-medium ${
