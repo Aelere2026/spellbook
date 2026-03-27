@@ -12,6 +12,7 @@ from match_cache import CACHE_PATH, load_cache, save_cache, build_score_cache
 OUTPUT = Path("matches.txt")
 TIME_WINDOW = timedelta(days=7)
 MIN_SCORE = 84.0
+TOP_K = 5  # max Polymarket candidates per Kalshi market after pre-filter
 
 
 def run():
@@ -55,7 +56,7 @@ def run():
 
     matches = find_matches(kalshi_markets, poly_markets,
                            min_score=MIN_SCORE, max_time_delta=TIME_WINDOW,
-                           score_cache=score_cache)
+                           score_cache=score_cache, top_k=TOP_K)
     print(f"  Matches found: {len(matches)}")
 
     save_cache(CACHE_PATH, kalshi_markets, poly_markets, matches)
