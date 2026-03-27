@@ -95,8 +95,8 @@ const Dashboard: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const { data: mar, isLoading: isMarketLoading } = api.markets.get.useQuery();
-  const { data: arb, isLoading: isArbitLoading } = api.arbitrages.get.useQuery(
+  const { data: mar } = api.markets.get.useQuery();
+  const { data: arb } = api.arbitrages.get.useQuery(
     undefined,
     {
       refetchInterval: 5000,
@@ -104,9 +104,10 @@ const Dashboard: React.FC = () => {
       notifyOnChangeProps: "all",
     },
   );
-  const { data: mat, isLoading: isMatchLoading } = api.matches.get.useQuery();
-  const { data: stats, isLoading: isStatsLoading } =
-    api.arbitrages.stats.useQuery(undefined, {
+  const { data: mat } = api.matches.get.useQuery();
+  const { data: stats } = api.arbitrages.stats.useQuery(
+    undefined,
+    {
       refetchInterval: 5000,
       refetchOnWindowFocus: true,
       notifyOnChangeProps: "all",

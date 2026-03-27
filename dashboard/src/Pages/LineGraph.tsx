@@ -68,7 +68,6 @@ const LineGraph: React.FC<LineGraphProps> = ({
   const tickTextColor = isDark ? "rgba(221,214,254,0.75)" : "rgba(109,40,217,0.8)";
   const labelColor = isDark ? "rgba(237,233,254,0.9)" : "rgba(109,40,217,0.9)";
   const titleColor = isDark ? "white" : "#4c1d95";
-  const bgColor = isDark ? "#0a0715" : "rgba(245,240,255,0.8)";
 
   return (
     <div
