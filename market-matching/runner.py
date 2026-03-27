@@ -7,6 +7,7 @@ from fetchers.polymarket import pull_polymarket
 from normalizers.kalshi import normalize_kalshi
 from normalizers.polymarket import normalize_polymarket
 from matchers.match import find_matches, is_binary
+from match_cache import CACHE_PATH, load_cache, save_cache, build_score_cache
 
 OUTPUT = Path("matches.txt")
 TIME_WINDOW = timedelta(days=7)
@@ -46,9 +47,18 @@ def run():
     print(f"  Kalshi binary: {len(binary_kalshi)}")
     print(f"  Polymarket: {len(poly_markets)} total  |  {neg_risk_poly} negRisk  |  {len(binary_poly)} binary")
 
+    old_k_fps, old_p_fps, pair_scores = load_cache(CACHE_PATH)
+    score_cache = build_score_cache(
+        kalshi_markets, poly_markets, old_k_fps, old_p_fps, pair_scores
+    )
+    print(f"  Score cache: {len(score_cache)} unchanged pairs (of {len(pair_scores)} cached)")
+
     matches = find_matches(kalshi_markets, poly_markets,
-                           min_score=MIN_SCORE, max_time_delta=TIME_WINDOW)
+                           min_score=MIN_SCORE, max_time_delta=TIME_WINDOW,
+                           score_cache=score_cache)
     print(f"  Matches found: {len(matches)}")
+
+    save_cache(CACHE_PATH, kalshi_markets, poly_markets, matches)
 
     try:
         from db import persist_matches
