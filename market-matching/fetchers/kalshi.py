@@ -4,7 +4,7 @@ BASE = "https://api.elections.kalshi.com/trade-api/v2"
 PAGE_LIMIT = 200  # API maximum per request
 
 
-def pull_kalshi(limit: int = 1000) -> list[dict]:
+def pull_kalshi(limit: int = 50000) -> list[dict]:
     """Fetch open Kalshi markets via the events endpoint (non-MVE markets only).
 
     The /markets endpoint returns almost exclusively sports MVE parlays.
