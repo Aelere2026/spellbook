@@ -1,8 +1,8 @@
 import c from "ansi-colors"
 import util from "util"
 
-type Verbosity = "DEBUG" | "LOG" | "INFO" | "WARN" | "ERROR" | "FATAL"
-const verbosityOrder: Verbosity[] = ["DEBUG", "LOG", "INFO", "WARN", "ERROR", "FATAL"]
+type Verbosity = "DEBUG" | "LOG" | "INFO" | "ALERT" | "WARN" | "ERROR" | "FATAL"
+const verbosityOrder: Verbosity[] = ["DEBUG", "LOG", "INFO", "ALERT", "WARN", "ERROR", "FATAL"]
 
 let loggerVerbosity: Verbosity = "DEBUG"
 
@@ -13,6 +13,7 @@ let loggerVerbosity: Verbosity = "DEBUG"
  * - DEBUG
  * - LOG
  * - INFO
+ * - ALERT
  * - WARN
  * - ERROR
  * - FATAL
@@ -31,6 +32,10 @@ export function log(...msgs: any) {
 
 export function info(...msgs: any[]) {
     print("INFO", c.cyan, msgs)
+}
+
+export function alert(...msgs: any[]) {
+    print("ALERT", c.magenta, msgs)
 }
 
 export function warn(...msgs: any[]) {
@@ -56,7 +61,7 @@ function print(msgVerbosity: Verbosity, format: c.StyleFunction, msgs: any[]) {
         // We use util.inspect so that our objects look normal and not like "[object Object]" when printing
         const msgsStr = msgs.map(msg => {
             if (typeof msg === "object") {
-                return util.inspect(msg)
+                return util.inspect(msg, { depth: null })
             } else {
                 return msg
             }

@@ -1,7 +1,7 @@
-import { publicProcedure, router } from "./trpc";
-import { prisma } from "src/util/prisma";
-import { tracked } from "@trpc/server";
-import { z } from "zod";
+import { publicProcedure, router } from "./trpc"
+import { prisma } from "../../src/util/prisma"
+import { tracked } from "@trpc/server"
+import { z } from "zod"
 
 const matchRouter = router({
   get: publicProcedure.query(async () => {
@@ -32,10 +32,10 @@ const matchRouter = router({
         const matches = await prisma.match.findMany({
           where: lastEventId
             ? {
-                createdAt: {
-                  gt: lastEventId,
-                },
-              }
+              createdAt: {
+                gt: lastEventId,
+              },
+            }
             : undefined,
           orderBy: {
             createdAt: "asc",
