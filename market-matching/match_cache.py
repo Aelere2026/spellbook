@@ -14,7 +14,6 @@ import json
 from pathlib import Path
 
 from normalizers.models import NormalizedMarket
-from matchers.match import MatchResult
 
 CACHE_PATH = Path("match_cache.json")
 
@@ -52,15 +51,15 @@ def save_cache(
     path: Path,
     kalshi: list[NormalizedMarket],
     polymarket: list[NormalizedMarket],
-    matches: list[MatchResult],
+    all_scores: dict[tuple[str, str], float],
 ) -> None:
-    """Persist the current run's fingerprints and match scores to disk."""
+    """Persist the current run's fingerprints and all candidate pair scores to disk."""
     data = {
         "kalshi":     {m.platform_id: fingerprint(m) for m in kalshi},
         "polymarket": {m.platform_id: fingerprint(m) for m in polymarket},
         "scores":     {
-            f"{r.kalshi.platform_id}|{r.polymarket.platform_id}": r.score
-            for r in matches
+            f"{k_id}|{p_id}": score
+            for (k_id, p_id), score in all_scores.items()
         },
     }
     path.write_text(json.dumps(data))

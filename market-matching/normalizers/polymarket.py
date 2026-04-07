@@ -22,6 +22,7 @@ def normalize_polymarket(m: dict) -> NormalizedMarket:
     return NormalizedMarket(
         platform        = "polymarket",
         platform_id     = m["conditionId"],
+        slug            = m.get("slug"),
         title           = m.get("question", ""),
         description     = m.get("description", ""),
         close_time      = end,

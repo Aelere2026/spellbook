@@ -1,13 +1,10 @@
-import itertools
 import re
 from dataclasses import dataclass
 from datetime import timedelta
 
-
 from normalizers.models import NormalizedMarket
 from matchers.utils import canon, fuzzy_score
-from matchers.gate import close_time_gate
-from matchers.event import event_candidates
+from matchers.bm25 import bm25_candidates
 
 
 @dataclass
@@ -39,61 +36,56 @@ def is_binary(m: NormalizedMarket) -> bool:
     return {x.lower() for x in m.outcomes} == {"yes", "no"}
 
 
-def _score(a: str, b: str) -> float:
-    """fuzzy_score on canonicalized titles."""
-    return fuzzy_score(canon(a), canon(b))
-
-
 def find_matches(
     kalshi: list[NormalizedMarket],
     polymarket: list[NormalizedMarket],
     min_score: float = 83.0,
     max_time_delta: timedelta = timedelta(days=14),
-    min_event_score: float = 80.0,
     score_cache: dict[tuple[str, str], float] | None = None,
-    top_k: int | None = None,
-) -> list[MatchResult]:
+    bm25_top_k: int = 20,
+) -> tuple[list[MatchResult], dict[tuple[str, str], float]]:
     """Return scored (kalshi, polymarket) pairs that likely describe the same event.
 
     Pipeline:
       1. Drop any non-binary (non Yes/No) market on either side.
-      2. Event-title blocking: group by event_title, fuzzy-match event groups
-         (threshold min_event_score), collect all within-group (k, p) pairs.
-      3. Time-gate fallback: for all eligible Kalshi markets, use ±max_time_delta
-         against all Polymarket markets (runs even on event-matched markets so a
-         false-positive event match never permanently suppresses a valid pair).
-      4. Score each unique candidate pair with (token_set_ratio + token_sort_ratio + partial_ratio) / 3
-         on canonicalized titles. If score_cache is provided and contains the pair,
-         the cached score is used instead of recomputing.
+      2. BM25 candidate generation: build an index over Polymarket titles,
+         query with each Kalshi title, retrieve top bm25_top_k candidates
+         with at least one shared token.
+      3. Time-gate: discard pairs whose resolution dates differ by more than
+         max_time_delta (applied as a post-filter so BM25 handles all recall).
+      4. Score each unique candidate pair with (token_set_ratio + token_sort_ratio
+         + partial_ratio) / 3 on canonicalized titles. Cached scores are reused
+         for pairs where both market fingerprints are unchanged since last run.
       5. Keep pairs at or above min_score, sorted best-first.
+      6. Greedy 1-to-1 assignment: each market appears in at most one match.
     """
     eligible = [k for k in kalshi if is_binary(k)]
     poly_binary = [p for p in polymarket if is_binary(p)]
 
-    # Layer 1: event-title blocking
-    ev_pairs = event_candidates(eligible, poly_binary, min_event_score, top_k=top_k)
+    # Candidate generation via BM25
+    raw_pairs = bm25_candidates(eligible, poly_binary, top_k=bm25_top_k)
 
-    # Layer 2: time-gate fallback for all eligible Kalshi markets.
-    # Running on all eligible (not just ungrouped) ensures that a false-positive
-    # event match doesn't permanently suppress a market's second chance.
-    # The seen set below prevents any pair from being scored twice.
-    time_pairs = close_time_gate(eligible, poly_binary, max_time_delta, top_k=top_k)
-
-    # Score all unique (k, p) candidates
+    # Dedup and time post-filter
     seen: set[tuple[str, str]] = set()
-    results: list[MatchResult] = []
-
-    for k, p in itertools.chain(ev_pairs, time_pairs):
+    candidates: list[tuple[NormalizedMarket, NormalizedMarket, tuple[str, str]]] = []
+    for k, p in raw_pairs:
         key = (k.platform_id, p.platform_id)
         if key in seen:
             continue
         seen.add(key)
         k_date = k.resolution_date or k.close_time
         p_date = p.resolution_date or p.close_time
-        if (k_date and p_date and abs(k_date - p_date) > max_time_delta):
+        if k_date and p_date and abs(k_date - p_date) > max_time_delta:
             continue
+        candidates.append((k, p, key))
+
+    # Score candidates, using cache where available
+    all_scores: dict[tuple[str, str], float] = {}
+    results: list[MatchResult] = []
+    for k, p, key in candidates:
         cached = score_cache.get(key) if score_cache is not None else None
-        score = cached if cached is not None else _score(k.title, p.title)
+        score = cached if cached is not None else fuzzy_score(canon(k.title), canon(p.title))
+        all_scores[key] = score
         if score >= min_score:
             results.append(MatchResult(k, p, round(score, 1)))
 
@@ -110,4 +102,4 @@ def find_matches(
             used_k.add(r.kalshi.platform_id)
             used_p.add(r.polymarket.platform_id)
 
-    return one_to_one
+    return one_to_one, all_scores
