@@ -56,6 +56,63 @@ def _prop_threshold_mismatch(k: NormalizedMarket, p: NormalizedMarket) -> bool:
     return bool(k_match and p_match)
 
 
+_FUNCTION_WORDS = frozenset({
+    # Grammatical function words
+    'will', 'that', 'this', 'from', 'with', 'have', 'them', 'they',
+    'were', 'been', 'than', 'also', 'over', 'under', 'their', 'each',
+    'both', 'such', 'very', 'some', 'when', 'into', 'upon', 'within',
+    'about', 'after', 'before', 'between', 'would', 'could', 'should',
+    'does', 'done', 'being', 'while', 'where', 'which', 'these', 'those',
+    # Domain-common prediction-market words — appear across many markets
+    # regardless of entity, so they carry no entity-discriminating signal.
+    # Sports
+    'finish', 'season', 'round', 'match', 'game', 'place', 'title',
+    'final', 'stage', 'seat', 'least', 'most', 'next', 'last', 'first',
+    # Tech / crypto
+    'launch', 'token', 'chain', 'network', 'protocol',
+    # Financial / general
+    'price', 'value', 'level', 'index', 'trade', 'market',
+})
+
+
+def _specific_tokens(title: str) -> frozenset[str]:
+    return frozenset(
+        t for t in re.findall(r'\w+', canon(title))
+        if len(t) >= 4
+        and t not in _FUNCTION_WORDS
+        and not (t.isdigit() and len(t) == 4)
+    )
+
+
+def _entity_mismatch(k: NormalizedMarket, p: NormalizedMarket) -> bool:
+    """Return True if the two titles share no specific tokens and each has its own.
+
+    A "specific token" is a word that is ≥4 chars, not a function word, and not
+    a 4-digit year.  If the titles have ZERO specific tokens in common AND each
+    side has at least one exclusive specific token, the markets almost certainly
+    refer to different entities (e.g. OpenSea vs OpenAI, Paris vs Lazio).
+
+    Requiring zero overlap (not just mutual exclusivity) avoids false rejections
+    on valid pairs where platforms phrase the same event differently — as long as
+    they share even one meaningful word they are allowed through.
+
+    Prefix overlap is allowed so "trump" and "trumps" don't trigger a mismatch.
+    """
+    k_spec = _specific_tokens(k.title)
+    p_spec = _specific_tokens(p.title)
+    if k_spec & p_spec:         # at least one token in common → same entity
+        return False
+    k_excl = k_spec - p_spec
+    p_excl = p_spec - k_spec
+    if not k_excl or not p_excl:
+        return False
+    for kt in k_excl:
+        for pt in p_excl:
+            if kt.startswith(pt) or pt.startswith(kt):
+                return False
+    return True
+
+
 def find_matches(
     kalshi: list[NormalizedMarket],
     polymarket: list[NormalizedMarket],
@@ -106,7 +163,7 @@ def find_matches(
         cached = score_cache.get(key) if score_cache is not None else None
         score = cached if cached is not None else fuzzy_score(canon(k.title), canon(p.title))
         all_scores[key] = score
-        if score >= min_score and not _prop_threshold_mismatch(k, p):
+        if score >= min_score and not _prop_threshold_mismatch(k, p) and not _entity_mismatch(k, p):
             results.append(MatchResult(k, p, round(score, 1)))
 
     results.sort(key=lambda r: r.score, reverse=True)

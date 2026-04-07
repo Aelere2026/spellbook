@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from .models import NormalizedMarket
 import json
 

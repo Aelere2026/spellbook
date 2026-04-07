@@ -110,11 +110,11 @@ def test_find_matches_uses_score_cache():
     fuzzy_score.cache_clear()
 
     # Prime a score cache with the known pair at a score above threshold
-    real_score = find_matches([k], [p])[0].score
+    real_score = find_matches([k], [p])[0][0].score
     score_cache = {("K1", "P1"): real_score}
 
     fuzzy_score.cache_clear()
-    results = find_matches([k], [p], score_cache=score_cache)
+    results, _ = find_matches([k], [p], score_cache=score_cache)
     assert len(results) == 1
     assert results[0].score == real_score
     # fuzzy_score was never called — cache should still be empty
@@ -123,12 +123,12 @@ def test_find_matches_uses_score_cache():
 def test_find_matches_score_cache_below_threshold_excluded():
     """A cached score below min_score still causes the pair to be excluded."""
     score_cache = {("K1", "P1"): 50.0}
-    results = find_matches([k], [p], score_cache=score_cache)
+    results, _ = find_matches([k], [p], score_cache=score_cache)
     assert len(results) == 0
 
 def test_find_matches_no_cache_still_works():
     """find_matches without a score_cache behaves identically to before."""
-    results = find_matches([k], [p])
+    results, _ = find_matches([k], [p])
     assert len(results) == 1
     assert results[0].score >= 82.0
 

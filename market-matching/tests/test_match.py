@@ -2,7 +2,6 @@ from datetime import datetime, timedelta, timezone
 from normalizers.models import NormalizedMarket
 from matchers.match import find_matches, MatchResult
 from matchers.utils import canon, fuzzy_score
-from matchers.event import event_candidates
 
 T = datetime(2026, 6, 1, tzinfo=timezone.utc)
 
@@ -79,47 +78,47 @@ k_late  = market("kalshi",     "K-LATE",   "Will the Fed cut rates in June 2026?
 
 
 # Strong phrasing match → included
-results = find_matches([k_fed], [p_fed])
+results, _ = find_matches([k_fed], [p_fed])
 assert len(results) == 1, f"expected fed match, got {len(results)}"
 assert results[0].score >= 82.0
 
 # Abbreviation match
-results = find_matches([k_btc], [p_btc])
+results, _ = find_matches([k_btc], [p_btc])
 assert len(results) == 1, f"expected btc match, got {len(results)}"
 assert results[0].score >= 82.0
 
 # Nomination phrasing match → included
-results = find_matches([k_aoc], [p_aoc])
+results, _ = find_matches([k_aoc], [p_aoc])
 assert len(results) == 1, f"expected nomination match, got {len(results)}"
 
 # Same candidate, nomination vs general election → excluded
-results = find_matches([k_aoc], [p_aoc_election])
+results, _ = find_matches([k_aoc], [p_aoc_election])
 assert len(results) == 0, "nomination vs election should not match"
 
 # Different candidates sharing a last name → excluded
-results = find_matches([k_phil], [p_chris])
+results, _ = find_matches([k_phil], [p_chris])
 assert len(results) == 0, "different candidates (Phil vs Chris Murphy) should not match"
 
 # Unrelated topics → excluded
-results = find_matches([k_other], [p_other])
+results, _ = find_matches([k_other], [p_other])
 assert len(results) == 0, "unrelated topics should not match"
 
 # Outside time window excluded
-results = find_matches([k_late], [p_fed])
+results, _ = find_matches([k_late], [p_fed])
 assert len(results) == 0, "market outside time window must be excluded"
 
 # Results sorted best-first
-results = find_matches([k_fed, k_btc], [p_fed, p_btc])
+results, _ = find_matches([k_fed, k_btc], [p_fed, p_btc])
 assert len(results) == 2
 assert results[0].score >= results[1].score
 
 # championship/champion normalization → included
-results = find_matches([k_nba], [p_nba])
+results, _ = find_matches([k_nba], [p_nba])
 assert len(results) == 1, f"expected championship/champion match, got {len(results)}"
 assert results[0].score >= 82.0
 
 # number format normalization ($100,000 vs $100k) with different verb → included
-results = find_matches([k_num], [p_num])
+results, _ = find_matches([k_num], [p_num])
 assert len(results) == 1, f"expected number-format match, got {len(results)}"
 assert results[0].score >= 82.0
 
@@ -136,7 +135,7 @@ p_ev = market("polymarket", "P-EV", "Will candidate X win the 2028 Democratic pr
                close_time=LATE, event_title="2028 Democratic Election Primary",
                resolution_date=T + timedelta(hours=12))
 
-results = find_matches([k_ev], [p_ev])
+results, _ = find_matches([k_ev], [p_ev])
 assert len(results) == 1, "event-matched pair with close resolution_dates should match"
 
 # Event-matched pair where resolution_dates are also far apart → excluded.
@@ -148,13 +147,13 @@ p_ev_far = market("polymarket", "P-EV-FAR", "Will candidate X win the 2028 Democ
                    close_time=LATE, event_title="2028 Democratic Election Primary",
                    resolution_date=LATE)
 
-results = find_matches([k_ev_far], [p_ev_far])
+results, _ = find_matches([k_ev_far], [p_ev_far])
 assert len(results) == 0, "event-matched pair with far resolution_dates must be excluded"
 
 # No event title on either side → falls back to time gate (original behavior)
 k_no_ev = market("kalshi",     "K-NO-EV", "Will the Fed cut rates in June 2026?")
 p_no_ev = market("polymarket", "P-NO-EV", "Will the Federal Reserve cut interest rates in June 2026?")
-results = find_matches([k_no_ev], [p_no_ev])
+results, _ = find_matches([k_no_ev], [p_no_ev])
 assert len(results) == 1, "no-event markets should still match via time gate"
 
 # Non-matching event titles → falls through to time gate; outside window → excluded
@@ -162,17 +161,8 @@ k_mismatch = market("kalshi",     "K-MIS", "Will candidate X win the primary?",
                      close_time=T,    event_title="Completely Unrelated Kalshi Event ZYXWV")
 p_mismatch  = market("polymarket", "P-MIS", "Will candidate X win the 2028 Democratic primary?",
                      close_time=LATE, event_title="2028 Democratic Election Primary")
-results = find_matches([k_mismatch], [p_mismatch])
+results, _ = find_matches([k_mismatch], [p_mismatch])
 assert len(results) == 0, "non-matching event + outside time window → excluded"
-
-# event_candidates unit test
-pairs = event_candidates([k_ev], [p_ev], min_event_score=70.0)
-assert len(pairs) == 1
-assert pairs[0] == (k_ev, p_ev)
-
-# event titles below threshold → no pairs
-pairs = event_candidates([k_mismatch], [p_mismatch], min_event_score=70.0)
-assert len(pairs) == 0
 
 # --- _canon unit tests ---
 

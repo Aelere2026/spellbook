@@ -28,7 +28,7 @@ def bm25_candidates(
         return []
 
     n = len(polymarket)
-    stop_threshold = n * 0.30
+    stop_threshold = max(1.0, n * 0.30)
 
     # Build inverted index: token -> list of poly indices
     corpus_tokens: list[set[str]] = []
