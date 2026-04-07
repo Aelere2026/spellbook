@@ -1,10 +1,14 @@
 # normalizers/kalshi.py
+import re
 from datetime import datetime, timezone
 from .models import NormalizedMarket
 
 def parse_dt(s: str | None) -> datetime | None:
     if not s:
         return None
+    # Python <3.11 fromisoformat requires exactly 6 fractional-second digits.
+    # Kalshi sometimes sends fewer (e.g. .04546 = 5 digits). Normalize to 6.
+    s = re.sub(r'\.\d+', lambda m: (m.group(0) + '000000')[:7], s)
     return datetime.fromisoformat(s.replace("Z", "+00:00"))
 
 def normalize_kalshi(m: dict) -> NormalizedMarket:
