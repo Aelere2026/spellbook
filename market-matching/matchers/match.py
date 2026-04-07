@@ -36,6 +36,26 @@ def is_binary(m: NormalizedMarket) -> bool:
     return {x.lower() for x in m.outcomes} == {"yes", "no"}
 
 
+_KALSHI_THRESHOLD = re.compile(r'(\d+(?:\.\d+)?)\+')
+_POLY_THRESHOLD   = re.compile(r'[Oo]/[Uu]\s+(\d+(?:\.\d+)?)')
+
+
+def _prop_threshold_mismatch(k: NormalizedMarket, p: NormalizedMarket) -> bool:
+    """Return True if both titles contain a numeric prop threshold.
+
+    Kalshi prop format:  "Player: N+ stat"   (e.g. "15+ points")
+    Polymarket format:   "Player: Stat O/U X" (e.g. "Points O/U 12.5")
+
+    Even when thresholds are close, the contracts resolve differently at the
+    boundary (e.g. Kalshi "6+" resolves Yes on exactly 6 assists; Polymarket
+    "O/U 6.5" resolves No). For a trading bot, any threshold divergence is
+    unacceptable, so all prop pairs are rejected.
+    """
+    k_match = _KALSHI_THRESHOLD.search(k.title)
+    p_match = _POLY_THRESHOLD.search(p.title)
+    return bool(k_match and p_match)
+
+
 def find_matches(
     kalshi: list[NormalizedMarket],
     polymarket: list[NormalizedMarket],
@@ -86,7 +106,7 @@ def find_matches(
         cached = score_cache.get(key) if score_cache is not None else None
         score = cached if cached is not None else fuzzy_score(canon(k.title), canon(p.title))
         all_scores[key] = score
-        if score >= min_score:
+        if score >= min_score and not _prop_threshold_mismatch(k, p):
             results.append(MatchResult(k, p, round(score, 1)))
 
     results.sort(key=lambda r: r.score, reverse=True)
