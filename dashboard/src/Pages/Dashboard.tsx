@@ -145,8 +145,17 @@ const Dashboard: React.FC = () => {
 
     const pairMatch = match.find((m) => m.id === a.matchId);
     const polymarket_id = Number(pairMatch?.polymarketMarketId);
-    const pairMarket = market.find((p) => p.id === polymarket_id);
-    const title = pairMarket?.title;
+    const kalshi_id = Number(pairMatch?.kalshiMarketId);
+    const polyMarket = market.find((p) => p.id === polymarket_id);
+    const kalshiMarket = market.find((p) => p.id === kalshi_id);
+    const title = polyMarket?.title;
+
+    const polymarketUrl = polyMarket?.slug
+      ? `https://polymarket.com/market/${polyMarket.slug}`
+      : null;
+    const kalshiUrl = kalshiMarket?.apiId
+      ? `https://kalshi.com/events/${kalshiMarket.apiId}`
+      : null;
 
     const edge_percent = Number(
       (1 - (Number(a.yesPrice) + Number(a.noPrice))) * 100,
@@ -155,9 +164,10 @@ const Dashboard: React.FC = () => {
     return {
       id: a.id,
       market: title,
-      exchangePair: "Polymarket / Kalshi",
+      polymarketUrl,
+      kalshiUrl,
       edgePct: edge_percent,
-      matchScore: matchScore,
+      matchScore,
       capital,
       costs,
       netPnl: netProfit,
@@ -326,10 +336,33 @@ const Dashboard: React.FC = () => {
                   >
                     {t.market}
                   </td>
-                  <td
-                    className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}
-                  >
-                    {t.exchangePair}
+                  <td className="px-3 py-3 text-sm sm:px-4">
+                    <div className="flex flex-col gap-1">
+                      {t.polymarketUrl ? (
+                        <a
+                          href={t.polymarketUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`hover:underline ${isDark ? "text-violet-300 hover:text-violet-100" : "text-violet-600 hover:text-violet-900"}`}
+                        >
+                          Polymarket
+                        </a>
+                      ) : (
+                        <span className={isDark ? "text-violet-100/70" : "text-violet-600"}>Polymarket</span>
+                      )}
+                      {t.kalshiUrl ? (
+                        <a
+                          href={t.kalshiUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`hover:underline ${isDark ? "text-violet-300 hover:text-violet-100" : "text-violet-600 hover:text-violet-900"}`}
+                        >
+                          Kalshi
+                        </a>
+                      ) : (
+                        <span className={isDark ? "text-violet-100/70" : "text-violet-600"}>Kalshi</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-3 py-3 text-sm sm:px-4">
                     <span
