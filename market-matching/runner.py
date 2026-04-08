@@ -100,12 +100,14 @@ def run():
     for i, m in enumerate(matches, 1):
         k_close = m.kalshi.close_time.date() if m.kalshi.close_time else "?"
         p_close = m.polymarket.close_time.date() if m.polymarket.close_time else "?"
+        k_url = f"https://kalshi.com/events/{m.kalshi.platform_id}"
+        p_url = f"https://polymarket.com/market/{m.polymarket.slug}"
         lines += [
             f"[{i}] score={m.score:.1f}",
             f"  K  {m.kalshi.title}",
-            f"     {m.kalshi.platform_id}  |  closes {k_close}",
+            f"     {k_url}  |  {m.kalshi.platform_id}  |  closes {k_close}",
             f"  P  {m.polymarket.title}",
-            f"     {m.polymarket.platform_id}  |  {m.polymarket.slug}  |  closes {p_close}",
+            f"     {p_url}  |  {m.polymarket.platform_id}  |  closes {p_close}",
             "",
         ]
 
