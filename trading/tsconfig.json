@@ -10,14 +10,18 @@
         "allowImportingTsExtensions": true,
         "outDir": "dist",
         "strict": true,
+        "paths": {
+            "@trpc/server/*": [
+                "./node_modules/@trpc/server/*"
+            ]
+        },
         "lib": [
             "esnext",
             "dom"
         ],
         "types": [
             "node"
-        ],
-        "baseUrl": "./",
+        ]
     },
     "exclude": [
         "node_modules"

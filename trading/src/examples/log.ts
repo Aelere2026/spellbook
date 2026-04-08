@@ -1,4 +1,4 @@
-import * as log from "src/util/log"
+import * as log from "../util/log"
 
 export function showcaseLogger() {
     log.debug("A secret debugging message...")

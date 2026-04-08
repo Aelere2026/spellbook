@@ -61,7 +61,7 @@ function print(msgVerbosity: Verbosity, format: c.StyleFunction, msgs: any[]) {
         // We use util.inspect so that our objects look normal and not like "[object Object]" when printing
         const msgsStr = msgs.map(msg => {
             if (typeof msg === "object") {
-                return util.inspect(msg, { depth: null })
+                return util.inspect(msg, { depth: Number.POSITIVE_INFINITY })
             } else {
                 return msg
             }

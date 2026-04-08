@@ -1,5 +1,5 @@
-import * as log from "src/util/log"
-import { prisma } from "src/util/prisma"
+import * as log from "../util/log"
+import { prisma } from "../util/prisma"
 
 export async function showcaseDatabase() {
     const polymarket = {

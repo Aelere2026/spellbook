@@ -233,7 +233,7 @@ async function persistArbitrage(opp: ArbOpportunity): Promise<void> {
 
 // ─── Main Loop ─────────────────────────────────────────────────────────────
 
-async function runDetector(): Promise<void> {
+export async function run(): Promise<void> {
   await loadPlatformFees();
   log.info("Arbitrage detector starting...");
 
@@ -291,9 +291,3 @@ async function runDetector(): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
 }
-
-// Start the detector
-runDetector().catch((err) => {
-  log.info(`Fatal error: ${err}`);
-  process.exit(1);
-});

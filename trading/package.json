@@ -7,9 +7,7 @@
     "types": "tsc --emitDeclarationOnly --noEmit false --declaration --outDir \"dist/types\" --watch",
     "build": "esbuild src/app.ts --outfile=dist/bundle.js --bundle --sourcemap --watch --platform=node --format=esm --external:./node_modules/*",
     "run": "node --enable-source-maps dist/bundle.js",
-    "dev": "concurrently \"npm run types\" \"npm run build\" \"npm run run\"",
-    "build:detector": "esbuild src/detector.ts --outfile=dist/detector.js --bundle --platform=node --format=esm --external:./node_modules/*",
-    "detector": "npm run build:detector && node --enable-source-maps dist/detector.js"
+    "dev": "concurrently \"npm run types\" \"npm run build\" \"npm run run\""
   },
   "keywords": [],
   "author": "",
@@ -42,9 +40,6 @@
     "prisma": "^7.4.2"
   },
   "overrides": {
-    "@prisma/dev": "^0.20.0",
-    "hono": "^4.12.7",
-    "@hono/node-server": "1.19.11",
-    "@mrleebo/prisma-ast": "^0.14.0"
+    "@hono/node-server": "1.19.13"
   }
 }

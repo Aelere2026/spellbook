@@ -1,5 +1,5 @@
 import { publicProcedure, router } from "./trpc";
-import { prisma } from "src/util/prisma";
+import { prisma } from "../util/prisma";
 import { tracked } from "@trpc/server";
 import { z } from "zod";
 
@@ -98,7 +98,7 @@ const arbitrageRouter = router({
 
     const exposure = totalGrossProfit;
 
-    const avgRoi = (totalProfit / (totalYes + totalNo)) * (100) ;
+    const avgRoi = (totalProfit / (totalYes + totalNo)) * (100);
 
     return {
       gainLoss: Number(gainLoss.toFixed(3)),
@@ -164,10 +164,10 @@ const arbitrageRouter = router({
         const arbitrages = await prisma.arbitrage.findMany({
           where: lastEventId
             ? {
-                createdAt: {
-                  gt: lastEventId,
-                },
-              }
+              createdAt: {
+                gt: lastEventId,
+              },
+            }
             : undefined,
           orderBy: {
             createdAt: "asc",

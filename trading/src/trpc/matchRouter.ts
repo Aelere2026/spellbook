@@ -1,5 +1,5 @@
 import { publicProcedure, router } from "./trpc"
-import { prisma } from "../../src/util/prisma"
+import { prisma } from "../util/prisma"
 import { tracked } from "@trpc/server"
 import { z } from "zod"
 
