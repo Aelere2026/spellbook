@@ -36,6 +36,38 @@ def is_binary(m: NormalizedMarket) -> bool:
     return {x.lower() for x in m.outcomes} == {"yes", "no"}
 
 
+_TITLE_YEAR = re.compile(r'\b(20\d{2})\b')
+
+
+def _year_mismatch(k: NormalizedMarket, p: NormalizedMarket) -> bool:
+    """Return True if the known resolution date is incompatible with a year
+    stated explicitly in the other side's title.
+
+    Handles the case where one platform omits a close date but the title
+    says e.g. "in 2026" while the other side's market closes in 2029 (a
+    different election cycle).  A tolerance of ±1 year is allowed so that
+    a 2026-election market resolving in January 2027 is not rejected.
+
+    Only fires when exactly one side is missing a date AND the other side's
+    title contains an explicit year — if both dates are present the time
+    gate already handles cycle mismatches.
+    """
+    k_date = k.resolution_date or k.close_time
+    p_date = p.resolution_date or p.close_time
+    if k_date and p_date:
+        return False  # time gate handles this
+
+    if k_date and not p_date:
+        p_years = {int(y) for y in _TITLE_YEAR.findall(p.title)}
+        return bool(p_years and not any(abs(k_date.year - y) <= 1 for y in p_years))
+
+    if p_date and not k_date:
+        k_years = {int(y) for y in _TITLE_YEAR.findall(k.title)}
+        return bool(k_years and not any(abs(p_date.year - y) <= 1 for y in k_years))
+
+    return False
+
+
 _KALSHI_THRESHOLD = re.compile(r'(\d+(?:\.\d+)?)\+')
 _POLY_THRESHOLD   = re.compile(r'[Oo]/[Uu]\s+(\d+(?:\.\d+)?)')
 
@@ -163,7 +195,7 @@ def find_matches(
         cached = score_cache.get(key) if score_cache is not None else None
         score = cached if cached is not None else fuzzy_score(canon(k.title), canon(p.title))
         all_scores[key] = score
-        if score >= min_score and not _prop_threshold_mismatch(k, p) and not _entity_mismatch(k, p):
+        if score >= min_score and not _year_mismatch(k, p) and not _prop_threshold_mismatch(k, p) and not _entity_mismatch(k, p):
             results.append(MatchResult(k, p, round(score, 1)))
 
     results.sort(key=lambda r: r.score, reverse=True)
