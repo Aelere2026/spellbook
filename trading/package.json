@@ -4,10 +4,9 @@
   "description": "SPeLL Trading Bot",
   "main": "index.js",
   "scripts": {
-    "types": "tsc --emitDeclarationOnly --noEmit false --declaration --outDir \"dist/types\" --watch",
     "build": "esbuild src/app.ts --outfile=dist/bundle.js --bundle --sourcemap --watch --platform=node --format=esm --external:./node_modules/*",
     "run": "node --enable-source-maps dist/bundle.js",
-    "dev": "concurrently \"npm run types\" \"npm run build\" \"npm run run\""
+    "dev": "concurrently \"npm run build\" \"npm run run\""
   },
   "keywords": [],
   "author": "",
