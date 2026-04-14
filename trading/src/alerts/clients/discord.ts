@@ -1,15 +1,17 @@
-import { AlertClient, Alert, sendWebhook, Severity } from ".."
+import { AlertClient, Alert, sendWebhook, defaults } from ".."
 import * as log from "../../util/log"
+
+const RED = Number(0xff0000)
 
 export class DiscordAlertClient implements AlertClient {
     readonly webhookUrl: string
-    username: string | undefined
-    icon: string | undefined
+    username: string
+    icon: string
 
     constructor({ webhookUrl, username, icon }: { webhookUrl: string, username?: string, icon?: string }) {
         this.webhookUrl = webhookUrl
-        this.username = username
-        this.icon = icon
+        this.username = username ?? defaults.username
+        this.icon = icon ?? defaults.icon
     }
 
     async send(alert: Alert) {
@@ -18,21 +20,14 @@ export class DiscordAlertClient implements AlertClient {
             avatar_url: this.icon ?? "",
             embeds: [
                 {
-                    color: getSeverityColor(alert.severity),
+                    color: RED,
                     title: alert.title,
                     description: alert.body
                 }
             ]
         }
 
-        log.alert("Sending webhook to Discord!")
+        log.alert("Sending Discord message!")
         return await sendWebhook(webhook, this.webhookUrl)
     }
-}
-
-function getSeverityColor(severity: Severity): number {
-    if (severity === "NOTIF") return Number(0x00ff00) // Green
-    else if (severity === "WARN") return Number(0xffff00) // Yellow
-    else if (severity === "CRITICAL") return Number(0xff0000) // Red
-    return Number(0xffffff) // Impossible?
 }

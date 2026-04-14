@@ -7,7 +7,7 @@ import * as path from "path"
 import * as log from "./log"
 
 const envFile = path.resolve(path.join(__dirname), "../prisma/.env")
-dotenv.config({ path: envFile, quiet: true } )
+dotenv.config({ path: envFile, quiet: true })
 const connectionString = `${process.env.DATABASE_URL}`
 
 const adapter = new PrismaPg({ connectionString })
@@ -18,9 +18,9 @@ async function healthCheck(timeout: number = 5000) {
         try {
             await prisma.platform.findFirst()
         } catch (err) {
-            log.fatal("Connection to database failed...")
-            log.fatal("Please make sure the docker container is running!")
-            process.exit(0)
+            log.error("Connection to database failed...")
+            log.error("Please make sure the docker container is running!")
+            // process.exit(0)
         }
 
         await new Promise(resolve => setTimeout(resolve, timeout))

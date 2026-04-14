@@ -1,4 +1,4 @@
-import { AlertClient, Alert } from ".."
+import { AlertClient, Alert, defaults } from ".."
 import sgMail from "@sendgrid/mail"
 import * as log from "../../util/log"
 
@@ -12,7 +12,7 @@ export class SendGridAlertClient implements AlertClient {
         this.apiKey = apiKey
         this.from = from
         this.to = Array.isArray(to) ? to : [to]
-        this.name = name ?? "Spellbook Notify"
+        this.name = name ?? defaults.username
     }
 
     async send(alert: Alert) {
@@ -27,7 +27,6 @@ export class SendGridAlertClient implements AlertClient {
 
         log.alert("Sending email!")
         const response = await sgMail.sendMultiple(msg)
-        log.debug(response)
         return response[0].statusCode === 202
     }
 }

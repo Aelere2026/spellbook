@@ -1,21 +1,24 @@
 import * as log from "../util/log"
 
-export type Severity = "NOTIF" | "WARN" | "CRITICAL"
-
 export type Alert = {
     title: string,
     body: string,
-    severity: Severity
 }
 
 export interface AlertClient {
     send: (alert: Alert) => Promise<boolean>
 }
 
+export const defaults = {
+    username: "Spellbook Notify",
+    icon: "https://ih1.redbubble.net/image.5381666378.3555/raf,360x360,075,t,fafafa:ca443f4786.jpg"
+}
+
 export { DiscordAlertClient } from "./clients/discord"
 export { SlackAlertClient } from "./clients/slack"
 export { SendGridAlertClient } from "./clients/sendGrid"
 export { TwilioAlertClient } from "./clients/twilio"
+export { Watchdog } from "./watchdog"
 
 export async function sendWebhook(webhook: object, url: string) {
     log.debug(webhook)

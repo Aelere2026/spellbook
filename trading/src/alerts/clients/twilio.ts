@@ -31,6 +31,7 @@ export class TwilioAlertClient implements AlertClient {
             to
         }
 
+        log.alert("Sending SMS!")
         const response = await this.client.messages.create(msg)
         log.debug(response)
         return true

@@ -1,4 +1,4 @@
-import { AlertClient, Alert, sendWebhook, Severity } from ".."
+import { AlertClient, Alert, sendWebhook } from ".."
 import * as log from "../../util/log"
 
 export class SlackAlertClient implements AlertClient {
@@ -22,7 +22,7 @@ export class SlackAlertClient implements AlertClient {
             ]
         }
 
-        log.alert("Sending alert to slack!")
+        log.alert("Sending Slack message!")
         return await sendWebhook(webhook, this.webhookUrl)
     }
 }
