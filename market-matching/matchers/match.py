@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from normalizers.models import NormalizedMarket
 from matchers.utils import canon, fuzzy_score
-from matchers.bm25 import bm25_candidates
+from matchers.idf_retrieval import idf_candidates
 
 
 @dataclass
@@ -119,14 +119,14 @@ def find_matches(
     min_score: float = 83.0,
     max_time_delta: timedelta = timedelta(days=14),
     score_cache: dict[tuple[str, str], float] | None = None,
-    bm25_top_k: int = 20,
+    idf_top_k: int = 20,
 ) -> tuple[list[MatchResult], dict[tuple[str, str], float]]:
     """Return scored (kalshi, polymarket) pairs that likely describe the same event.
 
     Pipeline:
       1. Drop any non-binary (non Yes/No) market on either side.
       2. BM25 candidate generation: build an index over Polymarket titles,
-         query with each Kalshi title, retrieve top bm25_top_k candidates
+         query with each Kalshi title, retrieve top idf_top_k candidates
          with at least one shared token.
       3. Time-gate: discard pairs whose resolution dates differ by more than
          max_time_delta (applied as a post-filter so BM25 handles all recall).
@@ -140,7 +140,7 @@ def find_matches(
     poly_binary = [p for p in polymarket if is_binary(p)]
 
     # Candidate generation via BM25
-    raw_pairs = bm25_candidates(eligible, poly_binary, top_k=bm25_top_k)
+    raw_pairs = idf_candidates(eligible, poly_binary, top_k=idf_top_k)
 
     # Dedup and time post-filter
     seen: set[tuple[str, str]] = set()
