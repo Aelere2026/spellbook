@@ -71,7 +71,7 @@ def run():
     print(f"[match] Finding matches...")
     matches, all_scores = find_matches(kalshi_markets, poly_markets,
                                        min_score=MIN_SCORE, max_time_delta=TIME_WINDOW,
-                                       score_cache=score_cache, bm25_top_k=BM25_TOP_K)
+                                       score_cache=score_cache, idf_top_k=BM25_TOP_K)
     print(f"[match] Done in {_elapsed(t)}  |  {len(matches)} matches found  |  {len(all_scores)} pairs scored")
 
     # --- Save cache ---

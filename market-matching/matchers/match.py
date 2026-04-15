@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from normalizers.models import NormalizedMarket
 from matchers.utils import canon, fuzzy_score
-from matchers.bm25 import bm25_candidates
+from matchers.idf_retrieval import idf_candidates
 
 
 @dataclass
@@ -34,6 +34,38 @@ def is_binary(m: NormalizedMarket) -> bool:
     if _OPEN_QUESTION.match(m.title):
         return False
     return {x.lower() for x in m.outcomes} == {"yes", "no"}
+
+
+_TITLE_YEAR = re.compile(r'\b(20\d{2})\b')
+
+
+def _year_mismatch(k: NormalizedMarket, p: NormalizedMarket) -> bool:
+    """Return True if the known resolution date is incompatible with a year
+    stated explicitly in the other side's title.
+
+    Handles the case where one platform omits a close date but the title
+    says e.g. "in 2026" while the other side's market closes in 2029 (a
+    different election cycle).  A tolerance of ±1 year is allowed so that
+    a 2026-election market resolving in January 2027 is not rejected.
+
+    Only fires when exactly one side is missing a date AND the other side's
+    title contains an explicit year — if both dates are present the time
+    gate already handles cycle mismatches.
+    """
+    k_date = k.resolution_date or k.close_time
+    p_date = p.resolution_date or p.close_time
+    if k_date and p_date:
+        return False  # time gate handles this
+
+    if k_date and not p_date:
+        p_years = {int(y) for y in _TITLE_YEAR.findall(p.title)}
+        return bool(p_years and not any(abs(k_date.year - y) <= 1 for y in p_years))
+
+    if p_date and not k_date:
+        k_years = {int(y) for y in _TITLE_YEAR.findall(k.title)}
+        return bool(k_years and not any(abs(p_date.year - y) <= 1 for y in k_years))
+
+    return False
 
 
 _KALSHI_THRESHOLD = re.compile(r'(\d+(?:\.\d+)?)\+')
@@ -119,14 +151,14 @@ def find_matches(
     min_score: float = 83.0,
     max_time_delta: timedelta = timedelta(days=14),
     score_cache: dict[tuple[str, str], float] | None = None,
-    bm25_top_k: int = 20,
+    idf_top_k: int = 20,
 ) -> tuple[list[MatchResult], dict[tuple[str, str], float]]:
     """Return scored (kalshi, polymarket) pairs that likely describe the same event.
 
     Pipeline:
       1. Drop any non-binary (non Yes/No) market on either side.
       2. BM25 candidate generation: build an index over Polymarket titles,
-         query with each Kalshi title, retrieve top bm25_top_k candidates
+         query with each Kalshi title, retrieve top idf_top_k candidates
          with at least one shared token.
       3. Time-gate: discard pairs whose resolution dates differ by more than
          max_time_delta (applied as a post-filter so BM25 handles all recall).
@@ -140,7 +172,7 @@ def find_matches(
     poly_binary = [p for p in polymarket if is_binary(p)]
 
     # Candidate generation via BM25
-    raw_pairs = bm25_candidates(eligible, poly_binary, top_k=bm25_top_k)
+    raw_pairs = idf_candidates(eligible, poly_binary, top_k=idf_top_k)
 
     # Dedup and time post-filter
     seen: set[tuple[str, str]] = set()
@@ -163,7 +195,7 @@ def find_matches(
         cached = score_cache.get(key) if score_cache is not None else None
         score = cached if cached is not None else fuzzy_score(canon(k.title), canon(p.title))
         all_scores[key] = score
-        if score >= min_score and not _prop_threshold_mismatch(k, p) and not _entity_mismatch(k, p):
+        if score >= min_score and not _year_mismatch(k, p) and not _prop_threshold_mismatch(k, p) and not _entity_mismatch(k, p):
             results.append(MatchResult(k, p, round(score, 1)))
 
     results.sort(key=lambda r: r.score, reverse=True)

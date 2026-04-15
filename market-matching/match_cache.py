@@ -53,13 +53,20 @@ def save_cache(
     polymarket: list[NormalizedMarket],
     all_scores: dict[tuple[str, str], float],
 ) -> None:
-    """Persist the current run's fingerprints and all candidate pair scores to disk."""
+    """Persist the current run's fingerprints and all candidate pair scores to disk.
+
+    Only scores where both markets are still present in the current fetch are
+    kept — stale pairs are dropped so the cache doesn't grow unboundedly.
+    """
+    live_k = {m.platform_id for m in kalshi}
+    live_p = {m.platform_id for m in polymarket}
     data = {
         "kalshi":     {m.platform_id: fingerprint(m) for m in kalshi},
         "polymarket": {m.platform_id: fingerprint(m) for m in polymarket},
         "scores":     {
             f"{k_id}|{p_id}": score
             for (k_id, p_id), score in all_scores.items()
+            if k_id in live_k and p_id in live_p
         },
     }
     path.write_text(json.dumps(data))

@@ -66,23 +66,24 @@ def upsert_market(cur, market: NormalizedMarket, platform_db_id: int) -> int:
         cur.execute(
             """
             UPDATE "Market"
-               SET title = %s, event_date = %s, resolution_date = %s, category = %s
+               SET title = %s, event_date = %s, resolution_date = %s, category = %s, slug = %s
              WHERE id = %s
             """,
-            (market.title, event_date, resolution_date, category, market_id),
+            (market.title, event_date, resolution_date, category, market.slug, market_id),
         )
         return market_id
 
     cur.execute(
         """
         INSERT INTO "Market"
-            (platform_id, api_id, title, event_date, resolution_date, status, fee, category)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            (platform_id, api_id, slug, title, event_date, resolution_date, status, fee, category)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """,
         (
             platform_db_id,
             market.platform_id,
+            market.slug,
             market.title,
             event_date,
             resolution_date,

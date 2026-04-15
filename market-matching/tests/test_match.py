@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from normalizers.models import NormalizedMarket
-from matchers.match import find_matches, MatchResult
+from matchers.match import find_matches, MatchResult, _year_mismatch
 from matchers.utils import canon, fuzzy_score
 
 T = datetime(2026, 6, 1, tzinfo=timezone.utc)
@@ -187,5 +187,59 @@ fuzzy_score(a, b)
 assert fuzzy_score.cache_info().hits == 0, "first call should be a miss"
 fuzzy_score(a, b)
 assert fuzzy_score.cache_info().hits == 1, "second call with same args should be a cache hit"
+
+# --- _year_mismatch unit tests ---
+
+def _ym(platform_k, pid_k, title_k, close_k, platform_p, pid_p, title_p, close_p):
+    k = market(platform_k, pid_k, title_k, close_time=close_k)
+    p = market(platform_p, pid_p, title_p, close_time=close_p)
+    return _year_mismatch(k, p)
+
+Y2026 = datetime(2026, 6, 1, tzinfo=timezone.utc)
+Y2027 = datetime(2027, 11, 3, tzinfo=timezone.utc)   # 2026-election Kalshi close
+Y2029 = datetime(2029, 11, 7, tzinfo=timezone.utc)   # 2028-election Kalshi close
+
+# Both dates present → guard defers to time gate, never fires
+assert not _ym("kalshi", "K1", "Will Democrats win the Senate race in Oklahoma?", Y2029,
+               "polymarket", "P1", "Will the Democrats win the Oklahoma Senate race in 2026?", Y2026), \
+    "both dates present: guard should not fire (time gate owns this)"
+
+# Kalshi 2028 cycle (closes 2029), Polymarket 2026 title, no Poly date → reject
+assert _ym("kalshi", "K2", "Will Democrats win the Senate race in Oklahoma?", Y2029,
+           "polymarket", "P2", "Will the Democrats win the Oklahoma Senate race in 2026?", None), \
+    "2029 Kalshi vs 2026 Polymarket title with no Poly date should be rejected"
+
+# Kalshi 2026 cycle (closes 2027), Polymarket 2026 title, no Poly date → allow (±1 tolerance)
+assert not _ym("kalshi", "K3", "Will Democrats win the Senate race in Rhode Island?", Y2027,
+               "polymarket", "P3", "Will the Democrats win the Rhode Island Senate race in 2026?", None), \
+    "2027 Kalshi close vs 2026 Polymarket title should be allowed (within ±1 year)"
+
+# No year in either title, one date missing → allow (nothing to compare)
+assert not _ym("kalshi", "K4", "Will the Fed cut rates?", Y2027,
+               "polymarket", "P4", "Will the Federal Reserve cut rates?", None), \
+    "no year in title: guard should not fire"
+
+# Symmetric: Polymarket has date, Kalshi title has explicit year, no Kalshi date
+k_no_date = market("kalshi", "K5", "Will Democrats win the Senate race in 2026?", close_time=None)
+p_has_date = market("polymarket", "P5", "Will the Democrats win the Senate race?",
+                    close_time=Y2029)
+assert _year_mismatch(k_no_date, p_has_date), \
+    "symmetric: 2026 in Kalshi title vs 2029 Poly date should be rejected"
+
+# end-to-end: 2028-cycle Kalshi matches excluded from find_matches
+k_28 = market("kalshi", "K-28", "Will Democrats win the Senate race in Oklahoma?",
+              close_time=Y2029)
+p_26 = market("polymarket", "P-26", "Will the Democrats win the Oklahoma Senate race in 2026?",
+              close_time=None)
+results, _ = find_matches([k_28], [p_26])
+assert len(results) == 0, "2028-cycle Kalshi must not match 2026 Polymarket with no date"
+
+# end-to-end: 2026-cycle Kalshi still matches when Polymarket has no date
+k_26 = market("kalshi", "K-26", "Will Democrats win the Senate race in Rhode Island?",
+              close_time=Y2027)
+p_26_ri = market("polymarket", "P-26-RI", "Will the Democrats win the Rhode Island Senate race in 2026?",
+                 close_time=None)
+results, _ = find_matches([k_26], [p_26_ri])
+assert len(results) == 1, "2026-cycle Kalshi should still match 2026 Polymarket with no date"
 
 print("All tests passed.")

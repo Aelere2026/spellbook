@@ -1,8 +1,12 @@
+/* Dashboard.tsx contains the main code for the dashboard display of this project. It requires React.ts and uses 
+Tailwindcss for graphical design. Users will primarily view data through the dashboard. */
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
 import { useTheme } from "../context/ThemeContext";
 
+//Defines the structure for display cards for the metrics 
 interface StatCardProps {
   title: string;
   value: string | number;
@@ -12,6 +16,7 @@ interface StatCardProps {
   isDark?: boolean;
 }
 
+//Defines the react component for display cards and the styling 
 const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
@@ -82,6 +87,7 @@ const fmtMoney = (n: number) =>
 
 const fmtPct = (n: number) => `${n.toFixed(2)}%`;
 
+//Defines colors for light and dark modes 
 const colors = (n: number, isDark: boolean) =>
   n > 0
     ? isDark
@@ -100,6 +106,7 @@ const Dashboard: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
+  //Fetching data from the database every 5000ms for arbitrage opportunities and arbitrage stats 
   const { data: mar } = api.markets.get.useQuery();
   const { data: arb } = api.arbitrages.get.useQuery(undefined, {
     refetchInterval: 5000,
@@ -113,6 +120,7 @@ const Dashboard: React.FC = () => {
     notifyOnChangeProps: "all",
   });
 
+  //Assures nonnull 
   const market = mar ?? [];
   const arbit = arb ?? [];
   const match = mat ?? [];
@@ -122,6 +130,7 @@ const Dashboard: React.FC = () => {
   console.log(match);
   console.log(stats);
 
+  //Defines variables to display from fetched arbitrage data 
   const trades = arbit.map((a) => {
     const grossProfit = Number(a.grossProfit);
     const netProfit = Number(a.netProfit);
@@ -139,14 +148,25 @@ const Dashboard: React.FC = () => {
       Math.round(execution.getTime() - deduction.getTime()),
     );
 
+    //Calculating and grabbing additional information needed for display 
     const capital = grossProfit;
     const costs = totalFee + slippage;
     const roiPct = capital > 0 ? (netProfit / capital) * 100 : 0;
 
     const pairMatch = match.find((m) => m.id === a.matchId);
     const polymarket_id = Number(pairMatch?.polymarketMarketId);
-    const pairMarket = market.find((p) => p.id === polymarket_id);
-    const title = pairMarket?.title;
+    const kalshi_id = Number(pairMatch?.kalshiMarketId);
+    const polyMarket = market.find((p) => p.id === polymarket_id);
+    const kalshiMarket = market.find((p) => p.id === kalshi_id);
+    const title = polyMarket?.title;
+
+    //Retrieving links for specific markets to display in trade table 
+    const polymarketUrl = polyMarket?.slug
+      ? `https://polymarket.com/market/${polyMarket.slug}`
+      : null;
+    const kalshiUrl = kalshiMarket?.apiId
+      ? `https://kalshi.com/events/${kalshiMarket.apiId}`
+      : null;
 
     const edge_percent = Number(
       (1 - (Number(a.yesPrice) + Number(a.noPrice))) * 100,
@@ -155,9 +175,10 @@ const Dashboard: React.FC = () => {
     return {
       id: a.id,
       market: title,
-      exchangePair: "Polymarket / Kalshi",
+      polymarketUrl,
+      kalshiUrl,
       edgePct: edge_percent,
-      matchScore: matchScore,
+      matchScore,
       capital,
       costs,
       netPnl: netProfit,
@@ -168,6 +189,7 @@ const Dashboard: React.FC = () => {
   });
 
   return (
+    //Stat cards with metrics displayed at the top followed by trade table with all simulated arbitrages displayed 
     <div className="relative">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.05fr_1.6fr_1.05fr]">
         <div className="grid grid-cols-2 gap-3">
@@ -194,7 +216,6 @@ const Dashboard: React.FC = () => {
             value={`${stats?.avgTradeTime ?? 0} ms`}
           />
         </div>
-
         <button
           type="button"
           style={
@@ -326,10 +347,33 @@ const Dashboard: React.FC = () => {
                   >
                     {t.market}
                   </td>
-                  <td
-                    className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}
-                  >
-                    {t.exchangePair}
+                  <td className="px-3 py-3 text-sm sm:px-4">
+                    <div className="flex flex-col gap-1">
+                      {t.polymarketUrl ? (
+                        <a
+                          href={t.polymarketUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`hover:underline ${isDark ? "text-violet-300 hover:text-violet-100" : "text-violet-600 hover:text-violet-900"}`}
+                        >
+                          Polymarket
+                        </a>
+                      ) : (
+                        <span className={isDark ? "text-violet-100/70" : "text-violet-600"}>Polymarket</span>
+                      )}
+                      {t.kalshiUrl ? (
+                        <a
+                          href={t.kalshiUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`hover:underline ${isDark ? "text-violet-300 hover:text-violet-100" : "text-violet-600 hover:text-violet-900"}`}
+                        >
+                          Kalshi
+                        </a>
+                      ) : (
+                        <span className={isDark ? "text-violet-100/70" : "text-violet-600"}>Kalshi</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-3 py-3 text-sm sm:px-4">
                     <span

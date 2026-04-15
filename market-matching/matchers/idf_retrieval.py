@@ -9,7 +9,7 @@ def _tokenize(title: str) -> list[str]:
     return re.findall(r'\w+', canon(title))
 
 
-def bm25_candidates(
+def idf_candidates(
     kalshi: list[NormalizedMarket],
     polymarket: list[NormalizedMarket],
     top_k: int = 20,

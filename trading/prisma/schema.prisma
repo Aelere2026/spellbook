@@ -33,6 +33,7 @@ model Market {
 
   platformId     Int      @map("platform_id")
   apiId          String   @map("api_id")
+  slug           String?
   title          String
   eventDate      DateTime @map("event_date")
   resolutionDate DateTime @map("resolution_date")
