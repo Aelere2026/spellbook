@@ -182,6 +182,18 @@ const Navbar: React.FC = () => {
             <span className="text-base">{isDark ? "☀️" : "🌙"}</span>
             <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
           </button>
+          {/*Settings*/}
+          <Link
+            to="/settings"
+            className={`ml-2 inline-flex items-center justify-center text-lg transition-all duration-200 ${
+              isDark
+                ? "text-violet-300 hover:text-white hover:scale-110"
+                : "text-violet-500 hover:text-violet-900 hover:scale-110"
+            }`}
+            title="Settings"
+          >
+            ⚙️
+          </Link>
         </nav>
       </div>
     </header>

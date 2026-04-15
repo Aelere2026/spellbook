@@ -20,7 +20,7 @@ const Profits: React.FC = () => {
 
   // Fetch arbitrage data including market resolution info
   const { data: arbData } = api.arbitrages.getWithMarkets.useQuery(undefined, {
-    refetchInterval: 5000, // auto-refresh every 5 seconds
+    refetchInterval: 5000, // auto-refresh every 5 seconds (5000 ms)
     refetchOnWindowFocus: true,
   });
 
