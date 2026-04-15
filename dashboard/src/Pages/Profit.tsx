@@ -13,6 +13,16 @@ const Profits: React.FC = () => {
   const [timeScale, setTimeScale] = useState<TimeScale>("day");
   const [closureFilter, setClosureFilter] = useState<ClosureFilter>("all");
 
+  const { data: configData } = api.config.get.useQuery();
+  const setCutoff = api.config.setResolutionCutoff.useMutation({
+    onSuccess: () => void utils.config.get.invalidate(),
+  });
+  const utils = api.useUtils();
+
+  const cutoffInputValue = configData?.resolutionCutoff
+    ? new Date(configData.resolutionCutoff).toISOString().slice(0, 10)
+    : "";
+
   const { data: arbData } = api.arbitrages.getWithMarkets.useQuery(undefined, {
     refetchInterval: 5000,
     refetchOnWindowFocus: true,
@@ -537,6 +547,46 @@ const Profits: React.FC = () => {
                     {opt.label}
                   </button>
                 ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="resolution-cutoff"
+                  className={`text-sm font-medium ${
+                    isDark ? "text-violet-200/75" : "text-violet-600"
+                  }`}
+                >
+                  Detect until
+                </label>
+                <input
+                  id="resolution-cutoff"
+                  type="date"
+                  value={cutoffInputValue}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCutoff.mutate({
+                      date: val ? new Date(val) : null,
+                    });
+                  }}
+                  className={[
+                    "rounded-xl border px-4 py-2 text-sm outline-none ring-0 transition",
+                    isDark
+                      ? "border-violet-400/12 bg-violet-500/10 text-violet-100 focus:border-violet-300/30 [color-scheme:dark]"
+                      : "border-violet-300 bg-violet-50 text-violet-900 focus:border-violet-400",
+                  ].join(" ")}
+                />
+                {cutoffInputValue && (
+                  <button
+                    onClick={() => setCutoff.mutate({ date: null })}
+                    className={`rounded-lg px-2 py-1 text-xs transition ${
+                      isDark
+                        ? "text-violet-300/60 hover:text-violet-200"
+                        : "text-violet-400 hover:text-violet-700"
+                    }`}
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
 
               <label

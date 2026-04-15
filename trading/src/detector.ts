@@ -240,17 +240,38 @@ async function runDetector(): Promise<void> {
   while (true) {
     try {
       // Load all matched pairs with their market API IDs
-      const matches = await prisma.match.findMany({
-        include: {
-          polymarketMarket: true,
-          kalshiMarket: true,
-        },
-      });
+      const [matches, config] = await Promise.all([
+        prisma.match.findMany({
+          include: {
+            polymarketMarket: true,
+            kalshiMarket: true,
+          },
+        }),
+        prisma.config.findUnique({ where: { id: 1 } }),
+      ]);
 
-      log.info(`Checking ${matches.length} matched pairs for arbitrage...`);
+      const cutoff = config?.resolutionCutoff ?? null;
+      const activeMatches = cutoff
+        ? matches.filter((m) => {
+            const laterDate = new Date(
+              Math.max(
+                m.polymarketMarket.resolutionDate.getTime(),
+                m.kalshiMarket.resolutionDate.getTime(),
+              ),
+            );
+            return laterDate <= cutoff;
+          })
+        : matches;
+
+      const skipped = matches.length - activeMatches.length;
+      log.info(
+        `Checking ${activeMatches.length} matched pairs for arbitrage` +
+        (skipped > 0 ? ` (${skipped} skipped — resolve after cutoff ${cutoff!.toISOString().slice(0, 10)})` : "") +
+        "...",
+      );
       let opportunitiesFound = 0;
 
-      for (const match of matches) {
+      for (const match of activeMatches) {
         const kalshiApiId = match.kalshiMarket.apiId;
         const polymarketApiId = match.polymarketMarket.apiId;
 

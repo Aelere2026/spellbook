@@ -80,3 +80,9 @@ model Platform {
   createdAt DateTime @default(now()) @map("created_at")
   markets   Market[]
 }
+
+model Config {
+  id               Int       @id @default(1)
+  resolutionCutoff DateTime? @map("resolution_cutoff")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+}
