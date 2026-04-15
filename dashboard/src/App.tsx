@@ -5,6 +5,7 @@ import Opportunities from "./Pages/Opportunities";
 import Layout from "./Pages/Layout";
 import Home from "./Pages/Home";
 import Profit from "./Pages/Profit";
+import Settings from "./Pages/Settings";
 import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 
@@ -46,6 +47,8 @@ function App() {
               <Route path="/gain-loss" element={<GainLoss />} />
               <Route path="/opportunities" element={<Opportunities />} />
               <Route path="/profit" element={<Profit />} />
+              <Route path="/settings" element={<Settings />} />
+
             </Route>
           </Routes>
         </QueryClientProvider>
