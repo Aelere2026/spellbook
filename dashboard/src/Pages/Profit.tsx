@@ -3,41 +3,31 @@ import LineGraph from "./LineGraph";
 import { api } from "../utils/api";
 import { useTheme } from "../context/ThemeContext";
 
-// Define supported time scales for grouping data
 type TimeScale = "minute" | "day" | "week" | "month";
-
-// Define filter options for pre/post market closure
 type ClosureFilter = "all" | "pre" | "post";
 
 const Profits: React.FC = () => {
-  // Theme handling for light/dark mode styling
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  // State for time grouping and closure filtering
   const [timeScale, setTimeScale] = useState<TimeScale>("day");
   const [closureFilter, setClosureFilter] = useState<ClosureFilter>("all");
 
-  // Fetch arbitrage data including market resolution info
   const { data: arbData } = api.arbitrages.getWithMarkets.useQuery(undefined, {
-    refetchInterval: 5000, // auto-refresh every 5 seconds (5000 ms)
+    refetchInterval: 5000,
     refetchOnWindowFocus: true,
   });
 
-  // Default to empty array if no data returned
   const arbitrages = arbData ?? [];
 
-  // Separate trades executed before market resolution
   const preClose = arbitrages.filter(
     (a) => new Date(a.executionTime) < new Date(a.resolutionDate),
   );
 
-  // Separate trades executed after market resolution
   const postClose = arbitrages.filter(
     (a) => new Date(a.executionTime) >= new Date(a.resolutionDate),
   );
 
-  // Apply selected filter (all, pre, or post)
   const filteredArbitrages =
     closureFilter === "pre"
       ? preClose
@@ -45,7 +35,6 @@ const Profits: React.FC = () => {
         ? postClose
         : arbitrages;
 
-  // Format labels for chart x-axis depending on time scale
   const formatBucketLabel = (date: Date, scale: TimeScale) => {
     if (scale === "minute") {
       return new Intl.DateTimeFormat(undefined, {
@@ -62,7 +51,6 @@ const Profits: React.FC = () => {
     }
 
     if (scale === "week") {
-      // Calculate start of week (Monday)
       const startOfWeek = new Date(date);
       const day = startOfWeek.getDay();
       const diff = day === 0 ? -6 : 1 - day;
@@ -75,14 +63,12 @@ const Profits: React.FC = () => {
       }).format(startOfWeek)}`;
     }
 
-    // Default: month + year
     return new Intl.DateTimeFormat(undefined, {
       month: "short",
       year: "numeric",
     }).format(date);
   };
 
-  // Create normalized grouping key based on selected time scale
   const bucketKey = (date: Date, scale: TimeScale) => {
     const d = new Date(date);
 
@@ -104,13 +90,11 @@ const Profits: React.FC = () => {
       return d.toISOString();
     }
 
-    // Normalize to start of month
     d.setDate(1);
     d.setHours(0, 0, 0, 0);
     return d.toISOString();
   };
 
-  // Build grouped chart data (net + gross profit)
   const chartData = useMemo(() => {
     const grouped = new Map<
       string,
@@ -130,7 +114,6 @@ const Profits: React.FC = () => {
       const netProfit = Number(a.netProfit ?? 0);
       const grossProfit = Number(a.grossProfit ?? 0);
 
-      // Initialize bucket if needed
       if (!grouped.has(key)) {
         grouped.set(key, {
           label,
@@ -140,22 +123,18 @@ const Profits: React.FC = () => {
         });
       }
 
-      // Accumulate values into bucket
       const bucket = grouped.get(key)!;
       bucket.netProfit += netProfit;
       bucket.grossProfit += grossProfit;
     }
 
-    // Convert to array and sort chronologically
     return Array.from(grouped.values()).sort(
       (a, b) => a.date.getTime() - b.date.getTime(),
     );
   }, [filteredArbitrages, timeScale]);
 
-  // Limit number of points for minute-level charts
   const MAX_MINUTE_POINTS = 30;
 
-  // Downsample minute data if too dense
   const displayData = useMemo(() => {
     if (timeScale !== "minute") {
       return chartData;
@@ -167,7 +146,6 @@ const Profits: React.FC = () => {
       return chartData;
     }
 
-    // Evenly sample across dataset
     const step = (n - 1) / (MAX_MINUTE_POINTS - 1);
     const sampled: typeof chartData = [];
     const usedIndices = new Set<number>();
@@ -184,12 +162,10 @@ const Profits: React.FC = () => {
     return sampled.length > 0 ? sampled : chartData;
   }, [chartData, timeScale]);
 
-  // Extract arrays for graph input
   const timeData = displayData.map((d) => d.label);
   const netProfitData = displayData.map((d) => d.netProfit);
   const grossProfitData = displayData.map((d) => d.grossProfit);
 
-  // Latest values for summary cards
   const latestNet =
     netProfitData.length > 0 ? netProfitData[netProfitData.length - 1] : 0;
 
@@ -198,7 +174,6 @@ const Profits: React.FC = () => {
       ? grossProfitData[grossProfitData.length - 1]
       : 0;
 
-  // Average values
   const avgNet =
     netProfitData.length > 0
       ? netProfitData.reduce((sum, value) => sum + value, 0) /
@@ -211,7 +186,6 @@ const Profits: React.FC = () => {
         grossProfitData.length
       : 0;
 
-  // Human-readable label for UI
   const scaleLabel =
     timeScale === "minute"
       ? "Minute"
@@ -221,11 +195,9 @@ const Profits: React.FC = () => {
           ? "Week"
           : "Month";
 
-  // Total profits for pre/post closure comparisons
   const totalPreNet = preClose.reduce((s, a) => s + Number(a.netProfit), 0);
   const totalPostNet = postClose.reduce((s, a) => s + Number(a.netProfit), 0);
 
-  // Options for closure filter buttons
   const closureFilterOptions: { value: ClosureFilter; label: string }[] = [
     { value: "all", label: "All" },
     { value: "pre", label: "Pre-closure" },
@@ -239,54 +211,352 @@ const Profits: React.FC = () => {
       }`}
     >
       <div className="mx-auto max-w-7xl px-6 py-8 sm:px-8 lg:px-10">
-        {/* Summary cards and overview section */}
-        <section className="relative overflow-hidden rounded-[2rem] border px-8 py-12 backdrop-blur-xl">
-          {/* Decorative background for dark mode */}
+        <section
+          style={
+            !isDark
+              ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+              : undefined
+          }
+          className={[
+            "relative overflow-hidden rounded-[2rem] border px-8 py-12 backdrop-blur-xl",
+            isDark
+              ? "border-violet-400/10 bg-gradient-to-br from-[#120d22]/95 via-[#161028]/95 to-[#09070f]/95 shadow-[0_25px_80px_rgba(15,8,35,0.55)]"
+              : "border-violet-200 shadow-sm",
+          ].join(" ")}
+        >
           {isDark && (
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(...)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(139,92,246,0.22),transparent_35%),radial-gradient(circle_at_80%_20%,rgba(168,85,247,0.12),transparent_25%)]" />
           )}
 
           <div className="relative">
-            {/* Section label */}
-            <div className="inline-flex items-center rounded-full border px-4 py-1 text-xs font-medium uppercase tracking-[0.22em]">
+            <div
+              className={`inline-flex items-center rounded-full border px-4 py-1 text-xs font-medium uppercase tracking-[0.22em] ${
+                isDark
+                  ? "border-violet-400/15 bg-violet-500/10 text-violet-200/80"
+                  : "border-violet-300 bg-violet-100 text-violet-600"
+              }`}
+            >
               Performance Overview
             </div>
 
-            {/* Title */}
-            <h1 className="mt-5 text-4xl font-semibold">
+            <h1
+              className={`mt-5 text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl ${
+                isDark ? "text-white" : "text-violet-900"
+              }`}
+            >
               Profits Analysis
             </h1>
 
-            {/* Pre vs Post closure summary cards */}
-            {/* Shows total net profit before and after market resolution */}
-            {/* Also displays trade counts */}
-            ...
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div
+                style={
+                  !isDark
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
+                    : undefined
+                }
+                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
+                  isDark
+                    ? "border-violet-400/10 bg-white/5"
+                    : "border-violet-200"
+                }`}
+              >
+                <div
+                  className={`text-[11px] uppercase tracking-[0.2em] ${
+                    isDark ? "text-violet-200/55" : "text-violet-400"
+                  }`}
+                >
+                  Pre-closure Net Profit
+                </div>
+                <div
+                  className={`mt-1 text-[11px] ${
+                    isDark ? "text-violet-300/50" : "text-violet-400/70"
+                  }`}
+                >
+                  {preClose.length} trade{preClose.length !== 1 ? "s" : ""} ·
+                  executed before market resolved
+                </div>
+                <div
+                  className={`mt-2 text-2xl font-semibold ${
+                    totalPreNet >= 0
+                      ? isDark
+                        ? "text-emerald-300"
+                        : "text-emerald-600"
+                      : isDark
+                        ? "text-rose-300"
+                        : "text-rose-600"
+                  }`}
+                >
+                  {totalPreNet >= 0 ? "+$" : "-$"}
+                  {Math.abs(totalPreNet).toFixed(2)}
+                </div>
+              </div>
+
+              <div
+                style={
+                  !isDark
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
+                    : undefined
+                }
+                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
+                  isDark
+                    ? "border-violet-400/10 bg-white/5"
+                    : "border-violet-200"
+                }`}
+              >
+                <div
+                  className={`text-[11px] uppercase tracking-[0.2em] ${
+                    isDark ? "text-violet-200/55" : "text-violet-400"
+                  }`}
+                >
+                  Post-closure Net Profit
+                </div>
+                <div
+                  className={`mt-1 text-[11px] ${
+                    isDark ? "text-violet-300/50" : "text-violet-400/70"
+                  }`}
+                >
+                  {postClose.length} trade{postClose.length !== 1 ? "s" : ""} ·
+                  executed after market resolved
+                </div>
+                <div
+                  className={`mt-2 text-2xl font-semibold ${
+                    totalPostNet >= 0
+                      ? isDark
+                        ? "text-emerald-300"
+                        : "text-emerald-600"
+                      : isDark
+                        ? "text-rose-300"
+                        : "text-rose-600"
+                  }`}
+                >
+                  {totalPostNet >= 0 ? "+$" : "-$"}
+                  {Math.abs(totalPostNet).toFixed(2)}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div
+                style={
+                  !isDark
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
+                    : undefined
+                }
+                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
+                  isDark
+                    ? "border-violet-400/10 bg-white/5"
+                    : "border-violet-200"
+                }`}
+              >
+                <div
+                  className={`text-[11px] uppercase tracking-[0.2em] ${
+                    isDark ? "text-violet-200/55" : "text-violet-400"
+                  }`}
+                >
+                  Latest Net {scaleLabel}
+                </div>
+                <div
+                  className={`mt-2 text-2xl font-semibold ${
+                    latestNet >= 0
+                      ? isDark
+                        ? "text-emerald-300"
+                        : "text-emerald-600"
+                      : isDark
+                        ? "text-rose-300"
+                        : "text-rose-600"
+                  }`}
+                >
+                  {latestNet >= 0 ? "+" : ""}
+                  {latestNet.toFixed(2)}
+                </div>
+              </div>
+
+              <div
+                style={
+                  !isDark
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
+                    : undefined
+                }
+                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
+                  isDark
+                    ? "border-violet-400/10 bg-white/5"
+                    : "border-violet-200"
+                }`}
+              >
+                <div
+                  className={`text-[11px] uppercase tracking-[0.2em] ${
+                    isDark ? "text-violet-200/55" : "text-violet-400"
+                  }`}
+                >
+                  Latest Gross {scaleLabel}
+                </div>
+                <div
+                  className={`mt-2 text-2xl font-semibold ${
+                    latestGross >= 0
+                      ? isDark
+                        ? "text-emerald-300"
+                        : "text-emerald-600"
+                      : isDark
+                        ? "text-rose-300"
+                        : "text-rose-600"
+                  }`}
+                >
+                  {latestGross >= 0 ? "+" : ""}
+                  {latestGross.toFixed(2)}
+                </div>
+              </div>
+
+              <div
+                style={
+                  !isDark
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
+                    : undefined
+                }
+                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
+                  isDark
+                    ? "border-violet-400/10 bg-white/5"
+                    : "border-violet-200"
+                }`}
+              >
+                <div
+                  className={`text-[11px] uppercase tracking-[0.2em] ${
+                    isDark ? "text-violet-200/55" : "text-violet-400"
+                  }`}
+                >
+                  Average Net {scaleLabel}
+                </div>
+                <div
+                  className={`mt-2 text-2xl font-semibold ${
+                    isDark ? "text-white" : "text-violet-900"
+                  }`}
+                >
+                  {avgNet.toFixed(2)}
+                </div>
+              </div>
+
+              <div
+                style={
+                  !isDark
+                    ? {
+                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
+                      }
+                    : undefined
+                }
+                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
+                  isDark
+                    ? "border-violet-400/10 bg-white/5"
+                    : "border-violet-200"
+                }`}
+              >
+                <div
+                  className={`text-[11px] uppercase tracking-[0.2em] ${
+                    isDark ? "text-violet-200/55" : "text-violet-400"
+                  }`}
+                >
+                  Average Gross {scaleLabel}
+                </div>
+                <div
+                  className={`mt-2 text-2xl font-semibold ${
+                    isDark ? "text-white" : "text-violet-900"
+                  }`}
+                >
+                  {avgGross.toFixed(2)}
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* Chart section */}
-        <section className="mt-8 rounded-[2rem] border p-5">
-          {/* Header + controls */}
-          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:justify-between">
-            {/* Title and description */}
+        <section
+          style={
+            !isDark
+              ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+              : undefined
+          }
+          className={[
+            "mt-8 rounded-[2rem] border p-5 backdrop-blur-xl sm:p-6 lg:p-8",
+            isDark
+              ? "border-violet-400/12 bg-gradient-to-br from-[#0d0918]/95 via-[#120d22]/95 to-[#09070f]/95 shadow-[0_18px_60px_rgba(10,6,30,0.45)]"
+              : "border-violet-200 shadow-sm",
+          ].join(" ")}
+        >
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-xl font-semibold">Profit Trends</h2>
-              <p className="mt-1 text-sm">
+              <h2
+                className={`text-xl font-semibold ${
+                  isDark ? "text-white" : "text-violet-900"
+                }`}
+              >
+                Profit Trends
+              </h2>
+              <p
+                className={`mt-1 text-sm ${
+                  isDark ? "text-violet-200/60" : "text-violet-500"
+                }`}
+              >
                 Net and gross profit grouped by the selected time scale.
               </p>
             </div>
 
-            {/* Filters: closure type + time scale */}
             <div className="flex flex-wrap items-center gap-3">
-              {/* Closure filter buttons */}
-              {/* Toggles between all, pre-closure, and post-closure trades */}
-              ...
+              <div
+                className={`flex gap-2 rounded-xl border p-1 ${
+                  isDark
+                    ? "border-violet-400/12 bg-violet-500/10"
+                    : "border-violet-300 bg-violet-50"
+                }`}
+              >
+                {closureFilterOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setClosureFilter(opt.value)}
+                    className={[
+                      isDark
+                        ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
+                        : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md",
+                      "rounded-lg px-3 py-1 text-sm font-medium transition",
+                      closureFilter === opt.value
+                        ? isDark
+                          ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
+                          : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
+                        : isDark
+                          ? "text-violet-300/70 hover:text-violet-200"
+                          : "text-violet-500 hover:text-violet-700",
+                    ].join(" ")}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
 
-              {/* Time scale dropdown */}
+              <label
+                htmlFor="timescale"
+                className={`text-sm font-medium ${
+                  isDark ? "text-violet-200/75" : "text-violet-600"
+                }`}
+              >
+                Time Scale
+              </label>
               <select
                 id="timescale"
                 value={timeScale}
                 onChange={(e) => setTimeScale(e.target.value as TimeScale)}
+                className={[
+                  "rounded-xl border px-4 py-2 text-sm outline-none ring-0 transition",
+                  isDark
+                    ? "border-violet-400/12 bg-violet-500/10 text-violet-100 focus:border-violet-300/30"
+                    : "border-violet-300 bg-violet-50 text-violet-900 focus:border-violet-400",
+                ].join(" ")}
               >
                 <option value="minute">Minutes</option>
                 <option value="day">Days</option>
@@ -296,27 +566,40 @@ const Profits: React.FC = () => {
             </div>
           </div>
 
-          {/* Graphs */}
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            {/* Net profit chart */}
-            <LineGraph
-              gainLossData={netProfitData}
-              timeData={timeData}
-              xAxisLabel={scaleLabel}
-              yAxisLabel="Net Profit"
-              title={`Net Profit by ${scaleLabel}`}
-              isDark={isDark}
-            />
+            <div
+              className={`rounded-[1.5rem] border p-3 sm:p-4 lg:p-6 ${
+                isDark
+                  ? "border-violet-400/10 bg-[#070510]/70"
+                  : "border-violet-200 bg-white/60"
+              }`}
+            >
+              <LineGraph
+                gainLossData={netProfitData}
+                timeData={timeData}
+                xAxisLabel={scaleLabel}
+                yAxisLabel="Net Profit"
+                title={`Net Profit by ${scaleLabel}`}
+                isDark={isDark}
+              />
+            </div>
 
-            {/* Gross profit chart */}
-            <LineGraph
-              gainLossData={grossProfitData}
-              timeData={timeData}
-              xAxisLabel={scaleLabel}
-              yAxisLabel="Gross Profit"
-              title={`Gross Profit by ${scaleLabel}`}
-              isDark={isDark}
-            />
+            <div
+              className={`rounded-[1.5rem] border p-3 sm:p-4 lg:p-6 ${
+                isDark
+                  ? "border-violet-400/10 bg-[#070510]/70"
+                  : "border-violet-200 bg-white/60"
+              }`}
+            >
+              <LineGraph
+                gainLossData={grossProfitData}
+                timeData={timeData}
+                xAxisLabel={scaleLabel}
+                yAxisLabel="Gross Profit"
+                title={`Gross Profit by ${scaleLabel}`}
+                isDark={isDark}
+              />
+            </div>
           </div>
         </section>
       </div>
