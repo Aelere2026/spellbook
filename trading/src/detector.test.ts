@@ -131,5 +131,111 @@ test("picks the combo with higher net profit", () => {
   console.log(`   gross=${result.grossProfit.toFixed(4)} net=${result.netProfit.toFixed(4)}`);
 });
 
+// ─── Resolution Date Cutoff Tests ──────────────────────────────────────────
+//
+// applyResolutionCutoff is inlined here matching the logic in runDetector().
+// If the filter logic in detector.ts changes, update this copy too.
+
+interface MockMarket {
+  resolutionDate: Date;
+}
+
+interface MockMatch {
+  id: number;
+  polymarketMarket: MockMarket;
+  kalshiMarket: MockMarket;
+}
+
+function applyResolutionCutoff(
+  matches: MockMatch[],
+  cutoff: Date | null,
+): MockMatch[] {
+  if (!cutoff) return matches;
+  return matches.filter((m) => {
+    const laterDate = new Date(
+      Math.max(
+        m.polymarketMarket.resolutionDate.getTime(),
+        m.kalshiMarket.resolutionDate.getTime(),
+      ),
+    );
+    return laterDate <= cutoff;
+  });
+}
+
+const CUTOFF   = new Date("2026-06-01");
+const BEFORE   = new Date("2026-05-01");
+const ON_DAY   = new Date("2026-06-01");
+const AFTER    = new Date("2026-07-01");
+const WAY_AFTER = new Date("2027-01-01");
+
+function match(id: number, polyDate: Date, kalshiDate: Date): MockMatch {
+  return { id, polymarketMarket: { resolutionDate: polyDate }, kalshiMarket: { resolutionDate: kalshiDate } };
+}
+
+// Test 6: null cutoff passes all matches through unchanged
+test("null cutoff returns all matches", () => {
+  const matches = [match(1, BEFORE, BEFORE), match(2, AFTER, AFTER)];
+  const result = applyResolutionCutoff(matches, null);
+  assert.equal(result.length, 2, "all matches should pass");
+});
+
+// Test 7: both sides resolve before cutoff → kept
+test("keeps match where both sides resolve before cutoff", () => {
+  const result = applyResolutionCutoff([match(1, BEFORE, BEFORE)], CUTOFF);
+  assert.equal(result.length, 1, "match should be kept");
+});
+
+// Test 8: both sides resolve after cutoff → filtered
+test("filters match where both sides resolve after cutoff", () => {
+  const result = applyResolutionCutoff([match(1, AFTER, AFTER)], CUTOFF);
+  assert.equal(result.length, 0, "match should be filtered");
+});
+
+// Test 9: uses the later of the two dates — Polymarket after, Kalshi before
+test("filters when Polymarket resolves after cutoff even if Kalshi is before", () => {
+  const result = applyResolutionCutoff([match(1, AFTER, BEFORE)], CUTOFF);
+  assert.equal(result.length, 0, "later date (Polymarket) exceeds cutoff — should filter");
+});
+
+// Test 10: uses the later of the two dates — Kalshi after, Polymarket before
+test("filters when Kalshi resolves after cutoff even if Polymarket is before", () => {
+  const result = applyResolutionCutoff([match(1, BEFORE, AFTER)], CUTOFF);
+  assert.equal(result.length, 0, "later date (Kalshi) exceeds cutoff — should filter");
+});
+
+// Test 11: match resolving exactly on the cutoff date is kept (≤ boundary)
+test("keeps match whose resolution date is exactly the cutoff date", () => {
+  const result = applyResolutionCutoff([match(1, ON_DAY, BEFORE)], CUTOFF);
+  assert.equal(result.length, 1, "match on exact cutoff date should be kept");
+});
+
+// Test 12: mixed list — only matches within cutoff survive
+test("filters mixed list correctly", () => {
+  const matches = [
+    match(1, BEFORE,    BEFORE),    // both before  → keep
+    match(2, ON_DAY,    BEFORE),    // on cutoff     → keep
+    match(3, AFTER,     BEFORE),    // poly after    → filter
+    match(4, BEFORE,    AFTER),     // kalshi after  → filter
+    match(5, WAY_AFTER, WAY_AFTER), // both after    → filter
+  ];
+  const result = applyResolutionCutoff(matches, CUTOFF);
+  assert.equal(result.length, 2, "only 2 matches should survive");
+  assert(result.some((m) => m.id === 1), "match 1 should survive");
+  assert(result.some((m) => m.id === 2), "match 2 should survive");
+});
+
+// Test 13: cutoff in the far future passes everything
+test("far-future cutoff keeps all matches", () => {
+  const matches = [match(1, BEFORE, AFTER), match(2, WAY_AFTER, WAY_AFTER)];
+  const result = applyResolutionCutoff(matches, new Date("2099-01-01"));
+  assert.equal(result.length, 2, "all matches should pass a far-future cutoff");
+});
+
+// Test 14: empty match list returns empty regardless of cutoff
+test("empty match list returns empty with any cutoff", () => {
+  assert.equal(applyResolutionCutoff([], CUTOFF).length, 0);
+  assert.equal(applyResolutionCutoff([], null).length, 0);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

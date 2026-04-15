@@ -358,7 +358,7 @@ const TotalOpportunities: React.FC = () => {
                 className={[
                   "rounded-xl border px-4 py-2 text-sm outline-none ring-0 transition",
                   isDark
-                    ? "border-violet-400/12 bg-violet-500/10 text-violet-100 focus:border-violet-300/30"
+                    ? "border-violet-400/12 bg-[#1a1230] text-violet-100 focus:border-violet-300/30 [color-scheme:dark]"
                     : "border-violet-300 bg-violet-50 text-violet-900 focus:border-violet-400",
                 ].join(" ")}
               >
