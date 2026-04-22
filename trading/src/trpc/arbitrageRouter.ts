@@ -4,14 +4,36 @@ import { tracked } from "@trpc/server";
 import { z } from "zod";
 
 const arbitrageRouter = router({
-  get: publicProcedure.query(async () => {
-    return await prisma.arbitrage.findMany({
-      orderBy: {
-        detectionTime: "desc",
-      },
-    });
-  }),
+  get: publicProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(100),
+      }),
+    )
+    .query(async ({ input }) => {
+      const page = input.page;
+      const limit = input.limit;
+      const skip = (page - 1) * limit;
 
+      const [rows, total] = await Promise.all([
+        prisma.arbitrage.findMany({
+          orderBy: {
+            detectionTime: "desc",
+          },
+          skip,
+          take: limit,
+        }),
+        prisma.arbitrage.count(),
+      ]);
+
+      return {
+        rows,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      };
+    }),
   stats: publicProcedure.query(async () => {
     const arbitrages = await prisma.arbitrage.findMany({
       orderBy: {
@@ -98,7 +120,7 @@ const arbitrageRouter = router({
 
     const exposure = totalGrossProfit;
 
-    const avgRoi = (totalProfit / (totalYes + totalNo)) * (100);
+    const avgRoi = (totalProfit / (totalYes + totalNo)) * 100;
 
     return {
       gainLoss: Number(gainLoss.toFixed(3)),
@@ -117,7 +139,7 @@ const arbitrageRouter = router({
     .input(
       z.object({
         category: z.string(),
-      })
+      }),
     )
     .query(async (_opts) => {
       return await prisma.arbitrage.findMany({
@@ -155,7 +177,7 @@ const arbitrageRouter = router({
     .input(
       z.object({
         lastEventId: z.coerce.date().nullish(),
-      })
+      }),
     )
     .subscription(async function* (opts) {
       let lastEventId = opts.input?.lastEventId ?? null;
@@ -164,10 +186,10 @@ const arbitrageRouter = router({
         const arbitrages = await prisma.arbitrage.findMany({
           where: lastEventId
             ? {
-              createdAt: {
-                gt: lastEventId,
-              },
-            }
+                createdAt: {
+                  gt: lastEventId,
+                },
+              }
             : undefined,
           orderBy: {
             createdAt: "asc",

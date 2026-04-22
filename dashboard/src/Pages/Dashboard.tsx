@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
 import { useTheme } from "../context/ThemeContext";
 
-//Defines the structure for display cards for the metrics 
+//Defines the structure for display cards for the metrics
 interface StatCardProps {
   title: string;
   value: string | number;
@@ -16,7 +16,7 @@ interface StatCardProps {
   isDark?: boolean;
 }
 
-//Defines the react component for display cards and the styling 
+//Defines the react component for display cards and the styling
 const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
@@ -87,7 +87,7 @@ const fmtMoney = (n: number) =>
 
 const fmtPct = (n: number) => `${n.toFixed(2)}%`;
 
-//Defines colors for light and dark modes 
+//Defines colors for light and dark modes
 const colors = (n: number, isDark: boolean) =>
   n > 0
     ? isDark
@@ -102,17 +102,23 @@ const colors = (n: number, isDark: boolean) =>
         : "bg-violet-50 text-violet-700 ring-violet-300/50";
 
 const Dashboard: React.FC = () => {
+  const [page, setPage] = React.useState(1);
+  const PAGE_SIZE = 100;
+
   const navigate = useNavigate();
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  //Fetching data from the database every 5000ms for arbitrage opportunities and arbitrage stats 
+  //Fetching data from the database every 5000ms for arbitrage opportunities and arbitrage stats
   const { data: mar } = api.markets.get.useQuery();
-  const { data: arb } = api.arbitrages.get.useQuery(undefined, {
-    refetchInterval: 5000,
-    refetchOnWindowFocus: true,
-    notifyOnChangeProps: "all",
-  });
+  const { data: arb } = api.arbitrages.get.useQuery(
+    { page, limit: PAGE_SIZE },
+    {
+      refetchInterval: 5000,
+      refetchOnWindowFocus: true,
+      notifyOnChangeProps: "all",
+    },
+  );
   const { data: mat } = api.matches.get.useQuery();
   const { data: stats } = api.arbitrages.stats.useQuery(undefined, {
     refetchInterval: 5000,
@@ -120,17 +126,18 @@ const Dashboard: React.FC = () => {
     notifyOnChangeProps: "all",
   });
 
-  //Assures nonnull 
+  //Assures nonnull
   const market = mar ?? [];
-  const arbit = arb ?? [];
+  const arbit = arb?.rows ?? [];
   const match = mat ?? [];
+  const totalPages = arb?.totalPages ?? 1;
 
   console.log(market);
   console.log(arbit);
   console.log(match);
   console.log(stats);
 
-  //Defines variables to display from fetched arbitrage data 
+  //Defines variables to display from fetched arbitrage data
   const trades = arbit.map((a) => {
     const grossProfit = Number(a.grossProfit);
     const netProfit = Number(a.netProfit);
@@ -148,7 +155,7 @@ const Dashboard: React.FC = () => {
       Math.round(execution.getTime() - deduction.getTime()),
     );
 
-    //Calculating and grabbing additional information needed for display 
+    //Calculating and grabbing additional information needed for display
     const capital = grossProfit;
     const costs = totalFee + slippage;
     const roiPct = capital > 0 ? (netProfit / capital) * 100 : 0;
@@ -160,7 +167,7 @@ const Dashboard: React.FC = () => {
     const kalshiMarket = market.find((p) => p.id === kalshi_id);
     const title = polyMarket?.title;
 
-    //Retrieving links for specific markets to display in trade table 
+    //Retrieving links for specific markets to display in trade table
     const polymarketUrl = polyMarket?.slug
       ? `https://polymarket.com/market/${polyMarket.slug}`
       : null;
@@ -189,7 +196,7 @@ const Dashboard: React.FC = () => {
   });
 
   return (
-    //Stat cards with metrics displayed at the top followed by trade table with all simulated arbitrages displayed 
+    //Stat cards with metrics displayed at the top followed by trade table with all simulated arbitrages displayed
     <div className="relative">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.05fr_1.6fr_1.05fr]">
         <div className="grid grid-cols-2 gap-3">
@@ -359,7 +366,13 @@ const Dashboard: React.FC = () => {
                           Polymarket
                         </a>
                       ) : (
-                        <span className={isDark ? "text-violet-100/70" : "text-violet-600"}>Polymarket</span>
+                        <span
+                          className={
+                            isDark ? "text-violet-100/70" : "text-violet-600"
+                          }
+                        >
+                          Polymarket
+                        </span>
                       )}
                       {t.kalshiUrl ? (
                         <a
@@ -371,7 +384,13 @@ const Dashboard: React.FC = () => {
                           Kalshi
                         </a>
                       ) : (
-                        <span className={isDark ? "text-violet-100/70" : "text-violet-600"}>Kalshi</span>
+                        <span
+                          className={
+                            isDark ? "text-violet-100/70" : "text-violet-600"
+                          }
+                        >
+                          Kalshi
+                        </span>
                       )}
                     </div>
                   </td>
@@ -425,6 +444,41 @@ const Dashboard: React.FC = () => {
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="flex items-center justify-between px-5 pb-4 sm:px-6">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className={[
+              "rounded-xl border px-3 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-50",
+              isDark
+                ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] shadow-[0_18px_45px_rgba(10,6,30,0.45)] hover:border-violet-300/35 hover:shadow-[0_22px_60px_rgba(76,29,149,0.35)]"
+                : "border-violet-200 shadow-sm hover:border-violet-400 hover:shadow-md",
+            ].join(" ")}
+          >
+            Previous
+          </button>
+
+          <span
+            className={`text-sm ${isDark ? "text-violet-200/70" : "text-violet-600"}`}
+          >
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className={[
+              "rounded-xl border px-3 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-50",
+              isDark
+                ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] shadow-[0_18px_45px_rgba(10,6,30,0.45)] hover:border-violet-300/35 hover:shadow-[0_22px_60px_rgba(76,29,149,0.35)]"
+                : "border-violet-200 shadow-sm hover:border-violet-400 hover:shadow-md",
+            ].join(" ")}
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>
