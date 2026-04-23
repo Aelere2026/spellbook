@@ -14,14 +14,17 @@ const GainLoss: React.FC = () => {
   // State for selected time scale (default = day)
   const [timeScale, setTimeScale] = useState<TimeScale>("day");
 
+  const [page, setPage] = React.useState(1);
+  const PAGE_SIZE = 100;
+
   // Fetch arbitrage data from API with auto-refresh every 5 seconds
-  const { data: arbData, isLoading } = api.arbitrages.get.useQuery(undefined, {
+  const { data: arbData, isLoading } = api.arbitrages.get.useQuery({ page, limit: PAGE_SIZE }, {
     refetchInterval: 5000,
     refetchOnWindowFocus: true,
   });
 
   // Fallback to empty array if no data
-  const arbitrages = arbData ?? [];
+  const arbitrages = arbData?.rows ?? [];
 
   // Formats the label shown on the chart depending on time scale
   const formatBucketLabel = (date: Date, scale: TimeScale) => {
