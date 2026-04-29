@@ -12,6 +12,7 @@ model Arbitrage {
   id Int @id @default(autoincrement())
 
   matchId           Int      @map("match_id")
+  userId            Int      @map("user_id")
   //polymarketOutcomeId Int      @map("outcome_id_polymarket")
   //kalshiOutcomeId     Int      @map("outcome_id_kalshi")
   netProfit         Decimal  @map("net_profit")
@@ -21,12 +22,15 @@ model Arbitrage {
   detectionTime     DateTime @map("time_deduction")
   executionTime     DateTime @map("time_execution")
   createdAt         DateTime @default(now()) @map("created_at")
-  yesPrice       Decimal @map("yes_price")
-  noPrice        Decimal @map("no_price")
-  polymarketYes  Boolean @map("polymarket_yes")
-    shares            Int      @default(1) @map("shares")
+  yesPrice          Decimal  @map("yes_price")
+  noPrice           Decimal  @map("no_price")
+  polymarketYes     Boolean  @map("polymarket_yes")
+  shares            Int      @default(1) @map("shares")
 
   match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index(userId)
 }
 
 model Market {
@@ -79,16 +83,28 @@ model Platform {
   name      String
   baseFee   Decimal  @map("base_fee")
   createdAt DateTime @default(now()) @map("created_at")
-  markets   Market[]
+
+  markets Market[]
 }
 
-// for user settings (volume)
-model BotConfig {
-  id              Int       @id @default(autoincrement())
-  usePresetAlgo   Boolean   @default(true) @map("use_preset_algo")  // true = autmated and false = manual
-  manualShares    Int       @default(1)    @map("manual_shares")    // this will be used when usePresetAlgo = false
-  maxShares       Int       @default(200)  @map("max_shares")       // our cap for our algo
-  resolutionStart DateTime? @map("resolution_start")
-  resolutionEnd   DateTime? @map("resolution_end")
+model User {
+  id Int @id @default(autoincrement())
+
+  email          String
+  hashedPassword String   @map("hashed_password")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  sessions   Session[]
+  arbitrages Arbitrage[]
 }
 
+model Session {
+  id Int @id @default(autoincrement())
+
+  userId      Int      @map("platform_id")
+  hashedToken String   @map("hashed_token")
+  expires     DateTime
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+}
