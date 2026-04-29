@@ -337,7 +337,8 @@ const Dashboard: React.FC = () => {
               {trades.map((t) => (
                 <tr
                   key={t.id}
-                  className={`border-t transition-colors ${isDark ? "border-violet-400/8 hover:bg-white/5" : "border-violet-200/50 hover:bg-violet-100/50"}`}
+                  onClick={() => navigate(`/trade/${t.id}`)}
+                  className={`cursor-pointer border-t transition-colors ${isDark ? "border-violet-400/8 hover:bg-white/5" : "border-violet-200/50 hover:bg-violet-100/50"}`}
                 >
                   <td
                     className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/90" : "text-violet-900"}`}
@@ -354,7 +355,7 @@ const Dashboard: React.FC = () => {
                   >
                     {t.market}
                   </td>
-                  <td className="px-3 py-3 text-sm sm:px-4">
+                  <td className="px-3 py-3 text-sm sm:px-4" onClick={(e) => e.stopPropagation()}>
                     <div className="flex flex-col gap-1">
                       {t.polymarketUrl ? (
                         <a

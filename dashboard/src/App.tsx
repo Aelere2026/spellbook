@@ -6,6 +6,7 @@ import Layout from "./Pages/Layout";
 import Home from "./Pages/Home";
 import Profit from "./Pages/Profit";
 import Settings from "./Pages/Settings";
+import TradeDetail from "./Pages/TradeDetail";
 import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 
@@ -48,7 +49,7 @@ function App() {
               <Route path="/opportunities" element={<Opportunities />} />
               <Route path="/profit" element={<Profit />} />
               <Route path="/settings" element={<Settings />} />
-
+              <Route path="/trade/:id" element={<TradeDetail />} />
             </Route>
           </Routes>
         </QueryClientProvider>

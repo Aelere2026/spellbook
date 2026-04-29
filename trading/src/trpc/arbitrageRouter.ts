@@ -183,6 +183,27 @@ const arbitrageRouter = router({
       });
     }),
 
+  // Get a single arbitrage by ID with full market and match details
+  getById: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      return prisma.arbitrage.findUnique({
+        where: { id: input.id },
+        include: {
+          match: {
+            include: {
+              polymarketMarket: {
+                include: { platform: true, outcome: true },
+              },
+              kalshiMarket: {
+                include: { platform: true, outcome: true },
+              },
+            },
+          },
+        },
+      });
+    }),
+
   // Get arbitrages joined with market resolution dates
   getWithMarkets: publicProcedure.query(async () => {
     const arbitrages = await prisma.arbitrage.findMany({
