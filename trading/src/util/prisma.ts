@@ -23,6 +23,7 @@ async function healthCheck(timeout: number = 5000) {
             // process.exit(0)
         }
 
+        // TODO: Backoff on repeated fails?
         await new Promise(resolve => setTimeout(resolve, timeout))
     }
 }
@@ -30,3 +31,4 @@ async function healthCheck(timeout: number = 5000) {
 healthCheck()
 
 export { prisma }
+export type { Arbitrage, Market, Match, Outcome, Platform, User, Session } from "../../prisma/generated/client"

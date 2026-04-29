@@ -6,7 +6,7 @@ import { prisma } from "./util/prisma"
 import * as examples from "./examples"
 import * as detector from "./detector"
 import * as log from "./util/log"
-import { appRouter } from "./trpc"
+import { appRouter, createContext } from "./trpc"
 
 import { DiscordAlertClient, Watchdog } from "./alerts"
 
@@ -68,6 +68,7 @@ app.use(
     "/trpc",
     trpcExpress.createExpressMiddleware({
         router: appRouter,
+        createContext
     })
 )
 
