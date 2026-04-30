@@ -77,7 +77,7 @@ clean() {
 
     echo "Removing docker containers..."
     cd "$DOCKER_DIR"
-    sudo docker compose down --volumes --rmi "all"
+    docker compose down --volumes --rmi "all"
 
     cd $ROOT_DIR
 }
@@ -159,7 +159,7 @@ DOCKER() {
     add_env "$DOCKER_ENV" "TIMEZONE" "$timezone"
 
     cd "$DOCKER_DIR"
-    sudo docker compose pull
+    docker compose pull
 }
 
 # Sets up
@@ -189,10 +189,10 @@ POSTGRES() {
     if ! $postgres_running; then
         cd "$DOCKER_DIR"
         echo "Starting docker containers..."
-        sudo docker compose up --detach postgres
+        docker compose up --detach postgres
     else
         echo "Postgres already running! Recreating in case of env updates..."
-        sudo docker compose up --detach postgres
+        docker compose up --detach postgres
     fi
 
     # Give the container some time to finish starting up
@@ -210,7 +210,7 @@ POSTGRES() {
     if ! $postgres_running; then
         cd "$DOCKER_DIR"
         echo "Stopping docker containers..."
-        sudo docker compose stop postgres
+        docker compose stop postgres
     fi
 }
 
