@@ -1,11 +1,13 @@
-import { publicProcedure, router } from "./trpc";
-import { prisma } from "../util/prisma";
-import { tracked } from "@trpc/server";
-import { z } from "zod";
+import { tracked } from "@trpc/server"
+import { z } from "zod"
+
+import { router } from "./"
+import { protectedProcedure } from "./procedures"
+import { prisma } from "../util/prisma"
 
 const arbitrageRouter = router({
   // Get arbitrages with pagination (100 per page default)
-  get: publicProcedure
+  get: protectedProcedure
     .input(
       z.object({
         // current page number
@@ -48,7 +50,7 @@ const arbitrageRouter = router({
     }),
 
   // Compute dashboard summary statistics
-  stats: publicProcedure.query(async () => {
+  stats: protectedProcedure.query(async () => {
     const arbitrages = await prisma.arbitrage.findMany({
       orderBy: {
         // oldest first for time-series calculations
@@ -101,13 +103,13 @@ const arbitrageRouter = router({
       const totalFee = Number(arbitrage.totalFee);
       const estimatedSlippage = Number(arbitrage.estimatedSlippage);
       const shares = Number(arbitrage.shares ?? 1);
- 
+
       // scale all per-share values by shares
       const totalNetProfit = netProfit * shares;
       const totalGross = grossProfit * shares;
       const totalFees = totalFee * shares;
       const totalSlip = estimatedSlippage * shares;
- 
+
       // capital = what we actually spent per share × shares
       const capital = (yesPrice + noPrice) * shares;
 
@@ -121,7 +123,7 @@ const arbitrageRouter = router({
       totalSlippage += totalSlip;
       totalGrossProfit += totalGross;
       totalCapital += capital;
- 
+
       // ROI per trade: net / capital
       if (capital > 0) {
         totalRoi += (totalNetProfit / capital) * 100;
@@ -181,26 +183,10 @@ const arbitrageRouter = router({
       avgRoi: Number(avgRoi.toFixed(3)),
       avgSlippage: Number(avgSlippage.toFixed(4)),
       exposure: Number(exposure.toFixed(3)),
-    };
+    }
   }),
-
-  // Search endpoint (currently returns all arbitrages ordered newest-first)
-  search: publicProcedure
-    .input(
-      z.object({
-        category: z.string(),
-      }),
-    )
-    .query(async (_opts) => {
-      return await prisma.arbitrage.findMany({
-        orderBy: {
-          detectionTime: "desc",
-        },
-      });
-    }),
-
   // Get a single arbitrage by ID with full market and match details
-  getById: publicProcedure
+  getById: protectedProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       return prisma.arbitrage.findUnique({
@@ -217,11 +203,10 @@ const arbitrageRouter = router({
             },
           },
         },
-      });
+      })
     }),
-
   // Get arbitrages joined with market resolution dates
-  getWithMarkets: publicProcedure.query(async () => {
+  getWithMarkets: protectedProcedure.query(async () => {
     const arbitrages = await prisma.arbitrage.findMany({
       orderBy: { detectionTime: "desc" },
       include: {
@@ -248,7 +233,7 @@ const arbitrageRouter = router({
   }),
 
   // Live subscription for newly added arbitrages
-  onMarketAdd: publicProcedure
+  onMarketAdd: protectedProcedure
     .input(
       z.object({
         // last event received by client
@@ -263,11 +248,11 @@ const arbitrageRouter = router({
         const arbitrages = await prisma.arbitrage.findMany({
           where: lastEventId
             ? {
-                createdAt: {
-                  // only send newer events
-                  gt: lastEventId,
-                },
-              }
+              createdAt: {
+                // only send newer events
+                gt: lastEventId,
+              },
+            }
             : undefined,
           orderBy: {
             createdAt: "asc",
@@ -286,4 +271,4 @@ const arbitrageRouter = router({
     }),
 });
 
-export default arbitrageRouter;
+export default arbitrageRouter
