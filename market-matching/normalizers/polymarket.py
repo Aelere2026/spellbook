@@ -19,6 +19,10 @@ def normalize_polymarket(m: dict) -> NormalizedMarket:
     # there's no separate trading-close concept exposed by the API.
     end = parse_dt(m.get("endDate"))
 
+    category = (m.get("category") or event.get("category") or "").lower().strip() or None
+    fee_schedule = m.get("feeSchedule") or {}
+    fee_rate = fee_schedule.get("rate") or 0.04
+
     return NormalizedMarket(
         platform        = "polymarket",
         platform_id     = m["conditionId"],
@@ -31,5 +35,7 @@ def normalize_polymarket(m: dict) -> NormalizedMarket:
         event_title     = event.get("title"),
         series_title    = series.get("title"),
         neg_risk        = bool(m.get("negRisk", False)),
+        category        = category,
+        fee_rate        = fee_rate,
         raw             = m,
     )
