@@ -27,6 +27,8 @@ class NormalizedMarket:
     neg_risk: bool = False           # Polymarket negRisk sub-leg (one option in a multi-choice group)
     resolution_date: Optional[datetime] = None  # when the market actually resolves (vs close_time = trading stop)
     slug: Optional[str] = None       # URL slug (Polymarket only)
+    category: Optional[str] = None
+    fee_rate: float = 0.04
     
     # --- Raw passthrough (for debugging) ---
     raw: dict = field(default_factory=dict, repr=False)
