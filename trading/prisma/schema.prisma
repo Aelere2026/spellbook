@@ -90,9 +90,10 @@ model Platform {
 model User {
   id Int @id @default(autoincrement())
 
-  email          String
+  name           String   @unique
   hashedPassword String   @map("hashed_password")
   createdAt      DateTime @default(now()) @map("created_at")
+  preferences    Json?
 
   sessions   Session[]
   arbitrages Arbitrage[]
@@ -103,8 +104,19 @@ model Session {
 
   userId      Int      @map("platform_id")
   hashedToken String   @map("hashed_token")
-  expires     DateTime
+  expiration  DateTime
   createdAt   DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
+
+  @@index(hashedToken)
+}
+
+model Invite {
+  id Int @id @default(autoincrement())
+
+  name        String   @unique
+  hashedToken String   @map("hashed_token")
+  expiration  DateTime
+  createdAt   DateTime @default(now()) @map("created_at")
 }

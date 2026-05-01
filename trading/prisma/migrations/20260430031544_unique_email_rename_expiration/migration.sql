@@ -22,11 +22,14 @@ CREATE TABLE "Session" (
     "id" SERIAL NOT NULL,
     "platform_id" INTEGER NOT NULL,
     "hashed_token" TEXT NOT NULL,
-    "expires" TIMESTAMP(3) NOT NULL,
+    "expiration" TIMESTAMP(3) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE INDEX "Arbitrage_user_id_idx" ON "Arbitrage"("user_id");
