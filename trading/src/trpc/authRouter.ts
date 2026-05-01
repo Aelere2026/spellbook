@@ -33,7 +33,7 @@ const authRouter = router({
                 password: z.string()
             }),
         )
-        .query(async ({ input }) => {
+        .mutation(async ({ input }) => {
             return await auth.signup(input.token, input.password)
         }),
     signout: userProcedure
@@ -42,7 +42,7 @@ const authRouter = router({
                 allSessions: z.boolean(),
             }),
         )
-        .query(async ({ ctx, input }) => {
+        .mutation(async ({ ctx, input }) => {
             ctx.data.res.set("Clear-Site-Data", "cookies")
 
             if (input.allSessions) {
@@ -58,7 +58,7 @@ const authRouter = router({
                 newPassword: z.string()
             }),
         )
-        .query(async ({ ctx, input }) => {
+        .mutation(async ({ ctx, input }) => {
             return await auth.changePassword(ctx.data.userId, input.oldPassword, input.newPassword)
         }),
     invite: adminProcedure
@@ -67,7 +67,7 @@ const authRouter = router({
                 name: z.string()
             }),
         )
-        .query(async ({ input }) => {
+        .mutation(async ({ input }) => {
             return await auth.invite(input.name)
         }),
     revokeInvite: adminProcedure
@@ -76,11 +76,12 @@ const authRouter = router({
                 name: z.string()
             }),
         )
-        .query(async ({ input }) => {
+        .mutation(async ({ input }) => {
             return await auth.revokeInvite(input.name)
         }),
     removeOwnUser: userProcedure
-        .query(async ({ ctx }) => {
+        .mutation(async ({ ctx }) => {
+            ctx.data.res.set("Clear-Site-Data", "cookies")
             return await auth.removeUser(ctx.data.userId)
         }),
     removeUser: adminProcedure
@@ -89,7 +90,7 @@ const authRouter = router({
                 userId: z.number()
             }),
         )
-        .query(async ({ input }) => {
+        .mutation(async ({ input }) => {
             return await auth.removeUser(input.userId)
         }),
     checkInvite: publicProcedure
@@ -106,7 +107,7 @@ const authRouter = router({
             return auth.isAdmin(ctx.data.userId)
         }),
     getUsers: adminProcedure // TODO: pagination?
-        .query(async ({ ctx }) => {
+        .query(async () => {
             return await prisma.user.findMany({
                 orderBy: { name: "asc" }, // TODO: is this the right direction?
                 select: {
@@ -116,7 +117,7 @@ const authRouter = router({
             })
         }),
     getInvites: adminProcedure // TODO: pagination?
-        .query(async ({ ctx }) => {
+        .query(async () => {
             return await prisma.user.findMany({
                 orderBy: { name: "asc" }, // TODO: is this the right direction?
                 select: {
@@ -127,7 +128,7 @@ const authRouter = router({
             })
         }),
     getSessions: adminProcedure
-        .query(async ({ ctx }) => { // TODO: pagination?
+        .query(async () => { // TODO: pagination?
             return await prisma.session.findMany({
                 orderBy: { userId: "asc" }, // TODO: sort by name? probs would have to do prisma typed raw sql
                 select: {
