@@ -14,7 +14,7 @@ export const publicProcedure = t.procedure
 export const userProcedure = publicProcedure.use(
     async function isAuthed(opts) {
         const { ctx, next } = opts
-        if (!ctx.data) {
+        if (!ctx.auth) {
             throw new TRPCError({ code: "UNAUTHORIZED" })
         }
 

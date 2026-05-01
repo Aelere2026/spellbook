@@ -5,8 +5,11 @@ import * as log from "./util/log"
 const ADMIN_UID = -1 // Should probably never change this
 const sessionCache = new Map<string, Session>()
 
-export async function validateSession(auth: string) {
-    const token = auth.split(' ')[1]
+export async function validateSession(cookie: string) {
+    const token = cookie.split(";")
+        .find(cookie => cookie.startsWith("session-token="))
+        ?.replace("session-token=", "")
+
     if (!token) {
         return null
     }
@@ -225,7 +228,7 @@ export async function initAdmin(): Promise<boolean> {
     return true
 }
 
-function later(days: number) {
+export function later(days: number) {
     const later = new Date()
     later.setDate(later.getDate() + days)
     return later

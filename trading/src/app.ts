@@ -1,6 +1,7 @@
 import * as trpcExpress from "@trpc/server/adapters/express"
 import express from "express"
 import cors from "cors"
+import cookieParser from "cookie-parser"
 import { prisma } from "./util/prisma"
 
 import * as examples from "./examples"
@@ -61,10 +62,10 @@ wd.watch({
 // TODO: Move this into a config file or smtn
 export const PORT = 3000
 
-
 const app = express()
 
 app.use(cors())
+app.use(cookieParser())
 app.use(
     "/trpc",
     trpcExpress.createExpressMiddleware({

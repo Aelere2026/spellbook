@@ -12,8 +12,19 @@ const authRouter = router({
                 password: z.string()
             }),
         )
-        .query(async ({ input }) => {
-            return await auth.login(input.name, input.password)
+        .mutation(async ({ input, ctx }) => {
+            // sign out to prevent session fixation attacks
+            if (ctx.auth) {
+                await auth.signoutSession(ctx.data.sessionId)
+            }
+
+            const token = await auth.login(input.name, input.password)
+            ctx.data.res.cookie("session-token", token, {
+                maxAge: 60 * 60 * 24 * 30, // 30 Days
+                httpOnly: true,
+                secure: true,
+                sameSite: "strict"
+            })
         }),
     signup: publicProcedure
         .input(
@@ -32,6 +43,8 @@ const authRouter = router({
             }),
         )
         .query(async ({ ctx, input }) => {
+            ctx.data.res.set("Clear-Site-Data", "cookies")
+
             if (input.allSessions) {
                 return await auth.signoutUser(ctx.data.userId)
             } else {
