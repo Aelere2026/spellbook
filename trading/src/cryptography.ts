@@ -9,8 +9,8 @@ export function generateToken(length: number = 16): string {
     return token
 }
 
-export async function verify(secret: string | undefined, hash: string): Promise<boolean> {
-    if (secret === undefined) {
+export async function verify(secret: string, hash: string | undefined): Promise<boolean> {
+    if (hash === undefined) {
         return false
     }
 

@@ -24,6 +24,29 @@ const authRouter = router({
         .query(async ({ input }) => {
             return await auth.signup(input.token, input.password)
         }),
+    signout: userProcedure
+        .input(
+            z.object({
+                allSessions: z.boolean(),
+            }),
+        )
+        .query(async ({ ctx, input }) => {
+            if (input.allSessions) {
+                return await auth.signoutUser(ctx.data.userId)
+            } else {
+                return await auth.signoutSession(ctx.data.sessionId)
+            }
+        }),
+    changePassword: userProcedure
+        .input(
+            z.object({
+                oldPassword: z.string(),
+                newPassword: z.string()
+            }),
+        )
+        .query(async ({ ctx, input }) => {
+            return await auth.changePassword(ctx.data.userId, input.oldPassword, input.newPassword)
+        }),
     invite: adminProcedure
         .input(
             z.object({
@@ -41,6 +64,10 @@ const authRouter = router({
         )
         .query(async ({ input }) => {
             return await auth.revokeInvite(input.name)
+        }),
+    removeOwnUser: userProcedure
+        .query(async ({ ctx }) => {
+            return await auth.removeUser(ctx.data.userId)
         }),
     removeUser: adminProcedure
         .input(
@@ -62,7 +89,7 @@ const authRouter = router({
         }),
     isAdmin: userProcedure
         .query(async ({ ctx }) => {
-            return ctx.user.id === 0
+            return auth.isAdmin(ctx.data.userId)
         })
 })
 

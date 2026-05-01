@@ -2,9 +2,10 @@ import { prisma, Session } from "./util/prisma"
 import * as crypt from "./cryptography"
 import * as log from "./util/log"
 
+const ADMIN_UID = -1 // Should probably never change this
 const sessionCache = new Map<string, Session>()
 
-export async function validateUser(auth: string): Promise<number | null> {
+export async function validateSession(auth: string) {
     const token = auth.split(' ')[1]
     if (!token) {
         return null
@@ -41,7 +42,10 @@ export async function validateUser(auth: string): Promise<number | null> {
         return null
     }
 
-    return session.userId
+    return {
+        sessionId: session.id,
+        userId: session.userId
+    }
 }
 
 async function createSession(userId: number): Promise<string> {
@@ -65,11 +69,53 @@ export async function login(name: string, password: string): Promise<string | nu
         where: { name }
     })
 
-    if (!await crypt.verify(user?.hashedPassword, password)) {
+    if (!await crypt.verify(password, user?.hashedPassword)) {
         return null
     }
 
     return await createSession(user!.id)
+}
+
+export async function signoutUser(userId: number): Promise<void> {
+    const sessions = await prisma.session.findMany({
+        select: { hashedToken: true },
+        where: { userId }
+    })
+    await prisma.session.deleteMany({ where: { userId } })
+
+    for (const session of sessions) {
+        sessionCache.delete(session.hashedToken)
+    }
+}
+
+export async function signoutSession(sessionId: number): Promise<void> {
+    try {
+        const session = await prisma.session.delete({
+            select: { hashedToken: true },
+            where: { id: sessionId }
+        })
+        sessionCache.delete(session.hashedToken)
+    } catch (err) { }
+}
+
+export async function changePassword(userId: number, oldPassword: string, newPassword: string): Promise<boolean> {
+    await signoutUser(userId)
+
+    const user = await prisma.user.findUnique({
+        select: { hashedPassword: true },
+        where: { id: userId }
+    })
+
+    if (!crypt.verify(oldPassword, user?.hashedPassword)) {
+        return false
+    }
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: { hashedPassword: await crypt.hash(newPassword) }
+    })
+
+    return true
 }
 
 export async function checkInvite(token: string): Promise<string | null> {
@@ -129,6 +175,11 @@ export async function invite(name: string): Promise<string | null> {
 }
 
 export async function removeUser(userId: number): Promise<boolean> {
+    if (userId === ADMIN_UID) {
+        return false
+    }
+
+    await signoutUser(userId)
     try {
         await prisma.user.delete({ where: { id: userId } })
         return true
@@ -146,8 +197,12 @@ export async function revokeInvite(name: string): Promise<boolean> {
     }
 }
 
+export function isAdmin(userId: number): boolean {
+    return userId === ADMIN_UID
+}
+
 export async function initAdmin(): Promise<boolean> {
-    if (await prisma.user.findUnique({ where: { id: 0 } })) {
+    if (await prisma.user.findUnique({ where: { id: ADMIN_UID } })) {
         return false
     }
 
@@ -158,7 +213,7 @@ export async function initAdmin(): Promise<boolean> {
 
     await prisma.user.create({
         data: {
-            id: 0,
+            id: ADMIN_UID,
             name,
             hashedPassword: await crypt.hash(password)
         }
