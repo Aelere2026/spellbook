@@ -18,7 +18,7 @@ export async function createContext({ req, res }: CreateExpressContextOptions) {
 
     return {
         user: {
-            userId
+            id: userId
         }
     }
 }
