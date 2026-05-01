@@ -54,7 +54,8 @@ def upsert_market(cur, market: NormalizedMarket, platform_db_id: int) -> int:
     now = datetime.now()
     event_date      = market.close_time or now
     resolution_date = market.resolution_date or market.close_time or now
-    category = market.event_title or market.series_title or "Uncategorized"
+    category = market.category or market.event_title or market.series_title or "uncategorized"
+    fee = getattr(market, 'fee_rate', 0.04)
 
     cur.execute(
         'SELECT id FROM "Market" WHERE platform_id = %s AND api_id = %s',
@@ -66,10 +67,10 @@ def upsert_market(cur, market: NormalizedMarket, platform_db_id: int) -> int:
         cur.execute(
             """
             UPDATE "Market"
-               SET title = %s, event_date = %s, resolution_date = %s, category = %s, slug = %s
+               SET title = %s, event_date = %s, resolution_date = %s, category = %s, slug = %s, fee = %s
              WHERE id = %s
             """,
-            (market.title, event_date, resolution_date, category, market.slug, market_id),
+            (market.title, event_date, resolution_date, category, market.slug, fee, market_id),
         )
         return market_id
 
@@ -88,7 +89,7 @@ def upsert_market(cur, market: NormalizedMarket, platform_db_id: int) -> int:
             event_date,
             resolution_date,
             "open",
-            0,
+            fee,
             category,
         ),
     )
