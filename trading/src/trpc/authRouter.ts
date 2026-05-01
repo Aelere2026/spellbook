@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { router, publicProcedure, userProcedure, adminProcedure } from "./trpc"
+import { prisma } from "../util/prisma"
 import * as auth from "../auth"
 
 const authRouter = router({
@@ -90,6 +91,37 @@ const authRouter = router({
     isAdmin: userProcedure
         .query(async ({ ctx }) => {
             return auth.isAdmin(ctx.data.userId)
+        }),
+    getUsers: adminProcedure // TODO: pagination?
+        .query(async ({ ctx }) => {
+            return await prisma.user.findMany({
+                orderBy: { name: "asc" }, // TODO: is this the right direction?
+                select: {
+                    id: true,
+                    name: true
+                }
+            })
+        }),
+    getInvites: adminProcedure // TODO: pagination?
+        .query(async ({ ctx }) => {
+            return await prisma.user.findMany({
+                orderBy: { name: "asc" }, // TODO: is this the right direction?
+                select: {
+                    id: true,
+                    name: true,
+                    expiration: true
+                }
+            })
+        }),
+    getSessions: adminProcedure
+        .query(async ({ ctx }) => { // TODO: pagination?
+            return await prisma.session.findMany({
+                orderBy: { userId: "asc" }, // TODO: sort by name? probs would have to do prisma typed raw sql
+                select: {
+                    id: true,
+                    expiration: true
+                }
+            })
         })
 })
 

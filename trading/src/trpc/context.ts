@@ -2,9 +2,7 @@ import type { CreateExpressContextOptions } from "@trpc/server/adapters/express"
 
 import { validateSession } from "../auth"
 
-const FAIL = {
-    data: null
-}
+const FAIL = { data: null }
 export async function createContext({ req, res }: CreateExpressContextOptions) {
     const auth = req.headers.authorization
     if (!auth) {
@@ -12,7 +10,7 @@ export async function createContext({ req, res }: CreateExpressContextOptions) {
     }
 
     const sessionInfo = await validateSession(auth)
-    if(!sessionInfo) {
+    if (!sessionInfo) {
         return FAIL
     }
 
