@@ -6,7 +6,9 @@
   "scripts": {
     "build": "esbuild src/app.ts --outfile=dist/bundle.js --bundle --sourcemap --watch --platform=node --format=esm --external:./node_modules/*",
     "run": "node --enable-source-maps dist/bundle.js",
-    "dev": "concurrently \"npm run build\" \"npm run run\""
+    "dev": "concurrently \"npm run build\" \"npm run run\"",
+    "build:detector": "esbuild src/detector.ts --outfile=dist/detector.js --bundle --platform=node --format=esm --external:./node_modules/*",
+    "detector": "npm run build:detector && node --enable-source-maps dist/detector.js"
   },
   "keywords": [],
   "author": "",
