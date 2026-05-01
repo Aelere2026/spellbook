@@ -1,26 +1,19 @@
-import { initTRPC } from "@trpc/server"
-import superjson from "superjson"
-
-import { Context } from "./context"
-import marketRouter from "./marketRouter"
-import platformRouter from "./platformRouter"
 import arbitrageRouter from "./arbitrageRouter"
-import matchRouter from "./matchRouter"
+import authRouter from "./authRouter"
 import configRouter from "./configRouter"
+import marketRouter from "./marketRouter"
+import matchRouter from "./matchRouter"
 
+import { router } from "./trpc"
 
 export { createContext } from "./context"
 
-export const t = initTRPC.context<Context>().create({
-    transformer: superjson
-})
-export const router = t.router
 export const appRouter = router({
-    markets: marketRouter,
-    platforms: platformRouter,
     arbitrages: arbitrageRouter,
-    matches: matchRouter,
+    auth: authRouter,
     config: configRouter,
+    markets: marketRouter,
+    matches: matchRouter
 })
 
 export type AppRouter = typeof appRouter

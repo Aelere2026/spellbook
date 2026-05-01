@@ -1,8 +1,7 @@
 import { tracked } from "@trpc/server"
 import { z } from "zod"
 
-import { router } from "./"
-import { userProcedure } from "./procedures"
+import { router, userProcedure } from "./trpc"
 import { prisma } from "../util/prisma"
 
 
