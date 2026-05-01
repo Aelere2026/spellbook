@@ -7,6 +7,7 @@ import * as examples from "./examples"
 import * as detector from "./detector"
 import * as log from "./util/log"
 import { appRouter, createContext } from "./trpc"
+import { initAdmin } from "./auth"
 
 import { DiscordAlertClient, Watchdog } from "./alerts"
 
@@ -79,6 +80,8 @@ app.listen(PORT, () => {
 
 // Start the detector
 detector.run().catch((err) => {
-    log.info(`Fatal error: ${err}`);
+    log.fatal(`Fatal error: ${err}`);
     process.exit(1)
 })
+
+initAdmin()

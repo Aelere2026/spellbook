@@ -1,5 +1,6 @@
 import { prisma, Session } from "./util/prisma"
 import * as crypt from "./cryptography"
+import * as log from "./util/log"
 
 const sessionCache = new Map<string, Session>()
 
@@ -80,16 +81,16 @@ export async function checkInvite(token: string): Promise<string | null> {
     return invite?.name ?? null
 }
 
-export async function signup(token: string, password: string): Promise<boolean> {
+export async function signup(token: string, password: string): Promise<string | null> {
     const invite = await prisma.invite.findFirst({
         where: { hashedToken: await crypt.hash(token) }
     })
 
     if (!invite) {
-        return false
+        return null
     }
 
-    await prisma.user.create({
+    const user = await prisma.user.create({
         data: {
             name: invite.name,
             hashedPassword: await crypt.hash(password)
@@ -98,7 +99,7 @@ export async function signup(token: string, password: string): Promise<boolean> 
 
     await prisma.invite.delete({ where: { id: invite.id } })
 
-    return true
+    return createSession(user.id)
 }
 
 export async function invite(name: string): Promise<string | null> {
@@ -123,6 +124,7 @@ export async function invite(name: string): Promise<string | null> {
         }
     })
 
+    log.info(`Signup token: ${token}`)
     return token
 }
 
@@ -142,6 +144,30 @@ export async function revokeInvite(name: string): Promise<boolean> {
     } catch (err) {
         return false
     }
+}
+
+export async function initAdmin(): Promise<boolean> {
+    if (await prisma.user.findUnique({ where: { id: 0 } })) {
+        return false
+    }
+
+    log.info("No admin account... creating one!")
+
+    const name = `SpellbookAdmin-${crypt.generateToken(4)}`
+    const password = crypt.generateToken(32)
+
+    await prisma.user.create({
+        data: {
+            id: 0,
+            name,
+            hashedPassword: await crypt.hash(password)
+        }
+    })
+
+    log.warn("Save the following information. It cannot be retrieved!!!")
+    log.warn(`Admin username: ${name}`)
+    log.warn(`Admin password: ${password}`)
+    return true
 }
 
 function later(days: number) {
