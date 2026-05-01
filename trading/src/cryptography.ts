@@ -2,7 +2,7 @@ import * as argon2 from "argon2"
 
 const VOCAB = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 export function generateToken(length: number = 16): string {
-    let token = '';
+    let token = ''
     for (let i = 0; i < length; i++) {
         token += VOCAB[Math.floor(Math.random() * VOCAB.length)];
     }

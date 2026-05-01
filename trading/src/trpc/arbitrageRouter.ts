@@ -2,17 +2,16 @@ import { tracked } from "@trpc/server"
 import { z } from "zod"
 
 import { router } from "./"
-import { protectedProcedure } from "./procedures"
+import { userProcedure } from "./procedures"
 import { prisma } from "../util/prisma"
 
 const arbitrageRouter = router({
   // Get arbitrages with pagination (100 per page default)
-  get: protectedProcedure
+  get: userProcedure
     .input(
       z.object({
         page: z.number().min(1).default(1), // current page number
         limit: z.number().min(1).max(100).default(100), // number of rows returned per page
-
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -47,12 +46,11 @@ const arbitrageRouter = router({
       }
     }),
   // Compute dashboard summary statistics
-  stats: protectedProcedure.query(async ({ ctx }) => {
+  stats: userProcedure.query(async ({ ctx }) => {
     const arbitrages = await prisma.arbitrage.findMany({
       where: { userId: ctx.user.id },
       orderBy: { detectionTime: "asc" } // oldest first for time-series calculations
     })
-
 
     // default values if no trades exist
     if (arbitrages.length === 0) {
@@ -181,56 +179,24 @@ const arbitrageRouter = router({
       exposure: Number(exposure.toFixed(3)),
     }
   }),
-  // Get a single arbitrage by ID with full market and match details
-  getById: protectedProcedure
-    .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
-      return prisma.arbitrage.findUnique({
-        where: { id: input.id },
+  // Get arbitrages joined with market resolution dates
+  getWithMarkets: userProcedure
+    .query(async ({ ctx }) => {
+      const arbitrages = await prisma.arbitrage.findMany({
+        where: { userId: ctx.user.id },
+        orderBy: { detectionTime: "desc" },
         include: {
-          match: {
-            include: {
-              polymarketMarket: {
-                include: { platform: true, outcome: true },
-              },
-              kalshiMarket: {
-                include: { platform: true, outcome: true },
-              },
-            },
+          polymarketMarket: {
+            include: { platform: true, outcome: true },
+          },
+          kalshiMarket: {
+            include: { platform: true, outcome: true },
           },
         },
       })
     }),
-  // Get arbitrages joined with market resolution dates
-  getWithMarkets: protectedProcedure.query(async ({ ctx }) => {
-    const arbitrages = await prisma.arbitrage.findMany({
-      where: { userId: ctx.user.id },
-      orderBy: { detectionTime: "desc" },
-      include: {
-        match: {
-          include: {
-            polymarketMarket: { select: { resolutionDate: true } },
-            kalshiMarket: { select: { resolutionDate: true } },
-          },
-        },
-      },
-    })
-
-    return arbitrages.map(arbitrage => ({
-      ...arbitrage,
-
-      // use whichever market resolves later
-      resolutionDate: new Date(
-        Math.max(
-          arbitrage.match.polymarketMarket.resolutionDate.getTime(),
-          arbitrage.match.kalshiMarket.resolutionDate.getTime(),
-        ),
-      ),
-    }))
-  }),
-
   // Live subscription for newly added arbitrages
-  onArbitrageAdd: protectedProcedure
+  onArbitrageAdd: userProcedure
     .input(
       z.object({
         // last event received by client

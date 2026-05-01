@@ -2,9 +2,7 @@ import type { CreateExpressContextOptions } from "@trpc/server/adapters/express"
 
 import { validateUser } from "../auth"
 
-const FAIL = {
-    user: null
-}
+const FAIL = { user: null }
 export async function createContext({ req, res }: CreateExpressContextOptions) {
     const auth = req.headers.authorization
     if (!auth) {
@@ -16,10 +14,6 @@ export async function createContext({ req, res }: CreateExpressContextOptions) {
         return FAIL
     }
 
-    return {
-        user: {
-            id: userId
-        }
-    }
+    return { user: { id: userId } }
 }
 export type Context = Awaited<ReturnType<typeof createContext>>

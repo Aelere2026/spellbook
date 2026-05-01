@@ -2,16 +2,16 @@ import { tracked } from "@trpc/server"
 import { z } from "zod"
 
 import { router } from "./"
-import { protectedProcedure } from "./procedures"
+import { userProcedure } from "./procedures"
 import { prisma } from "../util/prisma"
 
 
 const marketRouter = router({
-    get: protectedProcedure
+    get: userProcedure
         .query(async () => {
             return await prisma.market.findMany()
         }),
-    search: protectedProcedure
+    search: userProcedure
         .input(z.object({
             category: z.string()
         }))
@@ -22,7 +22,7 @@ const marketRouter = router({
                 }
             })
         }),
-    onMarketAdd: protectedProcedure
+    onMarketAdd: userProcedure
         .input(z.object({
             lastEventId: z.coerce.date().nullish(),
         }))
