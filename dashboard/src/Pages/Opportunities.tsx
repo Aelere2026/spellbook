@@ -11,10 +11,11 @@ const TotalOpportunities: React.FC = () => {
 
   const [timeScale, setTimeScale] = useState<TimeScale>("day");
 
-  const { data: arbData, isLoading } = api.arbitrages.get.useQuery(undefined, {
-    refetchInterval: 5000,
-    refetchOnWindowFocus: true,
-  });
+  const { data: arbData, isLoading } =
+    api.arbitrages.getWithMarkets.useQuery(undefined, {
+      refetchInterval: 5000,
+      refetchOnWindowFocus: true,
+    });
 
   const arbitrages = arbData ?? [];
 
@@ -81,7 +82,7 @@ const TotalOpportunities: React.FC = () => {
   const chartData = useMemo(() => {
     const grouped = new Map<
       string,
-      { label: string; value: number; date: Date }
+      { label: string; opportunities: number; date: Date }
     >();
 
     for (const a of arbitrages) {
@@ -95,10 +96,14 @@ const TotalOpportunities: React.FC = () => {
       const label = formatBucketLabel(executionDate, timeScale);
 
       if (!grouped.has(key)) {
-        grouped.set(key, { label, value: 0, date: new Date(key) });
+        grouped.set(key, {
+          label,
+          opportunities: 0,
+          date: new Date(key),
+        });
       }
 
-      grouped.get(key)!.value += 1;
+      grouped.get(key)!.opportunities += 1;
     }
 
     return Array.from(grouped.values()).sort(
@@ -109,15 +114,10 @@ const TotalOpportunities: React.FC = () => {
   const MAX_MINUTE_POINTS = 30;
 
   const displayData = useMemo(() => {
-    if (timeScale !== "minute") {
-      return chartData;
-    }
+    if (timeScale !== "minute") return chartData;
 
     const n = chartData.length;
-
-    if (n <= MAX_MINUTE_POINTS) {
-      return chartData;
-    }
+    if (n <= MAX_MINUTE_POINTS) return chartData;
 
     const step = (n - 1) / (MAX_MINUTE_POINTS - 1);
     const sampled: typeof chartData = [];
@@ -136,7 +136,9 @@ const TotalOpportunities: React.FC = () => {
   }, [chartData, timeScale]);
 
   const timeData = displayData.map((d) => d.label);
-  const opportunitiesData = displayData.map((d) => d.value);
+  const opportunitiesData = displayData.map((d) => d.opportunities);
+
+  const totalOpportunities = arbitrages.length;
 
   const latest =
     opportunitiesData.length > 0
@@ -155,6 +157,9 @@ const TotalOpportunities: React.FC = () => {
       ? opportunitiesData.reduce((sum, value) => sum + value, 0) /
         opportunitiesData.length
       : 0;
+
+  const bestPeriod =
+    opportunitiesData.length > 0 ? Math.max(...opportunitiesData) : 0;
 
   const scaleLabel =
     timeScale === "minute"
@@ -175,7 +180,9 @@ const TotalOpportunities: React.FC = () => {
 
   return (
     <div
-      className={`relative min-h-screen ${isDark ? "text-violet-50" : "text-gray-900"}`}
+      className={`relative min-h-screen ${
+        isDark ? "text-violet-50" : "text-gray-900"
+      }`}
     >
       <div className="mx-auto max-w-7xl px-6 py-8 sm:px-8 lg:px-10">
         <section
@@ -211,106 +218,34 @@ const TotalOpportunities: React.FC = () => {
                 isDark ? "text-white" : "text-violet-900"
               }`}
             >
-              Total Opportunities Analysis
+              Opportunities Analysis
             </h1>
 
-            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div
-                style={
-                  !isDark
-                    ? {
-                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
-                      }
-                    : undefined
-                }
-                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
-                  isDark
-                    ? "border-violet-400/10 bg-white/5"
-                    : "border-violet-200"
-                }`}
-              >
-                <div
-                  className={`text-[11px] uppercase tracking-[0.2em] ${
-                    isDark ? "text-violet-200/55" : "text-violet-400"
-                  }`}
-                >
-                  Latest {scaleLabel}
-                </div>
-                <div
-                  className={`mt-2 text-2xl font-semibold ${
-                    isDark ? "text-white" : "text-violet-900"
-                  }`}
-                >
-                  {latest}
-                </div>
-              </div>
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-4">
+              <MetricCard
+                title="Total Opportunities"
+                value={totalOpportunities}
+                isDark={isDark}
+              />
 
-              <div
-                style={
-                  !isDark
-                    ? {
-                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
-                      }
-                    : undefined
-                }
-                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
-                  isDark
-                    ? "border-violet-400/10 bg-white/5"
-                    : "border-violet-200"
-                }`}
-              >
-                <div
-                  className={`text-[11px] uppercase tracking-[0.2em] ${
-                    isDark ? "text-violet-200/55" : "text-violet-400"
-                  }`}
-                >
-                  Change vs Previous
-                </div>
-                <div
-                  className={`mt-2 text-2xl font-semibold ${
-                    change >= 0
-                      ? isDark
-                        ? "text-emerald-300"
-                        : "text-emerald-600"
-                      : isDark
-                        ? "text-rose-300"
-                        : "text-rose-600"
-                  }`}
-                >
-                  {change >= 0 ? "+" : ""}
-                  {change}
-                </div>
-              </div>
+              <MetricCard
+                title={`Latest ${scaleLabel}`}
+                value={latest}
+                isDark={isDark}
+              />
 
-              <div
-                style={
-                  !isDark
-                    ? {
-                        background: "linear-gradient(135deg, #f0e8ff, #e8deff)",
-                      }
-                    : undefined
-                }
-                className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
-                  isDark
-                    ? "border-violet-400/10 bg-white/5"
-                    : "border-violet-200"
-                }`}
-              >
-                <div
-                  className={`text-[11px] uppercase tracking-[0.2em] ${
-                    isDark ? "text-violet-200/55" : "text-violet-400"
-                  }`}
-                >
-                  Average {scaleLabel}
-                </div>
-                <div
-                  className={`mt-2 text-2xl font-semibold ${
-                    isDark ? "text-white" : "text-violet-900"
-                  }`}
-                >
-                  {avg.toFixed(1)}
-                </div>
-              </div>
+              <MetricCard
+                title="Change vs Previous"
+                value={`${change >= 0 ? "+" : ""}${change}`}
+                isDark={isDark}
+                positive={change >= 0}
+              />
+
+              <MetricCard
+                title={`Average ${scaleLabel}`}
+                value={avg.toFixed(1)}
+                isDark={isDark}
+              />
             </div>
           </div>
         </section>
@@ -331,14 +266,18 @@ const TotalOpportunities: React.FC = () => {
           <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2
-                className={`text-xl font-semibold ${isDark ? "text-white" : "text-violet-900"}`}
+                className={`text-xl font-semibold ${
+                  isDark ? "text-white" : "text-violet-900"
+                }`}
               >
                 Opportunities Trend
               </h2>
               <p
-                className={`mt-1 text-sm ${isDark ? "text-violet-200/60" : "text-violet-500"}`}
+                className={`mt-1 text-sm ${
+                  isDark ? "text-violet-200/60" : "text-violet-500"
+                }`}
               >
-                Total opportunities grouped by the selected time scale.
+                Opportunity count grouped by the selected time scale.
               </p>
             </div>
 
@@ -351,6 +290,7 @@ const TotalOpportunities: React.FC = () => {
               >
                 Time Scale
               </label>
+
               <select
                 id="timescale"
                 value={timeScale}
@@ -381,8 +321,8 @@ const TotalOpportunities: React.FC = () => {
               gainLossData={opportunitiesData}
               timeData={timeData}
               xAxisLabel={scaleLabel}
-              yAxisLabel="Total Opportunities"
-              title={`Total Opportunities by ${scaleLabel}`}
+              yAxisLabel="Opportunities"
+              title={`Opportunities by ${scaleLabel}`}
               isDark={isDark}
             />
           </div>
@@ -391,5 +331,54 @@ const TotalOpportunities: React.FC = () => {
     </div>
   );
 };
+
+const MetricCard = ({
+  title,
+  value,
+  isDark,
+  positive,
+}: {
+  title: string;
+  value: string | number;
+  isDark: boolean;
+  positive?: boolean;
+}) => (
+  <div
+    style={
+      !isDark
+        ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
+        : undefined
+    }
+    className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
+      isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
+    }`}
+  >
+    <div
+      className={`text-[11px] uppercase tracking-[0.2em] ${
+        isDark ? "text-violet-200/55" : "text-violet-400"
+      }`}
+    >
+      {title}
+    </div>
+
+    <div
+      className={`mt-2 text-2xl font-semibold ${
+        positive === undefined
+          ? isDark
+            ? "text-white"
+            : "text-violet-900"
+          : positive
+            ? isDark
+              ? "text-emerald-300"
+              : "text-emerald-600"
+            : isDark
+              ? "text-rose-300"
+              : "text-rose-600"
+      }`}
+    >
+      {value}
+    </div>
+  </div>
+);
 
 export default TotalOpportunities;
