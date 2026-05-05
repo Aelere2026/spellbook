@@ -20,12 +20,8 @@ const Navbar: React.FC = () => {
   const metricLinks = [
     { to: "/gain-loss", label: "Gain/Loss" },
     { to: "/opportunities", label: "Opportunities" },
-    { to: "/frequency", label: "Frequency" },
-    { to: "/avg-trade-time", label: "Avg Trade Time" },
     { to: "/fees", label: "Total Fee Loss" },
     { to: "/avgROI", label: "Avg ROI" },
-    { to: "/avg-slippage", label: "Avg Slippage" },
-    { to: "/exposure", label: "Exposure" },
   ];
 
   const isAnalyticsActive = useMemo(
