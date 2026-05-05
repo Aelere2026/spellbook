@@ -164,11 +164,11 @@ const Settings: React.FC = () => {
               </div>
 
               {/* Trading by Volume */}
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col p-6 gap-1">
                 <label className="text-sm font-medium">
                   Choose a maximum volume to purchase shares in
                 </label>
-                <label className="text-xs font-medium">
+                <label className="text-xs mb-6 font-medium">
                   The system automatically adjusts trade size based on
                   opportunity strength, but will never exceed this limit.
                 </label>
@@ -187,11 +187,10 @@ const Settings: React.FC = () => {
                       : "border-violet-300 bg-white"
                   }`}
                 />
-                <button onClick={handleSaveMaxShares}> Save </button>
               </div>
               {/* Market Category */}
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium">
+              <div className="flex flex-col  gap-1">
+                <label className="text-sm p-6 font-medium">
                   Choose a market category to purchase in{" "}
                 </label>
                 <select
@@ -208,6 +207,19 @@ const Settings: React.FC = () => {
                   <option>Any</option>
                 </select>
               </div>
+            </div>
+
+            <div className="flex justify-center p-6 mt-2">
+              <button
+                className={`inline-flex items-center gap-2 rounded-xl border p-6 px-2 py-1 text-xs font-medium backdrop-blur-xl transition-all duration-200 ${
+                  isDark
+                    ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
+                    : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
+                }`}
+                onClick={handleSaveMaxShares}
+              >
+                Save
+              </button>
             </div>
           </div>
         </div>
