@@ -23,14 +23,24 @@ interface FieldProps {
 const Field: React.FC<FieldProps> = ({ label, value, isDark, highlight }) => {
   const valueColor =
     highlight === "positive"
-      ? isDark ? "text-emerald-300" : "text-emerald-700"
+      ? isDark
+        ? "text-emerald-300"
+        : "text-emerald-700"
       : highlight === "negative"
-        ? isDark ? "text-rose-300" : "text-rose-700"
-        : isDark ? "text-violet-100" : "text-violet-900";
+        ? isDark
+          ? "text-rose-300"
+          : "text-rose-700"
+        : isDark
+          ? "text-violet-100"
+          : "text-violet-900";
 
   return (
     <div
-      style={!isDark ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" } : undefined}
+      style={
+        !isDark
+          ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+          : undefined
+      }
       className={[
         "rounded-2xl border px-5 py-4",
         isDark
@@ -38,10 +48,14 @@ const Field: React.FC<FieldProps> = ({ label, value, isDark, highlight }) => {
           : "border-violet-200",
       ].join(" ")}
     >
-      <div className={`text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-200/55" : "text-violet-400"}`}>
+      <div
+        className={`text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-200/55" : "text-violet-400"}`}
+      >
         {label}
       </div>
-      <div className={`mt-2 text-base font-semibold break-all ${valueColor}`}>{value}</div>
+      <div className={`mt-2 text-base font-semibold break-all ${valueColor}`}>
+        {value}
+      </div>
     </div>
   );
 };
@@ -52,14 +66,17 @@ const TradeDetail: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const { data: trade, isLoading, isError } = api.arbitrages.getById.useQuery(
-    { id: Number(id) },
-    { enabled: !!id },
-  );
+  const {
+    data: trade,
+    isLoading,
+    isError,
+  } = api.arbitrages.getById.useQuery({ id: Number(id) }, { enabled: !!id });
 
   if (isLoading) {
     return (
-      <div className={`flex min-h-[60vh] items-center justify-center ${isDark ? "text-violet-200" : "text-violet-700"}`}>
+      <div
+        className={`flex min-h-[60vh] items-center justify-center ${isDark ? "text-violet-200" : "text-violet-700"}`}
+      >
         Loading trade details…
       </div>
     );
@@ -67,12 +84,18 @@ const TradeDetail: React.FC = () => {
 
   if (isError || !trade) {
     return (
-      <div className={`flex min-h-[60vh] flex-col items-center justify-center gap-4 ${isDark ? "text-violet-200" : "text-violet-700"}`}>
+      <div
+        className={`flex min-h-[60vh] flex-col items-center justify-center gap-4 ${isDark ? "text-violet-200" : "text-violet-700"}`}
+      >
         <div>Trade not found.</div>
         <button
           type="button"
           onClick={() => navigate("/")}
-          className={`rounded-xl border px-4 py-2 text-sm transition ${isDark ? "border-violet-400/20 hover:border-violet-400/50" : "border-violet-300 hover:border-violet-500"}`}
+          className={
+            isDark
+              ? "sticky top-0 z-50 border-b border-violet-300/10 bg-[#0b0915]/80 backdrop-blur-xl"
+              : "sticky top-0 z-50 border-b border-violet-200 bg-[#f5f0ff]/80 backdrop-blur-xl"
+          }
         >
           ← Back to Dashboard
         </button>
@@ -93,26 +116,34 @@ const TradeDetail: React.FC = () => {
 
   const detectionTime = new Date(trade.detectionTime);
   const executionTime = new Date(trade.executionTime);
-  const durationMs = Math.max(0, executionTime.getTime() - detectionTime.getTime());
+  const durationMs = Math.max(
+    0,
+    executionTime.getTime() - detectionTime.getTime(),
+  );
 
   const poly = trade.match.polymarketMarket;
   const kalshi = trade.match.kalshiMarket;
 
-  const polymarketUrl = poly.slug ? `https://polymarket.com/market/${poly.slug}` : null;
-  const kalshiUrl = kalshi.apiId ? `https://kalshi.com/events/${kalshi.apiId}` : null;
+  const polymarketUrl = poly.slug
+    ? `https://polymarket.com/market/${poly.slug}`
+    : null;
+  const kalshiUrl = kalshi.apiId
+    ? `https://kalshi.com/events/${kalshi.apiId}`
+    : null;
 
   return (
-    <div className={`relative min-h-screen ${isDark ? "text-violet-50" : "text-gray-900"}`}>
+    <div
+      className={`relative min-h-screen ${isDark ? "text-violet-50" : "text-gray-900"}`}
+    >
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-
         {/* Back button */}
         <button
           type="button"
           onClick={() => navigate(-1)}
           className={`mb-6 inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm transition-all ${
             isDark
-              ? "border-violet-400/20 text-violet-200/70 hover:border-violet-400/50 hover:text-violet-100"
-              : "border-violet-300 text-violet-500 hover:border-violet-500 hover:text-violet-700"
+              ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
+              : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
           }`}
         >
           ← Back
@@ -120,7 +151,11 @@ const TradeDetail: React.FC = () => {
 
         {/* Header */}
         <div
-          style={!isDark ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" } : undefined}
+          style={
+            !isDark
+              ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+              : undefined
+          }
           className={[
             "mb-6 rounded-3xl border px-6 py-6 backdrop-blur-xl",
             isDark
@@ -128,14 +163,25 @@ const TradeDetail: React.FC = () => {
               : "border-violet-200 shadow-sm",
           ].join(" ")}
         >
-          <div className={`text-[11px] uppercase tracking-[0.25em] ${isDark ? "text-violet-300/60" : "text-violet-400"}`}>
+          <div
+            className={`text-[11px] uppercase tracking-[0.25em] ${isDark ? "text-violet-300/60" : "text-violet-400"}`}
+          >
             Trade #{trade.id}
           </div>
-          <h1 className={`mt-2 text-2xl font-semibold sm:text-3xl ${isDark ? "text-white" : "text-violet-900"}`}>
+          <h1
+            className={`mt-2 text-2xl font-semibold sm:text-3xl ${isDark ? "text-white" : "text-violet-900"}`}
+          >
             {poly.title}
           </h1>
-          <div className={`mt-1 text-sm ${isDark ? "text-violet-200/50" : "text-violet-400"}`}>
-            Match score: <span className={`font-medium ${isDark ? "text-violet-200/80" : "text-violet-600"}`}>{(trade.match.matchScore * 100).toFixed(1)}%</span>
+          <div
+            className={`mt-1 text-sm ${isDark ? "text-violet-200/50" : "text-violet-400"}`}
+          >
+            Match score:{" "}
+            <span
+              className={`font-medium ${isDark ? "text-violet-200/80" : "text-violet-600"}`}
+            >
+              {(trade.match.matchScore ).toFixed(1)}%
+            </span>
           </div>
         </div>
 
@@ -169,34 +215,66 @@ const TradeDetail: React.FC = () => {
 
         {/* Pricing & timing */}
         <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Field isDark={isDark} label="Yes Price" value={fmtPct(yesPrice * 100)} />
-          <Field isDark={isDark} label="No Price" value={fmtPct(noPrice * 100)} />
+          <Field
+            isDark={isDark}
+            label="Yes Price"
+            value={fmtPct(yesPrice * 100)}
+          />
+          <Field
+            isDark={isDark}
+            label="No Price"
+            value={fmtPct(noPrice * 100)}
+          />
           <Field
             isDark={isDark}
             label="Edge %"
             value={`${edgePct >= 0 ? "+" : ""}${fmtPct(edgePct)}`}
             highlight={edgePct > 0 ? "positive" : "negative"}
           />
-          <Field isDark={isDark} label="Side (Polymarket)" value={trade.polymarketYes ? "YES" : "NO"} />
+          <Field
+            isDark={isDark}
+            label="Side (Polymarket)"
+            value={trade.polymarketYes ? "YES" : "NO"}
+          />
         </div>
 
         <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Field isDark={isDark} label="Total Fee" value={fmtMoney(totalFee)} />
-          <Field isDark={isDark} label="Est. Slippage" value={fmtMoney(slippage)} />
+          <Field
+            isDark={isDark}
+            label="Est. Slippage"
+            value={fmtMoney(slippage)}
+          />
           <Field isDark={isDark} label="Duration" value={`${durationMs} ms`} />
-          <Field isDark={isDark} label="Match Score" value={`${(trade.match.matchScore * 100).toFixed(1)}%`} />
+          <Field
+            isDark={isDark}
+            label="Match Score"
+            value={`${(trade.match.matchScore * 100).toFixed(1)}%`}
+          />
         </div>
 
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field isDark={isDark} label="Detection Time" value={detectionTime.toLocaleString()} />
-          <Field isDark={isDark} label="Execution Time" value={executionTime.toLocaleString()} />
+          <Field
+            isDark={isDark}
+            label="Detection Time"
+            value={detectionTime.toLocaleString()}
+          />
+          <Field
+            isDark={isDark}
+            label="Execution Time"
+            value={executionTime.toLocaleString()}
+          />
         </div>
 
         {/* Markets */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Polymarket */}
           <div
-            style={!isDark ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" } : undefined}
+            style={
+              !isDark
+                ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+                : undefined
+            }
             className={[
               "rounded-3xl border px-5 py-5",
               isDark
@@ -204,17 +282,60 @@ const TradeDetail: React.FC = () => {
                 : "border-violet-200",
             ].join(" ")}
           >
-            <div className={`mb-3 text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-300/60" : "text-violet-400"}`}>
+            <div
+              className={`mb-3 text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-300/60" : "text-violet-400"}`}
+            >
               Polymarket
             </div>
-            <div className={`text-sm font-medium ${isDark ? "text-violet-100" : "text-violet-900"}`}>{poly.title}</div>
-            <div className={`mt-2 grid grid-cols-2 gap-2 text-xs ${isDark ? "text-violet-200/60" : "text-violet-500"}`}>
-              <span>Status: <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>{poly.status}</span></span>
-              <span>Fee: <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>{Number(poly.fee) * 100}%</span></span>
-              <span>Category: <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>{poly.category}</span></span>
-              <span>Resolution: <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>{new Date(poly.resolutionDate).toLocaleDateString()}</span></span>
+            <div
+              className={`text-sm font-medium ${isDark ? "text-violet-100" : "text-violet-900"}`}
+            >
+              {poly.title}
+            </div>
+            <div
+              className={`mt-2 grid grid-cols-2 gap-2 text-xs ${isDark ? "text-violet-200/60" : "text-violet-500"}`}
+            >
+              <span>
+                Status:{" "}
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
+                  {poly.status}
+                </span>
+              </span>
+              <span>
+                Fee:{" "}
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
+                  {Number(poly.fee) * 100}%
+                </span>
+              </span>
+              <span>
+                Category:{" "}
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
+                  {poly.category}
+                </span>
+              </span>
+              <span>
+                Resolution:{" "}
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
+                  {new Date(poly.resolutionDate).toLocaleDateString()}
+                </span>
+              </span>
               {poly.outcome && (
-                <span className="col-span-2">Outcome: <span className={`font-semibold ${isDark ? "text-emerald-300" : "text-emerald-700"}`}>{poly.outcome.outcome}</span></span>
+                <span className="col-span-2">
+                  Outcome:{" "}
+                  <span
+                    className={`font-semibold ${isDark ? "text-emerald-300" : "text-emerald-700"}`}
+                  >
+                    {poly.outcome.outcome}
+                  </span>
+                </span>
               )}
             </div>
             {polymarketUrl && (
@@ -231,7 +352,11 @@ const TradeDetail: React.FC = () => {
 
           {/* Kalshi */}
           <div
-            style={!isDark ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" } : undefined}
+            style={
+              !isDark
+                ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+                : undefined
+            }
             className={[
               "rounded-3xl border px-5 py-5",
               isDark
@@ -239,17 +364,60 @@ const TradeDetail: React.FC = () => {
                 : "border-violet-200",
             ].join(" ")}
           >
-            <div className={`mb-3 text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-300/60" : "text-violet-400"}`}>
+            <div
+              className={`mb-3 text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-300/60" : "text-violet-400"}`}
+            >
               Kalshi
             </div>
-            <div className={`text-sm font-medium ${isDark ? "text-violet-100" : "text-violet-900"}`}>{kalshi.title}</div>
-            <div className={`mt-2 grid grid-cols-2 gap-2 text-xs ${isDark ? "text-violet-200/60" : "text-violet-500"}`}>
-              <span>Status: <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>{kalshi.status}</span></span>
-              <span>Fee: <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>{Number(kalshi.fee) * 100}%</span></span>
-              <span>Category: <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>{kalshi.category}</span></span>
-              <span>Resolution: <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>{new Date(kalshi.resolutionDate).toLocaleDateString()}</span></span>
+            <div
+              className={`text-sm font-medium ${isDark ? "text-violet-100" : "text-violet-900"}`}
+            >
+              {kalshi.title}
+            </div>
+            <div
+              className={`mt-2 grid grid-cols-2 gap-2 text-xs ${isDark ? "text-violet-200/60" : "text-violet-500"}`}
+            >
+              <span>
+                Status:{" "}
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
+                  {kalshi.status}
+                </span>
+              </span>
+              <span>
+                Fee:{" "}
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
+                  {Number(kalshi.fee) * 100}%
+                </span>
+              </span>
+              <span>
+                Category:{" "}
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
+                  {kalshi.category}
+                </span>
+              </span>
+              <span>
+                Resolution:{" "}
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
+                  {new Date(kalshi.resolutionDate).toLocaleDateString()}
+                </span>
+              </span>
               {kalshi.outcome && (
-                <span className="col-span-2">Outcome: <span className={`font-semibold ${isDark ? "text-emerald-300" : "text-emerald-700"}`}>{kalshi.outcome.outcome}</span></span>
+                <span className="col-span-2">
+                  Outcome:{" "}
+                  <span
+                    className={`font-semibold ${isDark ? "text-emerald-300" : "text-emerald-700"}`}
+                  >
+                    {kalshi.outcome.outcome}
+                  </span>
+                </span>
               )}
             </div>
             {kalshiUrl && (
