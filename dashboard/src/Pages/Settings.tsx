@@ -1,9 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTheme } from "../context/ThemeContext";
+import { api } from "../utils/api";
 
 const Settings: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
+
+  const [maxShares, setMaxShares] = useState(50);
+  const updateConfig = api.config.update.useMutation();
+
+  const handleSaveMaxShares = async () => {
+    await updateConfig.mutateAsync({
+      usePresetAlgo: true,
+      maxShares: Number(maxShares),
+    });
+  };
 
   return (
     <div
@@ -155,20 +166,28 @@ const Settings: React.FC = () => {
               {/* Trading by Volume */}
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium">
-                  Choose a volume to purchase shares in
+                  Choose a maximum volume to purchase shares in
+                </label>
+                <label className="text-xs font-medium">
+                  The system automatically adjusts trade size based on
+                  opportunity strength, but will never exceed this limit.
                 </label>
 
                 <input
                   type="number"
                   min={1}
+                  max={10000}
                   step={1}
-                  defaultValue={1}
+                  value={maxShares}
+                  onChange={(e) => setMaxShares(Number(e.target.value))}
+                  defaultValue={maxShares}
                   className={`w-40 rounded-xl border px-3 py-2 text-sm ${
                     isDark
                       ? "border-gray-600 bg-gray-800 text-white"
                       : "border-violet-300 bg-white"
                   }`}
                 />
+                <button onClick={handleSaveMaxShares}> Save </button>
               </div>
               {/* Market Category */}
               <div className="flex flex-col gap-1">
@@ -186,6 +205,7 @@ const Settings: React.FC = () => {
                   <option>Crypto</option>
                   <option>Politics</option>
                   <option>Entertainment</option>
+                  <option>Any</option>
                 </select>
               </div>
             </div>
