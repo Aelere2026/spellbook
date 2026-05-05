@@ -176,7 +176,7 @@ const Settings: React.FC = () => {
                 <input
                   type="number"
                   min={1}
-                  max={10000}
+                  max={60}
                   step={1}
                   value={maxShares}
                   onChange={(e) => setMaxShares(Number(e.target.value))}
