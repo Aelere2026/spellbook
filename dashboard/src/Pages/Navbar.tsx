@@ -23,7 +23,7 @@ const Navbar: React.FC = () => {
     { to: "/frequency", label: "Frequency" },
     { to: "/avg-trade-time", label: "Avg Trade Time" },
     { to: "/fees", label: "Total Fee Loss" },
-    { to: "/avg-roi", label: "Avg ROI" },
+    { to: "/avgROI", label: "Avg ROI" },
     { to: "/avg-slippage", label: "Avg Slippage" },
     { to: "/exposure", label: "Exposure" },
   ];

@@ -6,6 +6,7 @@ import Layout from "./Pages/Layout";
 import Home from "./Pages/Home";
 import Profit from "./Pages/Profit";
 import TotalFees from "./Pages/Fees";
+import AvgRoi from "./Pages/AvgRoi";
 import Settings from "./Pages/Settings";
 import TradeDetail from "./Pages/TradeDetail";
 import { Routes, Route } from "react-router-dom";
@@ -50,6 +51,7 @@ function App() {
               <Route path="/opportunities" element={<Opportunities />} />
               <Route path="/profit" element={<Profit />} />
               <Route path="/fees" element={<TotalFees />} />
+              <Route path="/avgROI" element={<AvgRoi />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/trade/:id" element={<TradeDetail />} />
             </Route>

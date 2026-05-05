@@ -5,9 +5,10 @@ import { useTheme } from "../context/ThemeContext";
 
 type TimeScale = "minute" | "day" | "week" | "month";
 
-const TotalFees: React.FC = () => {
+const AvgRoi: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+
   const [timeScale, setTimeScale] = useState<TimeScale>("day");
 
   const { data: arbData, isLoading } =
@@ -18,11 +19,7 @@ const TotalFees: React.FC = () => {
 
   const arbitrages = arbData ?? [];
 
-  const formatCurrency = (value: number) =>
-    `$${value.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
+  const formatPct = (value: number) => `${value.toFixed(2)}%`;
 
   const formatBucketLabel = (date: Date, scale: TimeScale) => {
     if (scale === "minute") {
@@ -85,7 +82,10 @@ const TotalFees: React.FC = () => {
   };
 
   const chartData = useMemo(() => {
-    const grouped = new Map<string, { label: string; totalFees: number; date: Date }>();
+    const grouped = new Map<
+      string,
+      { label: string; totalRoi: number; count: number; date: Date }
+    >();
 
     for (const a of arbitrages) {
       const executionRaw = a.executionTime;
@@ -94,24 +94,36 @@ const TotalFees: React.FC = () => {
       const executionDate = new Date(executionRaw);
       if (Number.isNaN(executionDate.getTime())) continue;
 
+      const netProfit = Number(a.netProfit ?? 0);
+      const capital = Number(a.grossProfit ?? 0);
+
+      // ROI is defined here once, then used throughout the page.
+      const roiPct = capital > 0 ? (netProfit / capital) * 100 : 0;
+
       const key = bucketKey(executionDate, timeScale);
       const label = formatBucketLabel(executionDate, timeScale);
-      const fee = Number(a.totalFee ?? 0);
 
       if (!grouped.has(key)) {
         grouped.set(key, {
           label,
-          totalFees: 0,
+          totalRoi: 0,
+          count: 0,
           date: new Date(key),
         });
       }
 
-      grouped.get(key)!.totalFees += fee;
+      const bucket = grouped.get(key)!;
+      bucket.totalRoi += roiPct;
+      bucket.count += 1;
     }
 
-    return Array.from(grouped.values()).sort(
-      (a, b) => a.date.getTime() - b.date.getTime(),
-    );
+    return Array.from(grouped.values())
+      .map((bucket) => ({
+        label: bucket.label,
+        roiPct: bucket.count > 0 ? bucket.totalRoi / bucket.count : 0,
+        date: bucket.date,
+      }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [arbitrages, timeScale]);
 
   const MAX_MINUTE_POINTS = 30;
@@ -139,20 +151,33 @@ const TotalFees: React.FC = () => {
   }, [chartData, timeScale]);
 
   const timeData = displayData.map((d) => d.label);
-  const feesData = displayData.map((d) => d.totalFees);
+  const roiData = displayData.map((d) => d.roiPct);
 
-  const totalFees = arbitrages.reduce(
-    (sum, a) => sum + Number(a.totalFee ?? 0),
-    0,
-  );
+  const allRoiValues = arbitrages.map((a) => {
+    const netProfit = Number(a.netProfit ?? 0);
+    const capital = Number(a.grossProfit ?? 0);
 
-  const latest = feesData.length > 0 ? feesData[feesData.length - 1] : 0;
-  const previous = feesData.length > 1 ? feesData[feesData.length - 2] : 0;
+    // Same ROI definition used for total page metrics.
+    const roiPct = capital > 0 ? (netProfit / capital) * 100 : 0;
+
+    return roiPct;
+  });
+
+  const totalRoi =
+    allRoiValues.length > 0
+      ? allRoiValues.reduce((sum, value) => sum + value, 0) /
+        allRoiValues.length
+      : 0;
+
+  const latest = roiData.length > 0 ? roiData[roiData.length - 1] : 0;
+
+  const previous = roiData.length > 1 ? roiData[roiData.length - 2] : 0;
+
   const change = latest - previous;
 
   const avg =
-    feesData.length > 0
-      ? feesData.reduce((sum, value) => sum + value, 0) / feesData.length
+    roiData.length > 0
+      ? roiData.reduce((sum, value) => sum + value, 0) / roiData.length
       : 0;
 
   const scaleLabel =
@@ -167,16 +192,24 @@ const TotalFees: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-violet-100">
-        Loading fees analysis...
+        Loading ROI analysis...
       </div>
     );
   }
 
   return (
-    <div className={`relative min-h-screen ${isDark ? "text-violet-50" : "text-gray-900"}`}>
+    <div
+      className={`relative min-h-screen ${
+        isDark ? "text-violet-50" : "text-gray-900"
+      }`}
+    >
       <div className="mx-auto max-w-7xl px-6 py-8 sm:px-8 lg:px-10">
         <section
-          style={!isDark ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" } : undefined}
+          style={
+            !isDark
+              ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+              : undefined
+          }
           className={[
             "relative overflow-hidden rounded-[2rem] border px-8 py-12 backdrop-blur-xl",
             isDark
@@ -196,7 +229,7 @@ const TotalFees: React.FC = () => {
                   : "border-violet-300 bg-violet-100 text-violet-600"
               }`}
             >
-              Cost Overview
+              Performance Overview
             </div>
 
             <h1
@@ -204,25 +237,44 @@ const TotalFees: React.FC = () => {
                 isDark ? "text-white" : "text-violet-900"
               }`}
             >
-              Fees Analysis
+              ROI Analysis
             </h1>
 
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-4">
-              <MetricCard title="Total Fees" value={formatCurrency(totalFees)} isDark={isDark} />
-              <MetricCard title={`Latest ${scaleLabel}`} value={formatCurrency(latest)} isDark={isDark} />
+              <MetricCard
+                title="Average ROI"
+                value={formatPct(totalRoi)}
+                isDark={isDark}
+              />
+
+              <MetricCard
+                title={`Latest ${scaleLabel}`}
+                value={formatPct(latest)}
+                isDark={isDark}
+              />
+
               <MetricCard
                 title="Change vs Previous"
-                value={`${change >= 0 ? "+" : ""}${formatCurrency(change)}`}
+                value={`${change >= 0 ? "+" : ""}${formatPct(change)}`}
                 isDark={isDark}
-                positive={change <= 0}
+                positive={change >= 0}
               />
-              <MetricCard title={`Average ${scaleLabel}`} value={formatCurrency(avg)} isDark={isDark} />
+
+              <MetricCard
+                title={`Average ${scaleLabel}`}
+                value={formatPct(avg)}
+                isDark={isDark}
+              />
             </div>
           </div>
         </section>
 
         <section
-          style={!isDark ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" } : undefined}
+          style={
+            !isDark
+              ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+              : undefined
+          }
           className={[
             "mt-8 rounded-[2rem] border p-5 backdrop-blur-xl sm:p-6 lg:p-8",
             isDark
@@ -232,8 +284,12 @@ const TotalFees: React.FC = () => {
         >
           <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className={`text-xl font-semibold ${isDark ? "text-white" : "text-violet-900"}`}>
-                Fees Trend
+              <h2
+                className={`text-xl font-semibold ${
+                  isDark ? "text-white" : "text-violet-900"
+                }`}
+              >
+                ROI Trend
               </h2>
              
             </div>
@@ -241,7 +297,9 @@ const TotalFees: React.FC = () => {
             <div className="flex items-center gap-3">
               <label
                 htmlFor="timescale"
-                className={`text-sm font-medium ${isDark ? "text-violet-200/75" : "text-violet-600"}`}
+                className={`text-sm font-medium ${
+                  isDark ? "text-violet-200/75" : "text-violet-600"
+                }`}
               >
                 Time Scale
               </label>
@@ -273,11 +331,11 @@ const TotalFees: React.FC = () => {
             }`}
           >
             <LineGraph
-              gainLossData={feesData}
+              gainLossData={roiData}
               timeData={timeData}
               xAxisLabel={scaleLabel}
-              yAxisLabel="Total Fees"
-              title={`Fees by ${scaleLabel}`}
+              yAxisLabel="ROI (%)"
+              title={`ROI by ${scaleLabel}`}
               isDark={isDark}
             />
           </div>
@@ -299,7 +357,11 @@ const MetricCard = ({
   positive?: boolean;
 }) => (
   <div
-    style={!isDark ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" } : undefined}
+    style={
+      !isDark
+        ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
+        : undefined
+    }
     className={`rounded-2xl border px-5 py-4 backdrop-blur-md ${
       isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
     }`}
@@ -332,4 +394,4 @@ const MetricCard = ({
   </div>
 );
 
-export default TotalFees;
+export default AvgRoi;
