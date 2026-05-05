@@ -14,6 +14,7 @@ interface StatCardProps {
   className?: string;
   onClick?: () => void;
   isDark?: boolean;
+  isClickable?: boolean;
 }
 
 //Defines the react component for display cards and the styling
@@ -24,6 +25,7 @@ const StatCard: React.FC<StatCardProps> = ({
   className,
   onClick,
   isDark = true,
+  isClickable = true,
 }) => {
   const toneStyle =
     tone === "positive"
@@ -68,11 +70,17 @@ const StatCard: React.FC<StatCardProps> = ({
       >
         {value}
       </div>
-      <div
-        className={`mt-3 text-[11px] ${isDark ? "text-violet-200/45 group-hover:text-violet-200/70" : "text-violet-300 group-hover:text-violet-500"}`}
-      >
-        Click to explore
-      </div>
+      {isClickable && (
+        <div
+          className={`mt-3 text-[11px] ${
+            isDark
+              ? "text-violet-200/45 group-hover:text-violet-200/70"
+              : "text-violet-300 group-hover:text-violet-500"
+          }`}
+        >
+          Click to explore
+        </div>
+      )}
     </button>
   );
 };
@@ -216,11 +224,13 @@ const Dashboard: React.FC = () => {
             isDark={isDark}
             title="Frequency"
             value={stats?.frequency ?? 0}
+            isClickable={false}
           />
           <StatCard
             isDark={isDark}
             title="Avg Trade Time"
             value={`${stats?.avgTradeTime ?? 0} ms`}
+            isClickable={false}
           />
         </div>
         <button
@@ -271,21 +281,25 @@ const Dashboard: React.FC = () => {
             isDark={isDark}
             title="Total Fees"
             value={fmtMoney(stats?.totalFeeLoss ?? 0)}
+            onClick={() => navigate("/fees")}
           />
           <StatCard
             isDark={isDark}
             title="Avg ROI"
             value={`${stats?.avgRoi ?? 0}%`}
+            onClick={() => navigate("/avgROI")}
           />
           <StatCard
             isDark={isDark}
             title="Avg Slippage"
             value={`$${stats?.avgSlippage ?? 0}`}
+            isClickable={false}
           />
           <StatCard
             isDark={isDark}
             title="Profit Before Costs"
             value={fmtMoney(stats?.exposure ?? 0)}
+            isClickable={false}
           />
         </div>
       </div>
@@ -355,7 +369,10 @@ const Dashboard: React.FC = () => {
                   >
                     {t.market}
                   </td>
-                  <td className="px-3 py-3 text-sm sm:px-4" onClick={(e) => e.stopPropagation()}>
+                  <td
+                    className="px-3 py-3 text-sm sm:px-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <div className="flex flex-col gap-1">
                       {t.polymarketUrl ? (
                         <a
