@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { api } from "../utils/api";
 
@@ -10,6 +10,14 @@ const Settings: React.FC = () => {
   const [resolutionStart, setResolutionStart] = useState("");
   const [resolutionEnd, setResolutionEnd] = useState("");
   const updateConfig = api.config.update.useMutation();
+  const { data: config } = api.config.get.useQuery();
+
+  useEffect(() => {
+    if (!config) return;
+    setMaxShares(config.maxShares);
+    setResolutionStart(config.resolutionStart ? new Date(config.resolutionStart).toISOString().slice(0, 10) : "");
+    setResolutionEnd(config.resolutionEnd ? new Date(config.resolutionEnd).toISOString().slice(0, 10) : "");
+  }, [config]);
 
   const handleSaveMaxShares = async () => {
     await updateConfig.mutateAsync({

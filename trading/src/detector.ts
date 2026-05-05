@@ -281,18 +281,20 @@ export async function run(): Promise<void> {
         },
       });
  
-      log.info(`Checking ${matches.length} matched pairs... [mode: ${botConfig.usePresetAlgo ? `preset(max=${botConfig.maxShares})` : `manual(${botConfig.manualShares})`}]`);
+      const filterStart = botConfig.resolutionStart ? new Date(botConfig.resolutionStart) : null;
+      const filterEnd   = botConfig.resolutionEnd   ? new Date(botConfig.resolutionEnd)   : null;
+      log.info(`Checking ${matches.length} matched pairs... [mode: ${botConfig.usePresetAlgo ? `preset(max=${botConfig.maxShares})` : `manual(${botConfig.manualShares})`}] [resolution: ${filterStart?.toISOString() ?? "any"} → ${filterEnd?.toISOString() ?? "any"}]`);
       let opportunitiesFound = 0;
- 
+
       let count = 0
       for (const match of matches) {
         // Use the later of the two resolution dates as the market's effective resolution date
         const marketResDate = new Date(Math.max(
-          match.kalshiMarket.resolutionDate.getTime(),
-          match.polymarketMarket.resolutionDate.getTime(),
+          new Date(match.kalshiMarket.resolutionDate).getTime(),
+          new Date(match.polymarketMarket.resolutionDate).getTime(),
         ));
-        if (botConfig.resolutionStart && marketResDate < botConfig.resolutionStart) continue;
-        if (botConfig.resolutionEnd && marketResDate > botConfig.resolutionEnd) continue;
+        if (filterStart && marketResDate.getTime() < filterStart.getTime()) continue;
+        if (filterEnd   && marketResDate.getTime() > filterEnd.getTime())   continue;
 
         const kalshiApiId     = match.kalshiMarket.apiId;
         const polymarketApiId = match.polymarketMarket.apiId;
