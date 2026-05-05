@@ -22,6 +22,8 @@ const configRouter = router({
         usePresetAlgo: z.boolean().optional(),
         manualShares: z.number().min(1).max(10000).optional(),
         maxShares: z.number().min(1).max(10000).optional(),
+        resolutionStart: z.string().datetime().nullable().optional(),
+        resolutionEnd: z.string().datetime().nullable().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -32,6 +34,8 @@ const configRouter = router({
           ...(input.usePresetAlgo !== undefined && { usePresetAlgo: input.usePresetAlgo }),
           ...(input.manualShares !== undefined && { manualShares: input.manualShares }),
           ...(input.maxShares !== undefined && { maxShares: input.maxShares }),
+          ...(input.resolutionStart !== undefined && { resolutionStart: input.resolutionStart ? new Date(input.resolutionStart) : null }),
+          ...(input.resolutionEnd !== undefined && { resolutionEnd: input.resolutionEnd ? new Date(input.resolutionEnd) : null }),
         },
       });
     }),

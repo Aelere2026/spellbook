@@ -7,12 +7,16 @@ const Settings: React.FC = () => {
   const isDark = theme === "dark";
 
   const [maxShares, setMaxShares] = useState(50);
+  const [resolutionStart, setResolutionStart] = useState("");
+  const [resolutionEnd, setResolutionEnd] = useState("");
   const updateConfig = api.config.update.useMutation();
 
   const handleSaveMaxShares = async () => {
     await updateConfig.mutateAsync({
       usePresetAlgo: true,
       maxShares: Number(maxShares),
+      resolutionStart: resolutionStart ? new Date(resolutionStart).toISOString() : null,
+      resolutionEnd: resolutionEnd ? new Date(resolutionEnd).toISOString() : null,
     });
   };
 
@@ -141,6 +145,8 @@ const Settings: React.FC = () => {
                 <div className="flex gap-3">
                   <input
                     type="date"
+                    value={resolutionStart}
+                    onChange={(e) => setResolutionStart(e.target.value)}
                     className={`w-full rounded-xl border px-3 py-2 text-sm ${
                       isDark
                         ? "border-gray-600 bg-gray-800 text-white"
@@ -149,6 +155,8 @@ const Settings: React.FC = () => {
                   />
                   <input
                     type="date"
+                    value={resolutionEnd}
+                    onChange={(e) => setResolutionEnd(e.target.value)}
                     className={`w-full rounded-xl border px-3 py-2 text-sm ${
                       isDark
                         ? "border-gray-600 bg-gray-800 text-white"

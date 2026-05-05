@@ -84,9 +84,11 @@ model Platform {
 
 // for user settings (volume)
 model BotConfig {
-  id              Int     @id @default(autoincrement())
-  usePresetAlgo   Boolean @default(true) @map("use_preset_algo")  // true = autmated and false = manual
-  manualShares    Int     @default(1)    @map("manual_shares")    // this will be used when usePresetAlgo = false
-  maxShares       Int     @default(200)  @map("max_shares")       // our cap for our algo
+  id              Int       @id @default(autoincrement())
+  usePresetAlgo   Boolean   @default(true) @map("use_preset_algo")  // true = autmated and false = manual
+  manualShares    Int       @default(1)    @map("manual_shares")    // this will be used when usePresetAlgo = false
+  maxShares       Int       @default(200)  @map("max_shares")       // our cap for our algo
+  resolutionStart DateTime? @map("resolution_start")
+  resolutionEnd   DateTime? @map("resolution_end")
 }
 

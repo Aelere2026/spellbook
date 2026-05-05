@@ -59,17 +59,25 @@ function calcPresetShares(grossProfit: number, maxShares: number): number {
  * Returns defaults if no config row exists yet.
  * Default max is 50 for realistic order book depth.
  */
-async function loadBotConfig(): Promise<{ usePresetAlgo: boolean; manualShares: number; maxShares: number }> {
+async function loadBotConfig(): Promise<{
+  usePresetAlgo: boolean;
+  manualShares: number;
+  maxShares: number;
+  resolutionStart: Date | null;
+  resolutionEnd: Date | null;
+}> {
   try {
     const config = await prisma.botConfig.findFirst();
-    if (!config) return { usePresetAlgo: true, manualShares: 1, maxShares: 50 };
+    if (!config) return { usePresetAlgo: true, manualShares: 1, maxShares: 50, resolutionStart: null, resolutionEnd: null };
     return {
       usePresetAlgo: config.usePresetAlgo,
       manualShares: config.manualShares,
       maxShares: config.maxShares,
+      resolutionStart: config.resolutionStart ?? null,
+      resolutionEnd: config.resolutionEnd ?? null,
     };
   } catch {
-    return { usePresetAlgo: true, manualShares: 1, maxShares: 50 };
+    return { usePresetAlgo: true, manualShares: 1, maxShares: 50, resolutionStart: null, resolutionEnd: null };
   }
 }
  
@@ -278,6 +286,14 @@ export async function run(): Promise<void> {
  
       let count = 0
       for (const match of matches) {
+        // Use the later of the two resolution dates as the market's effective resolution date
+        const marketResDate = new Date(Math.max(
+          match.kalshiMarket.resolutionDate.getTime(),
+          match.polymarketMarket.resolutionDate.getTime(),
+        ));
+        if (botConfig.resolutionStart && marketResDate < botConfig.resolutionStart) continue;
+        if (botConfig.resolutionEnd && marketResDate > botConfig.resolutionEnd) continue;
+
         const kalshiApiId     = match.kalshiMarket.apiId;
         const polymarketApiId = match.polymarketMarket.apiId;
  
