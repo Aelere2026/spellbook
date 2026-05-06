@@ -18,9 +18,16 @@ interface FieldProps {
   value: React.ReactNode;
   isDark: boolean;
   highlight?: "positive" | "negative" | "neutral";
+  tooltip?: string;
 }
 
-const Field: React.FC<FieldProps> = ({ label, value, isDark, highlight }) => {
+const Field: React.FC<FieldProps> = ({
+  label,
+  value,
+  isDark,
+  highlight,
+  tooltip,
+}) => {
   const valueColor =
     highlight === "positive"
       ? isDark
@@ -35,27 +42,44 @@ const Field: React.FC<FieldProps> = ({ label, value, isDark, highlight }) => {
           : "text-violet-900";
 
   return (
-    <div
-      style={
-        !isDark
-          ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
-          : undefined
-      }
-      className={[
-        "rounded-2xl border px-5 py-4",
-        isDark
-          ? "border-violet-400/12 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22]"
-          : "border-violet-200",
-      ].join(" ")}
-    >
+    <div className="relative group h-full overflow-visible">
       <div
-        className={`text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-200/55" : "text-violet-400"}`}
+        style={
+          !isDark
+            ? { background: "linear-gradient(135deg, #f5f0ff, #ede8ff)" }
+            : undefined
+        }
+        className={[
+          "h-full rounded-2xl border px-5 py-4 cursor-help overflow-visible",
+          isDark
+            ? "border-violet-400/12 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22]"
+            : "border-violet-200",
+        ].join(" ")}
       >
-        {label}
+        <div
+          className={`text-[11px] uppercase tracking-[0.22em] ${
+            isDark ? "text-violet-200/55" : "text-violet-400"
+          }`}
+        >
+          {label}
+        </div>
+
+        <div className={`mt-2 text-base font-semibold break-all ${valueColor}`}>
+          {value}
+        </div>
       </div>
-      <div className={`mt-2 text-base font-semibold break-all ${valueColor}`}>
-        {value}
-      </div>
+
+      {tooltip && (
+        <div
+          className={`pointer-events-none absolute left-1/2 bottom-full z-[9999] mb-2 w-56 -translate-x-1/2 rounded-xl px-3 py-2 text-xs opacity-0 shadow-xl transition-opacity duration-200 group-hover:opacity-100 ${
+            isDark
+              ? "border border-violet-300/20 bg-[#120d22] text-violet-100"
+              : "border border-violet-200 bg-white text-violet-900"
+          }`}
+        >
+          {tooltip}
+        </div>
+      )}
     </div>
   );
 };
@@ -88,10 +112,7 @@ const TradeDetail: React.FC = () => {
         className={`flex min-h-[60vh] flex-col items-center justify-center gap-4 ${isDark ? "text-violet-200" : "text-violet-700"}`}
       >
         <div>Trade not found.</div>
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-        >
+        <button type="button" onClick={() => navigate("/")}>
           ← Back to Dashboard
         </button>
       </div>
@@ -138,8 +159,12 @@ const TradeDetail: React.FC = () => {
   const kalshiPrice = trade.polymarketYes ? noPrice : yesPrice;
 
   // Implied YES/NO prices on each platform
-  const polyYesPrice = trade.polymarketYes ? polymarketPrice : 1 - polymarketPrice;
-  const polyNoPrice = trade.polymarketYes ? 1 - polymarketPrice : polymarketPrice;
+  const polyYesPrice = trade.polymarketYes
+    ? polymarketPrice
+    : 1 - polymarketPrice;
+  const polyNoPrice = trade.polymarketYes
+    ? 1 - polymarketPrice
+    : polymarketPrice;
   const kalshiYesPrice = trade.polymarketYes ? 1 - kalshiPrice : kalshiPrice;
   const kalshiNoPrice = trade.polymarketYes ? kalshiPrice : 1 - kalshiPrice;
 
@@ -212,30 +237,40 @@ const TradeDetail: React.FC = () => {
             value={
               <div>
                 <div>{`${totalNetProfit >= 0 ? "+" : ""}${fmtMoney(totalNetProfit)}`}</div>
-                <div className={`mt-1 text-[11px] font-normal ${isDark ? "text-violet-200/60" : "text-violet-500"}`}>
-                  {fmtMoney(totalGrossProfit)} gross − {fmtMoney(totalCosts)} costs
+                <div
+                  className={`mt-1 text-[11px] font-normal ${isDark ? "text-violet-200/60" : "text-violet-500"}`}
+                >
+                  {fmtMoney(totalGrossProfit)} gross − {fmtMoney(totalCosts)}{" "}
+                  costs
                 </div>
               </div>
             }
             highlight={totalNetProfit >= 0 ? "positive" : "negative"}
+            tooltip="Total profit after fees and slippage for all shares"
           />
           <Field
             isDark={isDark}
             label="Profit Per Share"
             value={`${netProfit >= 0 ? "+" : ""}${fmtMoney(netProfit)}`}
             highlight={netProfit >= 0 ? "positive" : "negative"}
+            tooltip="Net profit per singular share"
+
           />
           <Field
             isDark={isDark}
             label="Total Costs"
             value={fmtMoney(totalCosts)}
             highlight="neutral"
+            tooltip="Total cost of fees and slippage for all shares"
+
           />
           <Field
             isDark={isDark}
             label="ROI"
             value={`${roiPct >= 0 ? "+" : ""}${fmtPct(roiPct)}`}
             highlight={roiPct >= 0 ? "positive" : "negative"}
+            tooltip="Net profit divided by (YES price + NO price)"
+
           />
         </div>
 
@@ -245,36 +280,56 @@ const TradeDetail: React.FC = () => {
             isDark={isDark}
             label="Yes Price (per share)"
             value={fmtMoney(yesPrice)}
+            tooltip="The price of a singular purchase of the YES option (that was purchased)"
           />
           <Field
             isDark={isDark}
             label="No Price (per share)"
             value={fmtMoney(noPrice)}
+            tooltip="The price of a singular purchase of the NO option (that was purchased)"
           />
           <Field
             isDark={isDark}
             label="Edge %"
             value={`${edgePct >= 0 ? "+" : ""}${fmtPct(edgePct)}`}
             highlight={edgePct > 0 ? "positive" : "negative"}
+            tooltip="The margin of price discrepancy, before fees, as a percentage."
           />
           <Field
             isDark={isDark}
             label="Shares"
             value={shares}
             highlight="neutral"
+            tooltip="Amount of shares purchased"
           />
         </div>
 
         {/* Fees & timing */}
         <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Field isDark={isDark} label="Total Fee (per share)" value={fmtMoney(totalFee)} />
+          <Field
+            isDark={isDark}
+            label="Total Fee (per share)"
+            value={fmtMoney(totalFee)}
+            tooltip="The total amount lost to fees on Polymarket and Kalshi per one share"
+          />
           <Field
             isDark={isDark}
             label="Est. Slippage (per share)"
             value={fmtMoney(slippage)}
+            tooltip="The combined estimated slippage per share (0.005 Polymarket + 0.005 Kalshi = 0.01)"
           />
-          <Field isDark={isDark} label="Match Score" value={`${trade.match.matchScore.toFixed(1)}%`} />
-          <Field isDark={isDark} label="Duration" value={`${durationMs} ms`} />
+          <Field
+            isDark={isDark}
+            label="Match Score"
+            value={`${trade.match.matchScore.toFixed(1)}%`}
+            tooltip="Describes how accurate the match between markets is as a percentage."
+          />
+          <Field 
+          isDark={isDark} 
+          label="Duration" 
+          value={`${durationMs} µs`} 
+          tooltip="The total duration in microseconds "
+          />
         </div>
 
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -282,11 +337,13 @@ const TradeDetail: React.FC = () => {
             isDark={isDark}
             label="Detection Time"
             value={detectionTime.toLocaleString()}
+            tooltip="The timestamp of when the opportunity was detected"
           />
           <Field
             isDark={isDark}
             label="Execution Time"
             value={executionTime.toLocaleString()}
+            tooltip="The timestamp of when the arbitrage was executed"
           />
         </div>
 
@@ -319,7 +376,9 @@ const TradeDetail: React.FC = () => {
 
             {/* YES/NO prices */}
             <div className="mt-2 flex gap-4 text-xs font-semibold">
-              <span className={isDark ? "text-emerald-300" : "text-emerald-700"}>
+              <span
+                className={isDark ? "text-emerald-300" : "text-emerald-700"}
+              >
                 YES: {fmtMoney(polyYesPrice)}
               </span>
               <span className={isDark ? "text-rose-300" : "text-rose-700"}>
@@ -332,31 +391,41 @@ const TradeDetail: React.FC = () => {
             >
               <span>
                 Status:{" "}
-                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
                   {poly.status}
                 </span>
               </span>
               <span>
                 Fee (taker):{" "}
-                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
                   {fmtMoney(totalFee)}
                 </span>
               </span>
               <span>
                 Side:{" "}
-                <span className={`font-semibold ${polymarketSide === "YES" ? isDark ? "text-emerald-300" : "text-emerald-700" : isDark ? "text-rose-300" : "text-rose-700"}`}>
+                <span
+                  className={`font-semibold ${polymarketSide === "YES" ? (isDark ? "text-emerald-300" : "text-emerald-700") : isDark ? "text-rose-300" : "text-rose-700"}`}
+                >
                   {polymarketSide}
                 </span>
               </span>
               <span>
                 Price paid:{" "}
-                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
                   {fmtMoney(polymarketPrice)}
                 </span>
               </span>
               <span>
                 Resolution:{" "}
-                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
                   {new Date(poly.resolutionDate).toLocaleDateString()}
                 </span>
               </span>
@@ -410,7 +479,9 @@ const TradeDetail: React.FC = () => {
 
             {/* YES/NO prices */}
             <div className="mt-2 flex gap-4 text-xs font-semibold">
-              <span className={isDark ? "text-emerald-300" : "text-emerald-700"}>
+              <span
+                className={isDark ? "text-emerald-300" : "text-emerald-700"}
+              >
                 YES: {fmtMoney(kalshiYesPrice)}
               </span>
               <span className={isDark ? "text-rose-300" : "text-rose-700"}>
@@ -423,31 +494,41 @@ const TradeDetail: React.FC = () => {
             >
               <span>
                 Status:{" "}
-                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
                   {kalshi.status}
                 </span>
               </span>
               <span>
                 Fee (taker):{" "}
-                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
                   {fmtMoney(totalFee)}
                 </span>
               </span>
               <span>
                 Side:{" "}
-                <span className={`font-semibold ${kalshiSide === "YES" ? isDark ? "text-emerald-300" : "text-emerald-700" : isDark ? "text-rose-300" : "text-rose-700"}`}>
+                <span
+                  className={`font-semibold ${kalshiSide === "YES" ? (isDark ? "text-emerald-300" : "text-emerald-700") : isDark ? "text-rose-300" : "text-rose-700"}`}
+                >
                   {kalshiSide}
                 </span>
               </span>
               <span>
                 Price paid:{" "}
-                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
                   {fmtMoney(kalshiPrice)}
                 </span>
               </span>
               <span>
                 Resolution:{" "}
-                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
+                <span
+                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
+                >
                   {new Date(kalshi.resolutionDate).toLocaleDateString()}
                 </span>
               </span>
