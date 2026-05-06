@@ -191,12 +191,11 @@ const Settings: React.FC = () => {
 
                 <input
                   type="number"
-                  min={1}
-                  max={60}
+                  min={0}
+                  max={50}
                   step={1}
                   value={maxShares}
                   onChange={(e) => setMaxShares(Number(e.target.value))}
-                  defaultValue={maxShares}
                   className={`w-40 rounded-xl border px-3 py-2 text-sm ${
                     isDark
                       ? "border-gray-600 bg-gray-800 text-white"
