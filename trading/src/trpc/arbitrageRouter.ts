@@ -85,6 +85,8 @@ const arbitrageRouter = router({
     let totalFeeLoss = 0;
     let totalSlippage = 0;
     let totalGrossProfit = 0;
+    let totalCapital = 0;
+    let totalRoi = 0;
 
     // initialize time range
     let earliestDetection = new Date(arbitrages[0].detectionTime);
@@ -98,18 +100,32 @@ const arbitrageRouter = router({
       const grossProfit = Number(arbitrage.grossProfit);
       const totalFee = Number(arbitrage.totalFee);
       const estimatedSlippage = Number(arbitrage.estimatedSlippage);
+      const shares = Number(arbitrage.shares ?? 1);
+ 
+      // scale all per-share values by shares
+      const totalNetProfit = netProfit * shares;
+      const totalGross = grossProfit * shares;
+      const totalFees = totalFee * shares;
+      const totalSlip = estimatedSlippage * shares;
+ 
+      // capital = what we actually spent per share × shares
+      const capital = (yesPrice + noPrice) * shares;
 
       // count winning vs losing trades
-      if (netProfit > 0) gains++;
-      if (netProfit < 0) losses++;
+      if (totalNetProfit > 0) gains++;
+      if (totalNetProfit < 0) losses++;
 
-      // aggregate values
-      totalYes += yesPrice;
-      totalNo += noPrice;
-      totalProfit += netProfit;
-      totalFeeLoss += totalFee;
-      totalSlippage += estimatedSlippage;
-      totalGrossProfit += grossProfit;
+      // aggregate scaled values
+      totalProfit += totalNetProfit;
+      totalFeeLoss += totalFees;
+      totalSlippage += totalSlip;
+      totalGrossProfit += totalGross;
+      totalCapital += capital;
+ 
+      // ROI per trade: net / capital
+      if (capital > 0) {
+        totalRoi += (totalNetProfit / capital) * 100;
+      }
 
       const detection = new Date(arbitrage.detectionTime);
       const execution = new Date(arbitrage.executionTime);
@@ -153,7 +169,7 @@ const arbitrageRouter = router({
     const exposure = totalGrossProfit;
 
     // average return on investment
-    const avgRoi = (totalProfit / (totalYes + totalNo)) * 100;
+    const avgRoi = totalRoi / arbitrages.length;
 
     return {
       gainLoss: Number(gainLoss.toFixed(3)),

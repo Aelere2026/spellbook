@@ -151,6 +151,9 @@ const Dashboard: React.FC = () => {
     const netProfit = Number(a.netProfit);
     const totalFee = Number(a.totalFee);
     const slippage = Number(a.estimatedSlippage);
+    const shares = Number(a.shares ?? 1);
+    const yesPrice = Number(a.yesPrice);
+    const noPrice = Number(a.noPrice);
 
     const matched = match.find((m) => m.id === a.matchId);
     const matchScore = Number(matched?.matchScore);
@@ -162,13 +165,12 @@ const Dashboard: React.FC = () => {
       0,
       Math.round(execution.getTime() - deduction.getTime()),
     );
-    const shares = Number(a.shares ?? 1);
 
 
     //Calculating and grabbing additional information needed for display
-    const capital = grossProfit;
-    const costs = totalFee + slippage;
-    const roiPct = capital > 0 ? (netProfit / capital) * 100 : 0;
+    const capital = (yesPrice + noPrice) * shares;        
+    const costs = (totalFee + slippage) * shares;
+    const roiPct = capital > 0 ? ((netProfit * shares) / capital) * 100 : 0;
 
     const pairMatch = match.find((m) => m.id === a.matchId);
     const polymarket_id = Number(pairMatch?.polymarketMarketId);
@@ -199,7 +201,8 @@ const Dashboard: React.FC = () => {
       shares,
       capital,
       costs,
-      netPnl: netProfit,
+      netPnl: netProfit * shares,
+      netProfitPerShare: netProfit,
       roiPct,
       durationMin,
       timestamp: execution.toLocaleString(),
@@ -213,19 +216,19 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-2 gap-3">
           <StatCard
             isDark={isDark}
-            title="Gain/Loss"
+            title="Gain/Loss Ratio"
             value={stats?.gainLoss ?? 0}
             onClick={() => navigate("/gain-loss")}
           />
           <StatCard
             isDark={isDark}
-            title="Opportunities"
+            title="Opportunities (All Time)"
             value={stats?.opportunities ?? 0}
             onClick={() => navigate("/opportunities")}
           />
           <StatCard
             isDark={isDark}
-            title="Frequency"
+            title="Frequency (per hr)"
             value={stats?.frequency ?? 0}
             isClickable={false}
           />
@@ -254,7 +257,7 @@ const Dashboard: React.FC = () => {
           <div
             className={`text-center text-sm tracking-[0.25em] ${isDark ? "text-violet-200/60" : "text-violet-400"}`}
           >
-            PROFIT
+            TOTAL PROFIT
           </div>
           <div
             className={[
@@ -294,7 +297,7 @@ const Dashboard: React.FC = () => {
           />
           <StatCard
             isDark={isDark}
-            title="Avg Slippage"
+            title="Avg Slippage (per trade)"
             value={`$${stats?.avgSlippage ?? 0}`}
             isClickable={false}
           />
@@ -342,9 +345,9 @@ const Dashboard: React.FC = () => {
                 <th className="px-3 py-2 sm:px-4">Shares</th>
                 <th className="px-3 py-2 sm:px-4">Match Score</th>
                 <th className="px-3 py-2 sm:px-4">Edge %</th>
-                <th className="px-3 py-2 sm:px-4">Gross Profit</th>
+                <th className="px-3 py-2 sm:px-4">Net Profit PS</th>
                 <th className="px-3 py-2 sm:px-4">Costs</th>
-                <th className="px-3 py-2 sm:px-4">Net PnL</th>
+                <th className="px-3 py-2 sm:px-4">Net Profit</th>
                 <th className="px-3 py-2 sm:px-4">ROI</th>
                 <th className="px-3 py-2 sm:px-4">Duration</th>
               </tr>
@@ -395,7 +398,7 @@ const Dashboard: React.FC = () => {
                   <td
                     className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}
                   >
-                    {fmtMoney(t.capital)}
+                    {`${Number(arbit.find(a => a.id === t.id)?.netProfit ?? 0) >= 0 ? "+" : ""}${fmtMoney(Number(arbit.find(a => a.id === t.id)?.netProfit ?? 0))}`}
                   </td>
                   <td
                     className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}
