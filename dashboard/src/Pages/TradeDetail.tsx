@@ -91,11 +91,6 @@ const TradeDetail: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate("/")}
-          className={
-            isDark
-              ? "sticky top-0 z-50 border-b border-violet-300/10 bg-[#0b0915]/80 backdrop-blur-xl"
-              : "sticky top-0 z-50 border-b border-violet-200 bg-[#f5f0ff]/80 backdrop-blur-xl"
-          }
         >
           ← Back to Dashboard
         </button>
@@ -109,9 +104,19 @@ const TradeDetail: React.FC = () => {
   const slippage = Number(trade.estimatedSlippage);
   const yesPrice = Number(trade.yesPrice);
   const noPrice = Number(trade.noPrice);
+  const shares = Number(trade.shares ?? 1);
 
-  const costs = totalFee + slippage;
-  const roiPct = grossProfit > 0 ? (netProfit / grossProfit) * 100 : 0;
+  // Scale by shares for total position values
+  const totalNetProfit = netProfit * shares;
+  const totalGrossProfit = grossProfit * shares;
+  const totalCosts = (totalFee + slippage) * shares;
+
+  // Capital = what we actually spent (yesPrice + noPrice) × shares
+  const capital = (yesPrice + noPrice) * shares;
+
+  // ROI = net profit / capital deployed
+  const roiPct = capital > 0 ? (totalNetProfit / capital) * 100 : 0;
+
   const edgePct = (1 - (yesPrice + noPrice)) * 100;
 
   const detectionTime = new Date(trade.detectionTime);
@@ -123,6 +128,20 @@ const TradeDetail: React.FC = () => {
 
   const poly = trade.match.polymarketMarket;
   const kalshi = trade.match.kalshiMarket;
+
+  // Which platform bought YES and which bought NO
+  const polymarketSide = trade.polymarketYes ? "YES" : "NO";
+  const kalshiSide = trade.polymarketYes ? "NO" : "YES";
+
+  // Price paid on each platform
+  const polymarketPrice = trade.polymarketYes ? yesPrice : noPrice;
+  const kalshiPrice = trade.polymarketYes ? noPrice : yesPrice;
+
+  // Implied YES/NO prices on each platform
+  const polyYesPrice = trade.polymarketYes ? polymarketPrice : 1 - polymarketPrice;
+  const polyNoPrice = trade.polymarketYes ? 1 - polymarketPrice : polymarketPrice;
+  const kalshiYesPrice = trade.polymarketYes ? 1 - kalshiPrice : kalshiPrice;
+  const kalshiNoPrice = trade.polymarketYes ? kalshiPrice : 1 - kalshiPrice;
 
   const polymarketUrl = poly.slug
     ? `https://polymarket.com/market/${poly.slug}`
@@ -180,7 +199,7 @@ const TradeDetail: React.FC = () => {
             <span
               className={`font-medium ${isDark ? "text-violet-200/80" : "text-violet-600"}`}
             >
-              {(trade.match.matchScore ).toFixed(1)}%
+              {trade.match.matchScore.toFixed(1)}%
             </span>
           </div>
         </div>
@@ -189,20 +208,27 @@ const TradeDetail: React.FC = () => {
         <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Field
             isDark={isDark}
-            label="Net PnL"
+            label="Net PnL (total)"
+            value={
+              <div>
+                <div>{`${totalNetProfit >= 0 ? "+" : ""}${fmtMoney(totalNetProfit)}`}</div>
+                <div className={`mt-1 text-[11px] font-normal ${isDark ? "text-violet-200/60" : "text-violet-500"}`}>
+                  {fmtMoney(totalGrossProfit)} gross − {fmtMoney(totalCosts)} costs
+                </div>
+              </div>
+            }
+            highlight={totalNetProfit >= 0 ? "positive" : "negative"}
+          />
+          <Field
+            isDark={isDark}
+            label="Profit Per Share"
             value={`${netProfit >= 0 ? "+" : ""}${fmtMoney(netProfit)}`}
             highlight={netProfit >= 0 ? "positive" : "negative"}
           />
           <Field
             isDark={isDark}
-            label="Gross Profit"
-            value={fmtMoney(grossProfit)}
-            highlight="neutral"
-          />
-          <Field
-            isDark={isDark}
             label="Total Costs"
-            value={fmtMoney(costs)}
+            value={fmtMoney(totalCosts)}
             highlight="neutral"
           />
           <Field
@@ -213,17 +239,17 @@ const TradeDetail: React.FC = () => {
           />
         </div>
 
-        {/* Pricing & timing */}
+        {/* Pricing & edge */}
         <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Field
             isDark={isDark}
-            label="Yes Price"
-            value={fmtPct(yesPrice * 100)}
+            label="Yes Price (per share)"
+            value={fmtMoney(yesPrice)}
           />
           <Field
             isDark={isDark}
-            label="No Price"
-            value={fmtPct(noPrice * 100)}
+            label="No Price (per share)"
+            value={fmtMoney(noPrice)}
           />
           <Field
             isDark={isDark}
@@ -233,24 +259,22 @@ const TradeDetail: React.FC = () => {
           />
           <Field
             isDark={isDark}
-            label="Side (Polymarket)"
-            value={trade.polymarketYes ? "YES" : "NO"}
+            label="Shares"
+            value={shares}
+            highlight="neutral"
           />
         </div>
 
+        {/* Fees & timing */}
         <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Field isDark={isDark} label="Total Fee" value={fmtMoney(totalFee)} />
+          <Field isDark={isDark} label="Total Fee (per share)" value={fmtMoney(totalFee)} />
           <Field
             isDark={isDark}
-            label="Est. Slippage"
+            label="Est. Slippage (per share)"
             value={fmtMoney(slippage)}
           />
+          <Field isDark={isDark} label="Match Score" value={`${trade.match.matchScore.toFixed(1)}%`} />
           <Field isDark={isDark} label="Duration" value={`${durationMs} ms`} />
-          <Field
-            isDark={isDark}
-            label="Match Score"
-            value={`${(trade.match.matchScore * 100).toFixed(1)}%`}
-          />
         </div>
 
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -292,38 +316,47 @@ const TradeDetail: React.FC = () => {
             >
               {poly.title}
             </div>
+
+            {/* YES/NO prices */}
+            <div className="mt-2 flex gap-4 text-xs font-semibold">
+              <span className={isDark ? "text-emerald-300" : "text-emerald-700"}>
+                YES: {fmtMoney(polyYesPrice)}
+              </span>
+              <span className={isDark ? "text-rose-300" : "text-rose-700"}>
+                NO: {fmtMoney(polyNoPrice)}
+              </span>
+            </div>
+
             <div
               className={`mt-2 grid grid-cols-2 gap-2 text-xs ${isDark ? "text-violet-200/60" : "text-violet-500"}`}
             >
               <span>
                 Status:{" "}
-                <span
-                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
-                >
+                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
                   {poly.status}
                 </span>
               </span>
               <span>
-                Fee:{" "}
-                <span
-                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
-                >
-                  {Number(poly.fee) * 100}%
+                Fee (taker):{" "}
+                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
+                  {fmtMoney(totalFee)}
                 </span>
               </span>
               <span>
-                Category:{" "}
-                <span
-                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
-                >
-                  {poly.category}
+                Side:{" "}
+                <span className={`font-semibold ${polymarketSide === "YES" ? isDark ? "text-emerald-300" : "text-emerald-700" : isDark ? "text-rose-300" : "text-rose-700"}`}>
+                  {polymarketSide}
+                </span>
+              </span>
+              <span>
+                Price paid:{" "}
+                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
+                  {fmtMoney(polymarketPrice)}
                 </span>
               </span>
               <span>
                 Resolution:{" "}
-                <span
-                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
-                >
+                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
                   {new Date(poly.resolutionDate).toLocaleDateString()}
                 </span>
               </span>
@@ -374,38 +407,47 @@ const TradeDetail: React.FC = () => {
             >
               {kalshi.title}
             </div>
+
+            {/* YES/NO prices */}
+            <div className="mt-2 flex gap-4 text-xs font-semibold">
+              <span className={isDark ? "text-emerald-300" : "text-emerald-700"}>
+                YES: {fmtMoney(kalshiYesPrice)}
+              </span>
+              <span className={isDark ? "text-rose-300" : "text-rose-700"}>
+                NO: {fmtMoney(kalshiNoPrice)}
+              </span>
+            </div>
+
             <div
               className={`mt-2 grid grid-cols-2 gap-2 text-xs ${isDark ? "text-violet-200/60" : "text-violet-500"}`}
             >
               <span>
                 Status:{" "}
-                <span
-                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
-                >
+                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
                   {kalshi.status}
                 </span>
               </span>
               <span>
-                Fee:{" "}
-                <span
-                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
-                >
-                  {Number(kalshi.fee) * 100}%
+                Fee (taker):{" "}
+                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
+                  {fmtMoney(totalFee)}
                 </span>
               </span>
               <span>
-                Category:{" "}
-                <span
-                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
-                >
-                  {kalshi.category}
+                Side:{" "}
+                <span className={`font-semibold ${kalshiSide === "YES" ? isDark ? "text-emerald-300" : "text-emerald-700" : isDark ? "text-rose-300" : "text-rose-700"}`}>
+                  {kalshiSide}
+                </span>
+              </span>
+              <span>
+                Price paid:{" "}
+                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
+                  {fmtMoney(kalshiPrice)}
                 </span>
               </span>
               <span>
                 Resolution:{" "}
-                <span
-                  className={isDark ? "text-violet-200/90" : "text-violet-700"}
-                >
+                <span className={isDark ? "text-violet-200/90" : "text-violet-700"}>
                   {new Date(kalshi.resolutionDate).toLocaleDateString()}
                 </span>
               </span>
