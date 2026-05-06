@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from normalizers.models import NormalizedMarket
-from matchers.match import find_matches, MatchResult
+from matchers.match import find_matches
 from match_cache import fingerprint, load_cache, save_cache, build_score_cache
 
 T = datetime(2026, 6, 1, tzinfo=timezone.utc)
@@ -46,10 +46,9 @@ def test_fingerprint_changes_on_date():
 # --- load_cache / save_cache roundtrip ---
 
 def test_cache_roundtrip():
-    match = MatchResult(k, p, 91.5)
     with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
         path = Path(f.name)
-    save_cache(path, [k], [p], [match])
+    save_cache(path, [k], [p], {("K1", "P1"): 91.5})
     old_k_fps, old_p_fps, pair_scores = load_cache(path)
     assert old_k_fps["K1"] == fingerprint(k)
     assert old_p_fps["P1"] == fingerprint(p)
@@ -71,20 +70,18 @@ def test_load_cache_corrupt_file():
 
 def test_build_score_cache_unchanged():
     """Both markets unchanged → cached score available."""
-    match = MatchResult(k, p, 91.5)
     with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
         path = Path(f.name)
-    save_cache(path, [k], [p], [match])
+    save_cache(path, [k], [p], {("K1", "P1"): 91.5})
     old_k_fps, old_p_fps, pair_scores = load_cache(path)
     score_cache = build_score_cache([k], [p], old_k_fps, old_p_fps, pair_scores)
     assert score_cache[("K1", "P1")] == 91.5
 
 def test_build_score_cache_kalshi_changed():
     """Kalshi market changed → pair evicted from cache."""
-    match = MatchResult(k, p, 91.5)
     with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
         path = Path(f.name)
-    save_cache(path, [k], [p], [match])
+    save_cache(path, [k], [p], {("K1", "P1"): 91.5})
     old_k_fps, old_p_fps, pair_scores = load_cache(path)
     k_changed = market("kalshi", "K1", "Will the Fed raise rates in June 2026?")
     score_cache = build_score_cache([k_changed], [p], old_k_fps, old_p_fps, pair_scores)
@@ -92,10 +89,9 @@ def test_build_score_cache_kalshi_changed():
 
 def test_build_score_cache_poly_changed():
     """Polymarket market changed → pair evicted from cache."""
-    match = MatchResult(k, p, 91.5)
     with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
         path = Path(f.name)
-    save_cache(path, [k], [p], [match])
+    save_cache(path, [k], [p], {("K1", "P1"): 91.5})
     old_k_fps, old_p_fps, pair_scores = load_cache(path)
     p_changed = market("polymarket", "P1", "Will the Fed hike rates in June 2026?")
     score_cache = build_score_cache([k], [p_changed], old_k_fps, old_p_fps, pair_scores)
