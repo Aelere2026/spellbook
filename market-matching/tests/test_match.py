@@ -1,6 +1,15 @@
 from datetime import datetime, timedelta, timezone
 from normalizers.models import NormalizedMarket
-from matchers.match import find_matches, MatchResult, _year_mismatch
+from matchers.match import (
+    find_matches,
+    MatchResult,
+    _entity_mismatch,
+    _prop_threshold_mismatch,
+    _year_mismatch,
+    is_binary,
+)
+import matchers.match as match_module
+from matchers.idf_retrieval import idf_candidates
 from matchers.utils import canon, fuzzy_score
 
 T = datetime(2026, 6, 1, tzinfo=timezone.utc)
@@ -218,6 +227,66 @@ assert not _ym("kalshi", "K3", "Will Democrats win the Senate race in Rhode Isla
 assert not _ym("kalshi", "K4", "Will the Fed cut rates?", Y2027,
                "polymarket", "P4", "Will the Federal Reserve cut rates?", None), \
     "no year in title: guard should not fire"
+
+# Polymarket date present, Kalshi title has incompatible explicit year → reject
+assert _ym("kalshi", "K5", "Will the Democrats win the Oklahoma Senate race in 2026?", None,
+           "polymarket", "P5", "Will Democrats win the Senate race in Oklahoma?", Y2029), \
+    "2026 Kalshi title vs 2029 Polymarket date should be rejected"
+
+# No date on either side → allow
+assert not _ym("kalshi", "K6", "Will Democrats win the Senate race?", None,
+               "polymarket", "P6", "Will Democrats win the Senate race?", None), \
+    "missing dates on both sides should be allowed"
+
+# Open-question titles are not binary Yes/No markets, even with Yes/No outcomes
+assert not is_binary(market("kalshi", "K-WHO", "Who will win the 2028 election?"))
+
+# Prop thresholds with different platform formats should be rejected
+assert _prop_threshold_mismatch(
+    market("kalshi", "K-PROP", "Stephen Curry: 6+ assists"),
+    market("polymarket", "P-PROP", "Stephen Curry assists O/U 6.5"),
+)
+
+# Entity mismatch guard edge cases
+assert not _entity_mismatch(
+    market("kalshi", "K-SHARED", "Will OpenAI launch a new model?"),
+    market("polymarket", "P-SHARED", "Will OpenAI release a new model?"),
+)
+assert not _entity_mismatch(
+    market("kalshi", "K-PREFIX", "Will Trump win Florida?"),
+    market("polymarket", "P-PREFIX", "Will Trumps campaign win Florida?"),
+)
+assert not _entity_mismatch(
+    market("kalshi", "K-NO-SPEC", "Can it?"),
+    market("polymarket", "P-NO-SPEC", "Will OpenAI pass?"),
+)
+assert not _entity_mismatch(
+    market("kalshi", "K-PREFIX-ONLY", "Will Trump win?"),
+    market("polymarket", "P-PREFIX-ONLY", "Will Trumps prevail?"),
+)
+assert _entity_mismatch(
+    market("kalshi", "K-DIFF", "Will OpenSea launch a token?"),
+    market("polymarket", "P-DIFF", "Will OpenAI launch a model?"),
+)
+
+# IDF retrieval guard branches
+assert idf_candidates([], [p_fed]) == []
+assert idf_candidates([k_fed], []) == []
+assert idf_candidates(
+    [market("kalshi", "K-NO-TOKENS", "zzzzunique")],
+    [market("polymarket", "P-NO-TOKENS", "yyyyunique")],
+) == []
+
+
+def test_find_matches_deduplicates_candidate_pairs(monkeypatch):
+    def duplicated_candidates(kalshi, polymarket, top_k=20):
+        return [(kalshi[0], polymarket[0]), (kalshi[0], polymarket[0])]
+
+    monkeypatch.setattr(match_module, "idf_candidates", duplicated_candidates)
+    results, scores = find_matches([k_fed], [p_fed])
+
+    assert len(results) == 1
+    assert list(scores) == [("K-FED", "P-FED")]
 
 # Symmetric: Polymarket has date, Kalshi title has explicit year, no Kalshi date
 k_no_date = market("kalshi", "K5", "Will Democrats win the Senate race in 2026?", close_time=None)
