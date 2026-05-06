@@ -8,7 +8,9 @@
     "run": "node --enable-source-maps dist/bundle.js",
     "dev": "concurrently \"npm run build\" \"npm run run\"",
     "build:detector": "esbuild src/detector.ts --outfile=dist/detector.js --bundle --platform=node --format=esm --external:./node_modules/*",
-    "detector": "npm run build:detector && node --enable-source-maps dist/detector.js"
+    "detector": "npm run build:detector && node --enable-source-maps dist/detector.js",
+    "build:test": "esbuild test/*.test.ts --outdir=dist-tests --bundle --platform=node --format=esm",
+    "test": "npm run build:test && node --test dist-tests/*.test.js"
   },
   "keywords": [],
   "author": "",

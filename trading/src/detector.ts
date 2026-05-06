@@ -1,11 +1,15 @@
 import { prisma } from "./util/prisma";
 import * as log from "./util/log";
+import {
+  calcPresetShares,
+  detectArbitrage,
+  type ArbOpportunity,
+  type PriceQuote,
+} from "./arbitrage/detection";
  
 // ─── Config ────────────────────────────────────────────────────────────────
  
 const POLL_INTERVAL_MS = 5_000;
-const SLIPPAGE_ESTIMATE = 0.005; // 0.5% per side = 1% total
-const MIN_NET_PROFIT = 0.001;
  
 let KALSHI_FEE = 0;
  
@@ -17,41 +21,6 @@ async function loadPlatformFees(): Promise<void> {
     throw new Error("Could not find Kalshi platform fee record");
   }
   KALSHI_FEE = Number(kal.baseFee);
-}
- 
-// ─── Fee Formulas ──────────────────────────────────────────────────────────
- 
-/**
- * Kalshi taker fee: 0.07 × price × (1 - price)
- * Probability-weighted — peaks at 50¢, near zero at extremes.
- */
-function kalshiTakerFee(price: number): number {
-  return 0.07 * price * (1 - price);
-}
- 
-/**
- * Polymarket taker fee: rate × price × (1 - price)
- * Rate comes from the DB (stored from feeSchedule.rate in market-matching).
- * e.g. politics = 0.04, sports = 0.03, crypto = 0.072
- */
-function polymarketTakerFee(price: number, rate: number): number {
-  return rate * price * (1 - price);
-}
- 
-// ─── Volume Logic ──────────────────────────────────────────────────────────
- 
-/**
- * Preset algorithm: shares scale linearly with edge percentage.
- * Formula: floor(edgePct / 0.01) * 10, capped at maxShares.
- *
- * Examples:
- *   2% edge  → 20 shares
- *   3.5% edge → 35 shares
- *   5% edge  → 50 shares (capped at default max)
- */
-function calcPresetShares(grossProfit: number, maxShares: number): number {
-  const shares = Math.floor(grossProfit / 0.01) * 10;
-  return Math.min(Math.max(shares, 1), maxShares);
 }
  
 /**
@@ -79,13 +48,6 @@ async function loadBotConfig(): Promise<{
   } catch {
     return { usePresetAlgo: true, manualShares: 1, maxShares: 50, resolutionStart: null, resolutionEnd: null };
   }
-}
- 
-// ─── Types ─────────────────────────────────────────────────────────────────
- 
-interface PriceQuote {
-  yes: number;
-  no: number;
 }
  
 // ─── Price Fetchers ────────────────────────────────────────────────────────
@@ -173,74 +135,6 @@ async function fetchPolymarketAskPrice(tokenId: string): Promise<number | null> 
   } catch {
     return null;
   }
-}
- 
-// ─── Arbitrage Detection ───────────────────────────────────────────────────
- 
-interface ArbOpportunity {
-  matchId: number;
-  yesPrice: number;
-  noPrice: number;
-  polymarketYes: boolean;
-  grossProfit: number;
-  totalFee: number;
-  estimatedSlippage: number;
-  netProfit: number;
-  shares: number;
-}
- 
-/**
- * Check both arb combos using real ask prices and probability-weighted fees.
- * polyFeeRate comes from the DB (feeSchedule.rate stored by market-matching).
- */
-function detectArbitrage(
-  matchId: number,
-  polyPrices: PriceQuote,
-  kalshiPrices: PriceQuote,
-  shares: number,
-  polyFeeRate: number,
-): ArbOpportunity | null {
-  const candidates = [
-    { yesPrice: polyPrices.yes, noPrice: kalshiPrices.no, polymarketYes: true },
-    { yesPrice: kalshiPrices.yes, noPrice: polyPrices.no, polymarketYes: false },
-  ];
- 
-  let best: ArbOpportunity | null = null;
- 
-  for (const c of candidates) {
-    const grossProfit = 1.0 - c.yesPrice - c.noPrice;
- 
-    // Fee on each leg — applied to the price of the share we're buying on that platform
-    const kalshiFee = c.polymarketYes
-      ? kalshiTakerFee(c.noPrice)   // buying NO on Kalshi
-      : kalshiTakerFee(c.yesPrice); // buying YES on Kalshi
- 
-    const polyFee = c.polymarketYes
-      ? polymarketTakerFee(c.yesPrice, polyFeeRate) // buying YES on Poly
-      : polymarketTakerFee(c.noPrice, polyFeeRate);  // buying NO on Poly
- 
-    const totalFee = kalshiFee + polyFee;
-    const estimatedSlippage = SLIPPAGE_ESTIMATE * 2; // 1% total
-    const netProfit = grossProfit - totalFee - estimatedSlippage;
- 
-    if (netProfit > MIN_NET_PROFIT) {
-      if (!best || netProfit > best.netProfit) {
-        best = {
-          matchId,
-          yesPrice: c.yesPrice,
-          noPrice: c.noPrice,
-          polymarketYes: c.polymarketYes,
-          grossProfit,
-          totalFee,
-          estimatedSlippage,
-          netProfit,
-          shares,
-        };
-      }
-    }
-  }
- 
-  return best;
 }
  
 // ─── Persist to DB ─────────────────────────────────────────────────────────
