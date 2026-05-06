@@ -424,7 +424,7 @@ const Dashboard: React.FC = () => {
                   <td
                     className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}
                   >
-                    {t.durationMin}ms
+                    {t.durationMin}µs
                   </td>
                 </tr>
               ))}
