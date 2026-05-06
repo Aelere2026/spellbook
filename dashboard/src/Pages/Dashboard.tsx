@@ -235,7 +235,7 @@ const Dashboard: React.FC = () => {
           <StatCard
             isDark={isDark}
             title="Avg Trade Time"
-            value={`${stats?.avgTradeTime ?? 0} ms`}
+            value={`${stats?.avgTradeTime ?? 0} µs`}
             isClickable={false}
           />
         </div>
