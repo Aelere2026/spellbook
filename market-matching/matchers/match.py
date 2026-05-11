@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import Callable
 
 from normalizers.models import NormalizedMarket
 from matchers.utils import canon, fuzzy_score
@@ -152,6 +153,7 @@ def find_matches(
     max_time_delta: timedelta = timedelta(days=14),
     score_cache: dict[tuple[str, str], float] | None = None,
     idf_top_k: int = 20,
+    match_verifier: Callable[[NormalizedMarket, NormalizedMarket, float], bool] | None = None,
 ) -> tuple[list[MatchResult], dict[tuple[str, str], float]]:
     """Return scored (kalshi, polymarket) pairs that likely describe the same event.
 
@@ -165,7 +167,8 @@ def find_matches(
       4. Score each unique candidate pair with (token_set_ratio + token_sort_ratio
          + partial_ratio) / 3 on canonicalized titles. Cached scores are reused
          for pairs where both market fingerprints are unchanged since last run.
-      5. Keep pairs at or above min_score, sorted best-first.
+      5. Keep pairs at or above min_score that pass deterministic guards and,
+         if supplied, the optional match_verifier.
       6. Greedy 1-to-1 assignment: each market appears in at most one match.
     """
     eligible = [k for k in kalshi if is_binary(k)]
@@ -195,7 +198,13 @@ def find_matches(
         cached = score_cache.get(key) if score_cache is not None else None
         score = cached if cached is not None else fuzzy_score(canon(k.title), canon(p.title))
         all_scores[key] = score
-        if score >= min_score and not _year_mismatch(k, p) and not _prop_threshold_mismatch(k, p) and not _entity_mismatch(k, p):
+        if (
+            score >= min_score
+            and not _year_mismatch(k, p)
+            and not _prop_threshold_mismatch(k, p)
+            and not _entity_mismatch(k, p)
+            and (match_verifier is None or match_verifier(k, p, score))
+        ):
             results.append(MatchResult(k, p, round(score, 1)))
 
     results.sort(key=lambda r: r.score, reverse=True)
