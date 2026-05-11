@@ -57,6 +57,27 @@ def test_llm_verifier_reviews_band_and_caches():
     assert len(load_llm_cache(path)) == 1
 
 
+def test_llm_verifier_uses_fast_ollama_options():
+    seen = {}
+
+    def chat(payload):
+        seen.update(payload)
+        return {
+            "message": {
+                "content": json.dumps(
+                    {"is_match": True, "confidence": 0.92, "reason": "same event"}
+                )
+            }
+        }
+
+    verifier = LLMMatchVerifier(chat_func=chat)
+    assert verifier.verify(k, p, 88.0)
+    assert seen["think"] is False
+    assert seen["keep_alive"] == "30m"
+    assert seen["options"]["num_predict"] == 80
+    assert seen["options"]["num_ctx"] == 2048
+
+
 def test_llm_verifier_accepts_high_scores_without_calling_model():
     def fail_chat(_payload):
         raise AssertionError("high scores should bypass LLM")

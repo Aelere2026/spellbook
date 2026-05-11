@@ -110,6 +110,9 @@ class LLMMatchVerifier:
         review_min_score: float = 85.0,
         auto_accept_score: float = 92.0,
         timeout_seconds: float = 45.0,
+        keep_alive: str = "30m",
+        num_predict: int = 80,
+        num_ctx: int = 2048,
         chat_func: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
     ) -> None:
         if review_min_score >= auto_accept_score:
@@ -120,6 +123,9 @@ class LLMMatchVerifier:
         self.review_min_score = review_min_score
         self.auto_accept_score = auto_accept_score
         self.timeout_seconds = timeout_seconds
+        self.keep_alive = keep_alive
+        self.num_predict = num_predict
+        self.num_ctx = num_ctx
         self._chat_func = chat_func
         self.cache = load_llm_cache(cache_path)
         self.calls = 0
@@ -169,8 +175,14 @@ class LLMMatchVerifier:
         payload = {
             "model": self.model,
             "stream": False,
+            "think": False,
+            "keep_alive": self.keep_alive,
             "format": self.schema,
-            "options": {"temperature": 0},
+            "options": {
+                "temperature": 0,
+                "num_predict": self.num_predict,
+                "num_ctx": self.num_ctx,
+            },
             "messages": [
                 {
                     "role": "system",
