@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
+import os
 from pathlib import Path
 import time
 
@@ -14,6 +15,11 @@ OUTPUT = Path("matches.txt")
 TIME_WINDOW = timedelta(days=7)
 MIN_SCORE = 84.0
 BM25_TOP_K = 20  # Polymarket candidates per Kalshi market from BM25 retrieval
+LLM_VERIFY_ENABLED = os.getenv("LLM_VERIFY_ENABLED", "").lower() in {"1", "true", "yes", "on"}
+LLM_REVIEW_MIN_SCORE = float(os.getenv("LLM_REVIEW_MIN_SCORE", "85.0"))
+LLM_AUTO_ACCEPT_SCORE = float(os.getenv("LLM_AUTO_ACCEPT_SCORE", "92.0"))
+LLM_MODEL = os.getenv("LLM_MODEL", "qwen3:8b")
+LLM_ENDPOINT = os.getenv("LLM_ENDPOINT", "http://localhost:11434/api/chat")
 
 
 def _elapsed(t0: float) -> str:
@@ -69,10 +75,38 @@ def run():
     # --- Match ---
     t = time.monotonic()
     print(f"[match] Finding matches...")
-    matches, all_scores = find_matches(kalshi_markets, poly_markets,
-                                       min_score=MIN_SCORE, max_time_delta=TIME_WINDOW,
-                                       score_cache=score_cache, idf_top_k=BM25_TOP_K)
-    print(f"[match] Done in {_elapsed(t)}  |  {len(matches)} matches found  |  {len(all_scores)} pairs scored")
+    verifier = None
+    match_verifier = None
+    min_score = MIN_SCORE
+    if LLM_VERIFY_ENABLED:
+        from llm_verifier import LLMMatchVerifier
+        verifier = LLMMatchVerifier(
+            model=LLM_MODEL,
+            endpoint=LLM_ENDPOINT,
+            review_min_score=LLM_REVIEW_MIN_SCORE,
+            auto_accept_score=LLM_AUTO_ACCEPT_SCORE,
+        )
+        match_verifier = verifier.verify
+        min_score = LLM_REVIEW_MIN_SCORE
+        print(
+            f"[match] LLM verifier enabled  |  model={LLM_MODEL}  |  "
+            f"review {LLM_REVIEW_MIN_SCORE:.1f}-{LLM_AUTO_ACCEPT_SCORE:.1f}"
+        )
+
+    matches, all_scores = find_matches(
+        kalshi_markets,
+        poly_markets,
+        min_score=min_score,
+        max_time_delta=TIME_WINDOW,
+        score_cache=score_cache,
+        idf_top_k=BM25_TOP_K,
+        match_verifier=match_verifier,
+    )
+    llm_stats = ""
+    if verifier is not None:
+        verifier.save()
+        llm_stats = f"  |  LLM calls: {verifier.calls}  |  LLM cache hits: {verifier.cache_hits}"
+    print(f"[match] Done in {_elapsed(t)}  |  {len(matches)} matches found  |  {len(all_scores)} pairs scored{llm_stats}")
 
     # --- Save cache ---
     t = time.monotonic()
@@ -92,7 +126,8 @@ def run():
         f"Kalshi:      {len(raw_kalshi)} fetched  |  {len(binary_kalshi)} binary",
         f"Polymarket:  {len(raw_poly)} fetched  |  {neg_risk_poly} negRisk  |  {len(binary_poly)} binary",
         f"Time window: ±{TIME_WINDOW.days} days",
-        f"Min score:   {MIN_SCORE}",
+        f"Min score:   {min_score}",
+        f"LLM verify:  {'on' if LLM_VERIFY_ENABLED else 'off'}",
         f"Matches:     {len(matches)}",
         "",
     ]
