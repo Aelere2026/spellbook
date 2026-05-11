@@ -20,6 +20,7 @@ LLM_REVIEW_MIN_SCORE = float(os.getenv("LLM_REVIEW_MIN_SCORE", "85.0"))
 LLM_AUTO_ACCEPT_SCORE = float(os.getenv("LLM_AUTO_ACCEPT_SCORE", "92.0"))
 LLM_MODEL = os.getenv("LLM_MODEL", "qwen3:8b")
 LLM_ENDPOINT = os.getenv("LLM_ENDPOINT", "http://localhost:11434/api/chat")
+LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "120.0"))
 
 
 def _elapsed(t0: float) -> str:
@@ -85,6 +86,7 @@ def run():
             endpoint=LLM_ENDPOINT,
             review_min_score=LLM_REVIEW_MIN_SCORE,
             auto_accept_score=LLM_AUTO_ACCEPT_SCORE,
+            timeout_seconds=LLM_TIMEOUT_SECONDS,
         )
         match_verifier = verifier.verify
         min_score = LLM_REVIEW_MIN_SCORE
