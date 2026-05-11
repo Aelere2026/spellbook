@@ -63,8 +63,11 @@ def load_llm_cache(path: Path = LLM_CACHE_PATH) -> dict[str, LLMVerdict]:
     cache: dict[str, LLMVerdict] = {}
     for key, value in entries.items():
         try:
+            is_match = value["is_match"]
+            if not isinstance(is_match, bool):
+                raise ValueError("is_match must be a boolean")
             cache[key] = LLMVerdict(
-                is_match=bool(value["is_match"]),
+                is_match=is_match,
                 confidence=float(value.get("confidence", 0.0)),
                 reason=str(value.get("reason", "")),
                 cached=True,
@@ -97,7 +100,7 @@ class LLMMatchVerifier:
         "properties": {
             "is_match": {"type": "boolean"},
             "confidence": {"type": "number", "minimum": 0, "maximum": 1},
-            "reason": {"type": "string"},
+            "reason": {"type": "string", "maxLength": 180},
         },
         "required": ["is_match", "confidence", "reason"],
     }
@@ -111,7 +114,7 @@ class LLMMatchVerifier:
         auto_accept_score: float = 92.0,
         timeout_seconds: float = 45.0,
         keep_alive: str = "30m",
-        num_predict: int = 80,
+        num_predict: int = 160,
         num_ctx: int = 2048,
         chat_func: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
     ) -> None:
@@ -189,7 +192,7 @@ class LLMMatchVerifier:
                     "content": (
                         "You verify whether two prediction-market contracts are the same tradable event. "
                         "Be conservative: if entity, threshold, date/cycle, resolution condition, or outcome differs, "
-                        "return is_match=false. Ignore harmless wording differences."
+                        "return is_match=false. Ignore harmless wording differences. Keep reason under 20 words."
                     ),
                 },
                 {

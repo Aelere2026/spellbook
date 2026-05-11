@@ -10,6 +10,7 @@ node_modules/
 
 market-matching/matches.txt
 market-matching/match_cache.json
+market-matching/llm_match_cache.json
 market-matching/.coverage
 
 # Just a symlink. Safe to commit!!

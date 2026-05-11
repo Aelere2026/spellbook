@@ -143,7 +143,7 @@ For speed, the verifier uses:
 think=false
 keep_alive=30m
 temperature=0
-num_predict=80
+num_predict=160
 num_ctx=2048
 ```
 
