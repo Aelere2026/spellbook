@@ -1,4 +1,5 @@
 import { prisma, Session } from "./util/prisma"
+import { TRPCError } from "@trpc/server"
 import * as crypt from "./cryptography"
 import * as log from "./util/log"
 import * as time from "./util/time"
@@ -6,28 +7,31 @@ import * as time from "./util/time"
 const ADMIN_UID = -1 // Should probably never change this
 const sessionCache = new Map<string, Session>()
 
-export async function validateSession(cookie: string) {
-    const token = cookie.split(";")
+
+export async function validateSession(cookies: string) {
+    const token = cookies.split(";")
+        .map(cookie => cookie.trim())
         .find(cookie => cookie.startsWith("session-token="))
         ?.replace("session-token=", "")
-
     if (!token) {
-        return null
+        throw new TRPCError({ code: "UNAUTHORIZED" })
     }
 
     let session: Session | undefined
     let hashedToken: string | undefined
 
     if (!sessionCache.has(token)) {
-        hashedToken = await crypt.hash(token)
+        hashedToken = crypt.quickHash(token)
         session = await prisma.session.findFirst({
             where: {
                 hashedToken
             }
         }) ?? undefined
 
+
         if (!session) {
-            return null
+            log.debug("Invalid login token!")
+            throw new TRPCError({ code: "UNAUTHORIZED" })
         }
 
         sessionCache.set(token, session)
@@ -37,13 +41,14 @@ export async function validateSession(cookie: string) {
 
     // If the session is expired, remove it from the database and cache
     if (time.isExpired(session)) {
+        log.debug("Sesion token expired!")
         sessionCache.delete(token)
         await prisma.session.deleteMany({
             where: {
                 hashedToken: hashedToken ?? await crypt.hash(token)
             }
         })
-        return null
+        throw new TRPCError({ code: "UNAUTHORIZED" })
     }
 
     return {
@@ -58,7 +63,7 @@ async function createSession(userId: number): Promise<string> {
     const session = await prisma.session.create({
         data: {
             userId,
-            hashedToken: await crypt.hash(token),
+            hashedToken: crypt.quickHash(token),
             expiration: time.later(30)
         }
     })
@@ -68,13 +73,13 @@ async function createSession(userId: number): Promise<string> {
     return token
 }
 
-export async function login(name: string, password: string): Promise<string | null> {
+export async function login(name: string, password: string): Promise<string> {
     const user = await prisma.user.findUnique({
         where: { name }
     })
 
     if (!await crypt.verify(password, user?.hashedPassword)) {
-        return null
+        throw new TRPCError({ code: "UNAUTHORIZED" })
     }
 
     return await createSession(user!.id)
@@ -137,7 +142,7 @@ export async function signup(token: string, password: string): Promise<string | 
     })
 
     if (!invite) {
-        return null
+        throw new TRPCError({ code: "UNAUTHORIZED" })
     }
 
     const user = await prisma.user.create({
@@ -156,7 +161,7 @@ export async function invite(name: string): Promise<string | null> {
 
     // Make sure no users aready have that name
     if (await prisma.user.findUnique({ where: { name } })) {
-        return null
+        throw new TRPCError({ code: "UNAUTHORIZED" })
     }
 
     // Revoke old invite if it already exists

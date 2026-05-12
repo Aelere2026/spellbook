@@ -3,7 +3,7 @@ import { initTRPC } from "@trpc/server"
 import superjson from "superjson"
 import { Context } from "./context"
 import { isAdmin } from "../auth"
-
+import * as log from "../util/log"
 
 export const t = initTRPC.context<Context>().create({
     transformer: superjson
@@ -15,6 +15,7 @@ export const userProcedure = publicProcedure.use(
     async function isAuthed(opts) {
         const { ctx, next } = opts
         if (!ctx.auth) {
+            log.debug("Auth failed!")
             throw new TRPCError({ code: "UNAUTHORIZED" })
         }
 

@@ -1,4 +1,5 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express"
+import * as log from "../util/log"
 
 import { validateSession } from "../auth"
 
@@ -13,17 +14,19 @@ export async function createContext({ req, res }: CreateExpressContextOptions) {
         return FAIL
     }
 
-    const sessionInfo = await validateSession(cookie)
-    if (!sessionInfo) {
+    try {
+        return {
+            data: {
+                ...await validateSession(cookie),
+                res
+            },
+            auth: true as const
+        }
+    } catch (err) {
+        log.warn("Session validation failed!")
         return FAIL
     }
 
-    return {
-        data: {
-            ...sessionInfo,
-            res
-        },
-        auth: true as const
-    }
+
 }
 export type Context = Awaited<ReturnType<typeof createContext>>

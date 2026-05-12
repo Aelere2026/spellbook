@@ -9,5 +9,5 @@ export function later(days: number) {
 }
 
 export function isExpired(event: { expiration: Date }) {
-    return event.expiration > new Date(Date.now())
+    return event.expiration < new Date(Date.now())
 }
