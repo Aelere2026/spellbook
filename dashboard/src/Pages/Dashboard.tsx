@@ -440,7 +440,7 @@ const Dashboard: React.FC = () => {
               "rounded-xl border px-3 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-50",
               isDark
                 ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] shadow-[0_18px_45px_rgba(10,6,30,0.45)] hover:border-violet-300/35 hover:shadow-[0_22px_60px_rgba(76,29,149,0.35)]"
-                : "border-violet-200 shadow-sm hover:border-violet-400 hover:shadow-md",
+                : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md",
             ].join(" ")}
           >
             Previous
@@ -460,7 +460,7 @@ const Dashboard: React.FC = () => {
               "rounded-xl border px-3 py-2 text-sm transition disabled:cursor-not-allowed disabled:opacity-50",
               isDark
                 ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] shadow-[0_18px_45px_rgba(10,6,30,0.45)] hover:border-violet-300/35 hover:shadow-[0_22px_60px_rgba(76,29,149,0.35)]"
-                : "border-violet-200 shadow-sm hover:border-violet-400 hover:shadow-md",
+                : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md",,
             ].join(" ")}
           >
             Next
