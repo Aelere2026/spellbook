@@ -82,6 +82,10 @@ export async function hash(secret: string): Promise<string> {
     return argon2.hash(secret)
 }
 
+export function quickHash(secret: string): string {
+    return crypto.createHash('md5').update(secret).digest("hex")
+}
+
 // Retrieves an encrypted user key
 export async function getKey(userId: number, platform: Platform) {
     const rawUserKeys = await prisma.user.findUnique({
