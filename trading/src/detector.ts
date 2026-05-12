@@ -1,7 +1,6 @@
 import { prisma } from "./util/prisma"
 import * as log from "./util/log"
 import * as time from "./util/time"
-import Decimal from "decimal.js"
 import {
     calcPresetShares,
     detectArbitrage,
@@ -13,9 +12,6 @@ import { getPreferencesOrDefault, UserPreferences } from "./trpc/preferencesRout
 // ─── Config ────────────────────────────────────────────────────────────────
 
 const POLL_INTERVAL_MS = 5_000
-const zero = new Decimal(0)
-const one = new Decimal(1)
-
 const userPreferencesCache = new Map<number, UserPreferences>()
 
 export async function updateUserPreferencesCache(userId: number, preferences: UserPreferences) {
@@ -54,10 +50,10 @@ async function fetchKalshiPrices(ticker: string): Promise<PriceQuote | null> {
         if (!market) return null
 
         // Use ask prices — what we actually pay as takers
-        const yesAsk = Decimal(market.yes_ask_dollars) ?? zero
-        const noAsk = Decimal(market.no_ask_dollars) ?? zero
+        const yesAsk = Number(market.yes_ask_dollars ?? 0)
+        const noAsk = Number(market.no_ask_dollars ?? 0)
 
-        if (yesAsk.lessThanOrEqualTo(0) || noAsk.lessThanOrEqualTo(0)) return null
+        if (yesAsk <= 0 || noAsk <= 0) return null
         return { yes: yesAsk, no: noAsk }
     } catch (err) {
         log.info(`Kalshi fetch failed ${ticker}: ${err}`)
@@ -102,7 +98,7 @@ async function fetchPolymarketPrices(conditionId: string): Promise<PriceQuote | 
  * Fetch the best ask price from Polymarket order book.
  * Falls back to best bid if no ask exists.
  */
-async function fetchPolymarketAskPrice(tokenId: string): Promise<Decimal | null> {
+async function fetchPolymarketAskPrice(tokenId: string): Promise<number | null> {
     try {
         const res = await fetch(
             `https://clob.polymarket.com/book?token_id=${tokenId}`
@@ -113,8 +109,8 @@ async function fetchPolymarketAskPrice(tokenId: string): Promise<Decimal | null>
         const bestAsk = book.asks?.[book.bids.length - 1]?.price
         const bestBid = book.bids?.[book.bids.length - 1]?.price
 
-        if (bestAsk !== undefined) return Decimal(bestAsk)
-        if (bestBid !== undefined) return Decimal(bestBid)
+        if (bestAsk !== undefined) return Number(bestAsk)
+        if (bestBid !== undefined) return Number(bestBid)
         return null
     } catch {
         return null
@@ -124,7 +120,6 @@ async function fetchPolymarketAskPrice(tokenId: string): Promise<Decimal | null>
 // ─── Persist to DB ─────────────────────────────────────────────────────────
 
 async function persistArbitrage(userId: number, shares: number, opp: ArbOpportunity): Promise<void> {
-    const now = new Date()
     await prisma.arbitrage.create({
         data: {
             userId,
@@ -137,8 +132,8 @@ async function persistArbitrage(userId: number, shares: number, opp: ArbOpportun
             estimatedSlippage: opp.estimatedSlippage,
             netProfit: opp.netProfit,
             shares,
-            detectionTime: now,
-            executionTime: now,
+            detectionTime: time.now(),
+            executionTime: time.now(),
         },
     })
 }
@@ -173,7 +168,7 @@ export async function run(): Promise<void> {
                 const polymarketApiId = match.polymarketMarket.apiId
 
                 // Fee rate comes from DB — stored by market-matching from Polymarket's feeSchedule
-                const polyFeeRate = match.polymarketMarket.fee
+                const polyFeeRate = match.polymarketMarket.fee.toNumber()
 
                 const [kalshiPrices, polyPrices] = await Promise.all([
                     fetchKalshiPrices(kalshiApiId),
@@ -189,10 +184,10 @@ export async function run(): Promise<void> {
                 }
 
                 // Estimate best gross profit for preset share calculation
-                const grossEstimate = Decimal.max(
-                    one.minus(polyPrices.yes).minus(kalshiPrices.no),
-                    one.minus(polyPrices.no).minus(kalshiPrices.yes),
-                    zero
+                const grossEstimate = Math.max(
+                    1 - polyPrices.yes - kalshiPrices.no,
+                    1 - polyPrices.no - kalshiPrices.yes,
+                    0
                 )
                 const opp = detectArbitrage(match.id, polyPrices, kalshiPrices, polyFeeRate)
                 if (!opp) {

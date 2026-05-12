@@ -84,8 +84,8 @@ const arbitrageRouter = router({
     let totalRoi = 0;
 
     // initialize time range
-    let earliestDetection = new Date(arbitrages[0].detectionTime);
-    let latestExecution = new Date(arbitrages[0].executionTime);
+    let earliestDetection = arbitrages[0].detectionTime;
+    let latestExecution = arbitrages[0].executionTime;
 
     // iterate through all arbitrages for metrics
     for (const arbitrage of arbitrages) {
@@ -185,12 +185,16 @@ const arbitrageRouter = router({
         where: { userId: ctx.data.userId },
         orderBy: { detectionTime: "desc" },
         include: {
-          polymarketMarket: {
-            include: { platform: true, outcome: true },
-          },
-          kalshiMarket: {
-            include: { platform: true, outcome: true },
-          },
+          match: {
+            include: {
+              polymarketMarket: {
+                include: { platform: true, outcome: true },
+              },
+              kalshiMarket: {
+                include: { platform: true, outcome: true },
+              },
+            }
+          }
         },
       })
 
