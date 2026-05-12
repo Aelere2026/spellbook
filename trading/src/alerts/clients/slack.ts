@@ -2,10 +2,10 @@ import { AlertClient, Alert, sendWebhook } from ".."
 import * as log from "../../util/log"
 
 export class SlackAlertClient implements AlertClient {
-    readonly webhookUrl: string
+    readonly webhookURL: string
 
-    constructor({ webhookUrl }: { webhookUrl: string }) {
-        this.webhookUrl = webhookUrl
+    constructor({ webhookUrl: webhookURL }: { webhookUrl: string }) {
+        this.webhookURL = webhookURL
     }
 
     async send(alert: Alert) {
@@ -23,6 +23,6 @@ export class SlackAlertClient implements AlertClient {
         }
 
         log.alert("Sending Slack message!")
-        return await sendWebhook(webhook, this.webhookUrl)
+        return await sendWebhook(webhook, this.webhookURL)
     }
 }

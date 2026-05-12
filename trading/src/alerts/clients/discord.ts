@@ -4,12 +4,12 @@ import * as log from "../../util/log"
 const RED = Number(0xff0000)
 
 export class DiscordAlertClient implements AlertClient {
-    readonly webhookUrl: string
+    readonly webhookURL: string
     username: string
     icon: string
 
-    constructor({ webhookUrl, username, icon }: { webhookUrl: string, username?: string, icon?: string }) {
-        this.webhookUrl = webhookUrl
+    constructor({ webhookUrl: webhookURL, username, icon }: { webhookUrl: string, username?: string, icon?: string }) {
+        this.webhookURL = webhookURL
         this.username = username ?? defaults.username
         this.icon = icon ?? defaults.icon
     }
@@ -28,6 +28,6 @@ export class DiscordAlertClient implements AlertClient {
         }
 
         log.alert("Sending Discord message!")
-        return await sendWebhook(webhook, this.webhookUrl)
+        return await sendWebhook(webhook, this.webhookURL)
     }
 }
