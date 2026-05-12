@@ -51,10 +51,16 @@ The default path does not require Ollama or a downloaded model.
 
 ## Loop Runner
 
-`run_loop.sh` runs `runner.py` every 300 seconds:
+`run_loop.sh` runs `runner.py` every hour by default:
 
 ```bash
 bash run_loop.sh
+```
+
+Override the loop interval in seconds with:
+
+```bash
+MATCH_LOOP_INTERVAL=1800 bash run_loop.sh
 ```
 
 From the repo root, `start.sh` creates a tmux session and runs this loop:
@@ -79,7 +85,8 @@ From the repo root:
 ```
 
 The root start script starts an `ollama` tmux window when needed and waits for
-Ollama before starting the matching loop.
+Ollama before starting the matching loop. If Ollama or the requested model is
+missing, the market-matching pane prints the exact install command to run.
 
 ### Recommended Local Model
 
@@ -87,6 +94,12 @@ For the current laptop-GPU setup, use:
 
 ```bash
 ollama pull qwen3:4b
+```
+
+If Ollama itself is not installed:
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
 ```
 
 Then make sure Ollama is running:
@@ -113,6 +126,16 @@ Defaults:
 LLM_REVIEW_MIN_SCORE=85.0
 LLM_AUTO_ACCEPT_SCORE=92.0
 ```
+
+For the current slower but stricter review mode, use:
+
+```text
+LLM_REVIEW_MIN_SCORE=92.0
+LLM_AUTO_ACCEPT_SCORE=101.0
+```
+
+That ignores scores below 92 and sends every remaining candidate to the LLM
+instead of auto-accepting high fuzzy scores.
 
 The fuzzy-only default threshold remains:
 
@@ -187,6 +210,12 @@ Use `LLM_REVIEW_MIN_SCORE=92 LLM_AUTO_ACCEPT_SCORE=101` when you want a less
 frequent but stricter run: fuzzy scores below 92 are ignored, and every kept
 candidate is checked by the LLM instead of auto-accepting high scores.
 
+From the repo root:
+
+```bash
+LLM_REVIEW_MIN_SCORE=92 LLM_AUTO_ACCEPT_SCORE=101 ./start.sh --llm
+```
+
 For a fast first validation run, cap the LLM reviews from the repo root:
 
 ```bash
@@ -228,13 +257,13 @@ Environment files are loaded from:
 Focused matcher/cache/verifier tests:
 
 ```bash
-PYTHONPATH=. pytest -q tests/test_match.py tests/test_cache.py tests/test_llm_verifier.py
+PYTHONPATH=. pytest -q tests/test_match.py tests/test_cache.py tests/test_llm_verifier.py tests/test_runner_reports.py
 ```
 
 Current expected result:
 
 ```text
-19 passed
+32 passed
 ```
 
 Full `pytest -q` may require DB configuration because `tests/test_db.py`
