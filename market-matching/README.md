@@ -17,13 +17,14 @@ off by default.
 
 1. Fetch raw markets from Kalshi and Polymarket in parallel.
 2. Normalize raw market payloads into `NormalizedMarket`.
-3. Filter to binary Yes/No markets.
-4. Generate candidate pairs with `matchers/idf_retrieval.py`.
-5. Apply time, year, prop-threshold, and entity mismatch guards.
-6. Score candidates with RapidFuzz.
-7. Optionally ask a local LLM to verify borderline scores.
-8. Greedily select one-to-one matches.
-9. Save match-score cache, write `matches.txt`, and persist to DB when
+3. Drop markets whose `close_time` is already in the past.
+4. Filter to binary Yes/No markets.
+5. Generate candidate pairs with `matchers/idf_retrieval.py`.
+6. Apply time, year, cutoff-year, prop-threshold, and entity mismatch guards.
+7. Score candidates with RapidFuzz.
+8. Optionally ask a local LLM to verify borderline scores.
+9. Greedily select one-to-one matches.
+10. Save match-score cache, write `matches.txt`, and persist to DB when
    `DATABASE_URL` is available.
 
 When LLM verification is enabled, `runner.py` also writes `matches_llm.txt`

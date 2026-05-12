@@ -1,20 +1,20 @@
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from llm_verifier import LLMMatchVerifier
 from normalizers.models import NormalizedMarket
-from runner import build_llm_report
+from runner import build_llm_report, filter_open_markets
 
 T = datetime(2026, 6, 1, tzinfo=timezone.utc)
 
 
-def market(platform, pid, title, slug=None):
+def market(platform, pid, title, slug=None, close_time=T):
     return NormalizedMarket(
         platform=platform,
         platform_id=pid,
         title=title,
         description="",
-        close_time=T,
+        close_time=close_time,
         resolution_date=T,
         outcomes=["Yes", "No"],
         event_title=None,
@@ -58,3 +58,15 @@ def test_build_llm_report_separates_approved_and_rejected_reviews():
     assert "source=live" in report
     assert "btc-100k" in report
     assert "argentina-world-cup" in report
+
+
+def test_filter_open_markets_removes_closed_and_keeps_missing_close_time():
+    now = datetime(2026, 6, 1, 12, tzinfo=timezone.utc)
+    closed = market("kalshi", "K-CLOSED", "Closed market", close_time=now - timedelta(seconds=1))
+    open_market = market("kalshi", "K-OPEN", "Open market", close_time=now)
+    missing_close = market("polymarket", "P-MISSING", "Missing close market", close_time=None)
+
+    markets, removed = filter_open_markets([closed, open_market, missing_close], now)
+
+    assert removed == 1
+    assert [m.platform_id for m in markets] == ["K-OPEN", "P-MISSING"]

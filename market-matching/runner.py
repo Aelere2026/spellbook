@@ -44,6 +44,16 @@ def _market_report_lines(index: int, score: float, kalshi, polymarket) -> list[s
     ]
 
 
+def filter_open_markets(markets: list, now: datetime) -> tuple[list, int]:
+    """Return markets that have not closed yet.
+
+    Markets with missing close_time are kept. Some platforms omit close times,
+    and the matcher can still use title/resolution data for those.
+    """
+    open_markets = [m for m in markets if m.close_time is None or m.close_time >= now]
+    return open_markets, len(markets) - len(open_markets)
+
+
 def build_llm_report(now: datetime, verifier) -> str:
     approved = [r for r in verifier.reviews if r.verdict.is_match]
     rejected = [r for r in verifier.reviews if not r.verdict.is_match]
@@ -128,6 +138,18 @@ def run():
     binary_poly   = [p for p in poly_markets if is_binary(p)]
     print(f"[normalize] Done in {_elapsed(t)}  |  Kalshi binary: {len(binary_kalshi)}  |  Polymarket: {len(poly_markets)} total  |  {neg_risk_poly} negRisk  |  {len(binary_poly)} binary")
 
+    # --- Open-market filter ---
+    t = time.monotonic()
+    kalshi_markets, closed_kalshi = filter_open_markets(kalshi_markets, now)
+    poly_markets, closed_poly = filter_open_markets(poly_markets, now)
+    binary_kalshi = [k for k in kalshi_markets if is_binary(k)]
+    neg_risk_poly = sum(1 for p in poly_markets if p.neg_risk)
+    binary_poly = [p for p in poly_markets if is_binary(p)]
+    print(
+        f"[filter] Removed closed markets in {_elapsed(t)}  |  "
+        f"Kalshi closed: {closed_kalshi}  |  Polymarket closed: {closed_poly}"
+    )
+
     # --- Cache ---
     t = time.monotonic()
     print(f"[cache] Loading and building score cache...")
@@ -194,8 +216,8 @@ def run():
 
     lines = [
         f"Generated:   {now.isoformat()}",
-        f"Kalshi:      {len(raw_kalshi)} fetched  |  {len(binary_kalshi)} binary",
-        f"Polymarket:  {len(raw_poly)} fetched  |  {neg_risk_poly} negRisk  |  {len(binary_poly)} binary",
+        f"Kalshi:      {len(raw_kalshi)} fetched  |  {closed_kalshi} closed filtered  |  {len(binary_kalshi)} binary open",
+        f"Polymarket:  {len(raw_poly)} fetched  |  {closed_poly} closed filtered  |  {neg_risk_poly} negRisk open  |  {len(binary_poly)} binary open",
         f"Time window: ±{TIME_WINDOW.days} days",
         f"Min score:   {min_score}",
         f"LLM verify:  {'on' if LLM_VERIFY_ENABLED else 'off'}",
