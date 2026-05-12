@@ -1,12 +1,23 @@
 import React, { useMemo, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { api } from "../utils/api";
 
 const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
   const location = useLocation();
+  const navigate = useNavigate();
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
+
+  const signout = api.auth.signout.useMutation({
+    onSuccess: () => navigate("/login"),
+    onError: () => navigate("/login"),
+  });
+
+  const handleSignOut = () => {
+    signout.mutate({ allSessions: false });
+  };
 
   const linkBase =
     "rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200";
@@ -178,7 +189,8 @@ const Navbar: React.FC = () => {
             <span className="text-base">{isDark ? "☀️" : "🌙"}</span>
             <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
           </button>
-          {/*Settings*/}
+
+          {/* Settings */}
           <Link
             to="/settings"
             className={`ml-2 inline-flex items-center justify-center text-lg transition-all duration-200 ${
@@ -190,6 +202,19 @@ const Navbar: React.FC = () => {
           >
             ⚙️
           </Link>
+
+          {/* Sign Out */}
+          <button
+            onClick={handleSignOut}
+            disabled={signout.isPending}
+            className={`ml-2 inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium backdrop-blur-xl transition-all duration-200 disabled:opacity-50 ${
+              isDark
+                ? "border-rose-400/20 bg-rose-500/10 text-rose-300 hover:-translate-y-0.5 hover:border-rose-400/40 hover:text-rose-100"
+                : "border-rose-300 bg-rose-50 text-rose-600 hover:-translate-y-0.5 hover:border-rose-400 hover:text-rose-800"
+            }`}
+          >
+            {signout.isPending ? "Signing out..." : "Sign Out"}
+          </button>
         </nav>
       </div>
     </header>

@@ -9,21 +9,23 @@ import TotalFees from "./Pages/Fees";
 import AvgRoi from "./Pages/AvgRoi";
 import Settings from "./Pages/Settings";
 import TradeDetail from "./Pages/TradeDetail";
+import Login from "./Pages/Login";
+import Signup from "./Pages/Signup";
+import AuthGuard from "./Pages/AuthGuard";
 import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
-
+ 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, splitLink, httpSubscriptionLink } from "@trpc/client";
 import { useState } from "react";
 import { api } from "./utils/api";
 import superjson from "superjson";
-
+ 
 function App() {
   const [queryClient] = useState(() => new QueryClient());
   const [apiClient] = useState(() =>
     api.createClient({
       links: [
-        //loggerLink(),
         splitLink({
           condition: (op) => op.type === "subscription",
           true: httpSubscriptionLink({
@@ -33,18 +35,30 @@ function App() {
           false: httpBatchLink({
             url: "http://localhost:3000/trpc",
             transformer: superjson,
+            fetch: (url, options) => fetch(url, { ...options, credentials: "include" }),
           }),
         }),
       ],
     }),
   );
-
+ 
   return (
     <ThemeProvider>
       <api.Provider client={apiClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
           <Routes>
-            <Route element={<Layout />}>
+            {/* Public routes - no auth required */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+ 
+            {/* Protected routes - auth required */}
+            <Route
+              element={
+                <AuthGuard>
+                  <Layout />
+                </AuthGuard>
+              }
+            >
               <Route path="/home" element={<Home />} />
               <Route path="/" element={<Dashboard />} />
               <Route path="/gain-loss" element={<GainLoss />} />
@@ -61,5 +75,5 @@ function App() {
     </ThemeProvider>
   );
 }
-
+ 
 export default App;
