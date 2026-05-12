@@ -8,7 +8,7 @@ shape, generates likely candidates with IDF/BM25-style retrieval, applies
 deterministic filters, scores title similarity with RapidFuzz, and writes the
 best one-to-one matches.
 
-Optional local LLM verification can be enabled for borderline matches. It is
+Optional local LLM verification can be enabled for score-eligible matches. It is
 off by default.
 
 ## Pipeline
@@ -22,7 +22,7 @@ off by default.
 5. Generate candidate pairs with `matchers/idf_retrieval.py`.
 6. Apply time, year, cutoff-year, prop-threshold, and entity mismatch guards.
 7. Score candidates with RapidFuzz.
-8. Optionally ask a local LLM to verify borderline scores.
+8. Optionally ask a local LLM to verify score-eligible candidates.
 9. Greedily select one-to-one matches.
 10. Save match-score cache, write `matches.txt`, and persist to DB when
    `DATABASE_URL` is available.
@@ -123,19 +123,19 @@ When LLM verification is enabled:
 Defaults:
 
 ```text
-LLM_REVIEW_MIN_SCORE=85.0
-LLM_AUTO_ACCEPT_SCORE=92.0
-```
-
-For the current slower but stricter review mode, use:
-
-```text
 LLM_REVIEW_MIN_SCORE=92.0
 LLM_AUTO_ACCEPT_SCORE=101.0
 ```
 
-That ignores scores below 92 and sends every remaining candidate to the LLM
+This ignores scores below 92 and sends every remaining candidate to the LLM
 instead of auto-accepting high fuzzy scores.
+
+For a broader but slower review mode, use:
+
+```text
+LLM_REVIEW_MIN_SCORE=85.0
+LLM_AUTO_ACCEPT_SCORE=101.0
+```
 
 The fuzzy-only default threshold remains:
 
@@ -189,8 +189,8 @@ num_ctx=2048
 LLM_VERIFY_ENABLED=1
 LLM_MODEL=qwen3:4b
 LLM_ENDPOINT=http://localhost:11434/api/chat
-LLM_REVIEW_MIN_SCORE=85.0
-LLM_AUTO_ACCEPT_SCORE=92.0
+LLM_REVIEW_MIN_SCORE=92.0
+LLM_AUTO_ACCEPT_SCORE=101.0
 LLM_TIMEOUT_SECONDS=120.0
 LLM_MAX_REVIEWS=
 LLM_PROGRESS_INTERVAL=25
@@ -201,19 +201,14 @@ Examples:
 ```bash
 LLM_VERIFY_ENABLED=1 LLM_MODEL=qwen3:4b PYTHONPATH=. python3 runner.py
 LLM_VERIFY_ENABLED=1 LLM_MODEL=qwen3:4b LLM_TIMEOUT_SECONDS=180 PYTHONPATH=. python3 runner.py
-LLM_VERIFY_ENABLED=1 LLM_REVIEW_MIN_SCORE=87 LLM_AUTO_ACCEPT_SCORE=92 PYTHONPATH=. python3 runner.py
-LLM_VERIFY_ENABLED=1 LLM_REVIEW_MIN_SCORE=92 LLM_AUTO_ACCEPT_SCORE=101 PYTHONPATH=. python3 runner.py
+LLM_VERIFY_ENABLED=1 LLM_REVIEW_MIN_SCORE=85 LLM_AUTO_ACCEPT_SCORE=101 PYTHONPATH=. python3 runner.py
 LLM_VERIFY_ENABLED=1 LLM_MODEL=qwen3:4b LLM_MAX_REVIEWS=100 PYTHONPATH=. python3 runner.py
 ```
-
-Use `LLM_REVIEW_MIN_SCORE=92 LLM_AUTO_ACCEPT_SCORE=101` when you want a less
-frequent but stricter run: fuzzy scores below 92 are ignored, and every kept
-candidate is checked by the LLM instead of auto-accepting high scores.
 
 From the repo root:
 
 ```bash
-LLM_REVIEW_MIN_SCORE=92 LLM_AUTO_ACCEPT_SCORE=101 ./start.sh --llm
+./start.sh --llm
 ```
 
 For a fast first validation run, cap the LLM reviews from the repo root:
