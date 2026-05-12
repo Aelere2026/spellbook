@@ -2,7 +2,8 @@ import { userProcedure, router } from "./trpc"
 import { prisma } from "../util/prisma"
 import { Prisma, User } from "../../prisma/generated/client"
 import { z } from "zod"
-import { later } from "../auth"
+import * as time from "../util/time"
+import { APIKeysValidator, setKey } from "../cryptography"
 
 export type UserPreferences = {
     usePresetAlgorithm: boolean,
@@ -11,35 +12,6 @@ export type UserPreferences = {
     resolutionStart: Date,
     resolutionEnd: Date
 }
-
-const APIKeysValidator = z.object({
-    polymarket: z.object({
-        iv: z.string()
-    }).optional(),
-    kalshi: z.object({
-        iv: z.string()
-    }).optional(),
-    discord: z.object({
-        iv: z.string(),
-        webhookUrl: z.string()
-    }).optional(),
-    sendgrid: z.object({
-        iv: z.string(),
-        key: z.string(),
-        recipient: z.string()
-    }).optional(),
-    slack: z.object({
-        iv: z.string(),
-        webhookUrl: z.string()
-    }).optional(),
-    twilio: z.object({
-        iv: z.string(),
-        sid: z.string(),
-        authToken: z.string()
-    }).optional()
-})
-type APIKeys = z.infer<typeof APIKeysValidator>
-
 
 async function getPreferences(userId: number): Promise<Partial<UserPreferences>> {
     let rawPreferences = await prisma.user.findUnique({
@@ -63,15 +35,15 @@ async function getPreferencesOrDefault(userId: number): Promise<UserPreferences>
         usePresetAlgorithm: prefs.usePresetAlgorithm as boolean ?? true,
         manualShares: prefs.manualShares as number ?? 1,
         maxShares: prefs.maxShares as number ?? 1,
-        resolutionStart: new Date(prefs.resolutionStart ?? later(0)),
-        resolutionEnd: new Date(prefs.resolutionStart ?? later(30))
+        resolutionStart: new Date(prefs.resolutionStart ?? time.now()),
+        resolutionEnd: new Date(prefs.resolutionStart ?? time.later(30))
     }
 }
 
 const configRouter = router({
     // Get current bot preferences
     getPreferences: userProcedure.query(async ({ ctx }) => {
-        return await getPreferences(ctx.data.userId)
+        return await getPreferencesOrDefault(ctx.data.userId)
     }),
     // Update bot preferences
     updatePreferences: userProcedure
@@ -104,9 +76,16 @@ const configRouter = router({
         .input(APIKeysValidator)
         .mutation(async ({ ctx, input }) => {
             const userId = ctx.data.userId
-            // return await prisma.user.update({
 
-            // })
+            let success = true
+            if (input.polymarket) success &&= await setKey({ platform: "polymarket", ...input.polymarket }, userId)
+            if (input.kalshi) success &&= await setKey({ platform: "kalshi", ...input.kalshi }, userId)
+            if (input.discord) success &&= await setKey({ platform: "discord", ...input.discord }, userId)
+            if (input.sendGrid) success &&= await setKey({ platform: "sendGrid", ...input.sendGrid }, userId)
+            if (input.slack) success &&= await setKey({ platform: "slack", ...input.slack }, userId)
+            if (input.twilio) success &&= await setKey({ platform: "twilio", ...input.twilio }, userId)
+
+            return success
         }),
 })
 
