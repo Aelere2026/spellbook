@@ -1,6 +1,7 @@
 import { prisma, Session } from "./util/prisma"
 import * as crypt from "./cryptography"
 import * as log from "./util/log"
+import * as time from "./util/time"
 
 const ADMIN_UID = -1 // Should probably never change this
 const sessionCache = new Map<string, Session>()
@@ -35,7 +36,7 @@ export async function validateSession(cookie: string) {
     session = session ?? sessionCache.get(token)!
 
     // If the session is expired, remove it from the database and cache
-    if (crypt.isExpired(session)) {
+    if (time.isExpired(session)) {
         sessionCache.delete(token)
         await prisma.session.deleteMany({
             where: {
@@ -58,7 +59,7 @@ async function createSession(userId: number): Promise<string> {
         data: {
             userId,
             hashedToken: await crypt.hash(token),
-            expiration: later(30)
+            expiration: time.later(30)
         }
     })
 
@@ -169,7 +170,7 @@ export async function invite(name: string): Promise<string | null> {
         data: {
             name,
             hashedToken: await crypt.hash(token),
-            expiration: later(30)
+            expiration: time.later(30)
         }
     })
 
@@ -227,10 +228,3 @@ export async function initAdmin(): Promise<boolean> {
     log.warn(`Admin password: ${password}`)
     return true
 }
-
-export function later(days: number) {
-    const later = new Date()
-    later.setDate(later.getDate() + days)
-    return later
-}
-
