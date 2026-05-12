@@ -124,8 +124,9 @@ const Profits: React.FC = () => {
       }
 
       const bucket = grouped.get(key)!;
-      bucket.netProfit += netProfit;
-      bucket.grossProfit += grossProfit;
+      const shares = Number(a.shares ?? 1);
+      bucket.netProfit += netProfit * shares;
+      bucket.grossProfit += grossProfit * shares;
     }
 
     return Array.from(grouped.values()).sort(
@@ -195,8 +196,8 @@ const Profits: React.FC = () => {
           ? "Week"
           : "Month";
 
-  const totalPreNet = preClose.reduce((s, a) => s + Number(a.netProfit), 0);
-  const totalPostNet = postClose.reduce((s, a) => s + Number(a.netProfit), 0);
+  const totalPreNet = preClose.reduce((s, a) => s + Number(a.netProfit) * Number(a.shares ?? 1), 0);
+  const totalPostNet = postClose.reduce((s, a) => s + Number(a.netProfit) * Number(a.shares ?? 1), 0);
 
   const closureFilterOptions: { value: ClosureFilter; label: string }[] = [
     { value: "all", label: "All" },

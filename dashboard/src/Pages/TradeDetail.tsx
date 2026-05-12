@@ -154,19 +154,9 @@ const TradeDetail: React.FC = () => {
   const polymarketSide = trade.polymarketYes ? "YES" : "NO";
   const kalshiSide = trade.polymarketYes ? "NO" : "YES";
 
-  // Price paid on each platform
+  // Price actually paid on each platform
   const polymarketPrice = trade.polymarketYes ? yesPrice : noPrice;
   const kalshiPrice = trade.polymarketYes ? noPrice : yesPrice;
-
-  // Implied YES/NO prices on each platform
-  const polyYesPrice = trade.polymarketYes
-    ? polymarketPrice
-    : 1 - polymarketPrice;
-  const polyNoPrice = trade.polymarketYes
-    ? 1 - polymarketPrice
-    : polymarketPrice;
-  const kalshiYesPrice = trade.polymarketYes ? 1 - kalshiPrice : kalshiPrice;
-  const kalshiNoPrice = trade.polymarketYes ? kalshiPrice : 1 - kalshiPrice;
 
   const polymarketUrl = poly.slug
     ? `https://polymarket.com/market/${poly.slug}`
@@ -373,19 +363,6 @@ const TradeDetail: React.FC = () => {
             >
               {poly.title}
             </div>
-
-            {/* YES/NO prices */}
-            <div className="mt-2 flex gap-4 text-xs font-semibold">
-              <span
-                className={isDark ? "text-emerald-300" : "text-emerald-700"}
-              >
-                YES: {fmtMoney(polyYesPrice)}
-              </span>
-              <span className={isDark ? "text-rose-300" : "text-rose-700"}>
-                NO: {fmtMoney(polyNoPrice)}
-              </span>
-            </div>
-
             <div
               className={`mt-2 grid grid-cols-2 gap-2 text-xs ${isDark ? "text-violet-200/60" : "text-violet-500"}`}
             >
@@ -432,9 +409,7 @@ const TradeDetail: React.FC = () => {
               {poly.outcome && (
                 <span className="col-span-2">
                   Outcome:{" "}
-                  <span
-                    className={`font-semibold ${isDark ? "text-emerald-300" : "text-emerald-700"}`}
-                  >
+                  <span className={`font-semibold ${isDark ? "text-emerald-300" : "text-emerald-700"}`}>
                     {poly.outcome.outcome}
                   </span>
                 </span>
@@ -476,19 +451,6 @@ const TradeDetail: React.FC = () => {
             >
               {kalshi.title}
             </div>
-
-            {/* YES/NO prices */}
-            <div className="mt-2 flex gap-4 text-xs font-semibold">
-              <span
-                className={isDark ? "text-emerald-300" : "text-emerald-700"}
-              >
-                YES: {fmtMoney(kalshiYesPrice)}
-              </span>
-              <span className={isDark ? "text-rose-300" : "text-rose-700"}>
-                NO: {fmtMoney(kalshiNoPrice)}
-              </span>
-            </div>
-
             <div
               className={`mt-2 grid grid-cols-2 gap-2 text-xs ${isDark ? "text-violet-200/60" : "text-violet-500"}`}
             >
@@ -535,9 +497,7 @@ const TradeDetail: React.FC = () => {
               {kalshi.outcome && (
                 <span className="col-span-2">
                   Outcome:{" "}
-                  <span
-                    className={`font-semibold ${isDark ? "text-emerald-300" : "text-emerald-700"}`}
-                  >
+                  <span className={`font-semibold ${isDark ? "text-emerald-300" : "text-emerald-700"}`}>
                     {kalshi.outcome.outcome}
                   </span>
                 </span>

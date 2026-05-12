@@ -337,7 +337,7 @@ const Dashboard: React.FC = () => {
           <table className="min-w-full">
             <thead>
               <tr
-                className={`text-left text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-200/55" : "text-violet-500"}`}
+                className={`text-center text-[11px] uppercase tracking-[0.22em] ${isDark ? "text-violet-200/55" : "text-violet-500"}`}
               >
                 <th className="px-3 py-2 sm:px-4">Trade ID</th>
                 <th className="px-3 py-2 sm:px-4">Timestamp</th>
@@ -424,7 +424,7 @@ const Dashboard: React.FC = () => {
                   <td
                     className={`px-3 py-3 text-sm sm:px-4 ${isDark ? "text-violet-100/70" : "text-violet-600"}`}
                   >
-                    {t.durationMin}ms
+                    {t.durationMin}µs
                   </td>
                 </tr>
               ))}

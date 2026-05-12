@@ -96,7 +96,8 @@ const TotalFees: React.FC = () => {
 
       const key = bucketKey(executionDate, timeScale);
       const label = formatBucketLabel(executionDate, timeScale);
-      const fee = Number(a.totalFee ?? 0);
+      const shares = Number(a.shares ?? 1);
+      const fee = Number(a.totalFee ?? 0) * shares;
 
       if (!grouped.has(key)) {
         grouped.set(key, {
@@ -142,7 +143,7 @@ const TotalFees: React.FC = () => {
   const feesData = displayData.map((d) => d.totalFees);
 
   const totalFees = arbitrages.reduce(
-    (sum, a) => sum + Number(a.totalFee ?? 0),
+    (sum, a) => sum + Number(a.totalFee ?? 0) * Number(a.shares ?? 1),
     0,
   );
 

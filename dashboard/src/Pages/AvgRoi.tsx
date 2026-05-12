@@ -95,9 +95,9 @@ const AvgRoi: React.FC = () => {
       if (Number.isNaN(executionDate.getTime())) continue;
 
       const netProfit = Number(a.netProfit ?? 0);
-      const capital = Number(a.grossProfit ?? 0);
-
-      // ROI is defined here once, then used throughout the page.
+      const yesPrice = Number(a.yesPrice ?? 0);
+      const noPrice = Number(a.noPrice ?? 0);
+      const capital = (yesPrice + noPrice);
       const roiPct = capital > 0 ? (netProfit / capital) * 100 : 0;
 
       const key = bucketKey(executionDate, timeScale);
@@ -155,11 +155,10 @@ const AvgRoi: React.FC = () => {
 
   const allRoiValues = arbitrages.map((a) => {
     const netProfit = Number(a.netProfit ?? 0);
-    const capital = Number(a.grossProfit ?? 0);
-
-    // Same ROI definition used for total page metrics.
+    const yesPrice = Number(a.yesPrice ?? 0);
+    const noPrice = Number(a.noPrice ?? 0);
+    const capital = (yesPrice + noPrice);
     const roiPct = capital > 0 ? (netProfit / capital) * 100 : 0;
-
     return roiPct;
   });
 
