@@ -38,6 +38,25 @@ def is_binary(m: NormalizedMarket) -> bool:
 
 
 _TITLE_YEAR = re.compile(r'\b(20\d{2})\b')
+_BEFORE_YEAR = re.compile(r'\bbefore\s+(?:jan(?:uary)?\s+1(?:st)?\s*,?\s+)?(20\d{2})\b', re.IGNORECASE)
+
+
+def _before_cutoff_year(title: str) -> int | None:
+    """Return the cutoff year from phrases like "before 2027" or "before Jan 1, 2027"."""
+    match = _BEFORE_YEAR.search(title)
+    return int(match.group(1)) if match else None
+
+
+def _cutoff_year_mismatch(k: NormalizedMarket, p: NormalizedMarket) -> bool:
+    """Reject pairs with incompatible explicit cutoff years.
+
+    "before 2027" and "before Jan 1, 2027" are equivalent.  But
+    "before 2026" vs "before 2027" changes the event window, so it is a hard
+    mismatch regardless of fuzzy score or LLM opinion.
+    """
+    k_cutoff = _before_cutoff_year(k.title)
+    p_cutoff = _before_cutoff_year(p.title)
+    return bool(k_cutoff and p_cutoff and k_cutoff != p_cutoff)
 
 
 def _year_mismatch(k: NormalizedMarket, p: NormalizedMarket) -> bool:
@@ -201,6 +220,7 @@ def find_matches(
         if (
             score >= min_score
             and not _year_mismatch(k, p)
+            and not _cutoff_year_mismatch(k, p)
             and not _prop_threshold_mismatch(k, p)
             and not _entity_mismatch(k, p)
             and (match_verifier is None or match_verifier(k, p, score))
