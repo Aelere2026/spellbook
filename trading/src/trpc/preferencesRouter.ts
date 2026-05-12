@@ -33,18 +33,13 @@ async function getPreferences(userId: number): Promise<Partial<UserPreferences>>
 
 async function getPreferencesOrDefault(userId: number): Promise<UserPreferences> {
     const prefs = await getPreferences(userId)
-
-    log.info("Prefs: ", prefs)
-
-    const cool = {
+    return {
         usePresetAlgorithm: prefs.usePresetAlgorithm as boolean ?? true,
         manualShares: prefs.manualShares as number ?? 1,
         maxShares: prefs.maxShares as number ?? 1,
         resolutionStart: new Date(prefs.resolutionStart ?? time.now()),
         resolutionEnd: new Date(prefs.resolutionStart ?? time.later(30))
     }
-    log.info("cool: ", cool)
-    return cool
 }
 
 const preferencesRouter = router({

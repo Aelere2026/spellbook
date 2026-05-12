@@ -4,9 +4,8 @@ import * as crypt from "./cryptography"
 import * as log from "./util/log"
 import * as time from "./util/time"
 
-const ADMIN_UID = -1 // Should probably never change this
+const ADMIN_UID = -1 // Should probably never change this, unless you want to add in multiple admin accounts
 const sessionCache = new Map<string, Session>()
-
 
 export async function validateSession(cookies: string) {
     const token = cookies.split(";")

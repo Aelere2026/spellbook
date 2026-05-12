@@ -4,6 +4,8 @@ import * as z from "zod"
 import * as log from "./util/log"
 import { prisma } from "./util/prisma"
 import { JsonObject } from "@prisma/client/runtime/client"
+import path from "path"
+import * as fs from "fs"
 
 /**
  * Keys we need to decrypt are encrypted using ChaCha20-Poly1305, a symmetric
@@ -20,12 +22,30 @@ import { JsonObject } from "@prisma/client/runtime/client"
  */
 
 // Constants used for ChaCha
-const MASTER_KEY = ""
-const ALGORITHM = "chacha20-poly1305"
+const MASTER_KEY = process.env.MASTER_KEY ?? generateMasterKey()
+const SYMMETRIC_ALGORITHM = "chacha20-poly1305"
 const ENCODING_FORMAT = "hex"
 const IV_LENGTH = 12
 const AD_LENGTH = 16
 const TAG_LENGTH = 16
+
+const QUICKHASH_ALGORITHM = "sha256"
+
+function generateMasterKey(): string {
+    const envPath = path.join(__dirname, "..", "..", "secrets", "bot.env")
+    const masterKey = generateToken(64)
+    fs.readFile(envPath, (err, data) => {
+        if (err) {
+            log.error("Could not find bot.env!")
+            return
+        }
+        if (!data.toString().includes("MASTER_KEY")) {
+            log.info("No master key, generating one!")
+            fs.appendFileSync(envPath, `MASTER_KEY=${masterKey}`)
+        }
+    })
+    return masterKey
+}
 
 export const APIKeysValidator = z.object({
     polymarket: z.looseObject({}).optional(), // looseObject for now because they're empty. Once Poly/kal get populated, switch to regular objs
@@ -59,8 +79,8 @@ type TwilioKey = PlatformKey<"twilio">
 export type APIKey = PolymarketKey | KalshiKey | DiscordKey | SendGridKey | SlackKey | TwilioKey
 export type Platform = APIKey["platform"]
 
-const VOCAB = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-export function generateToken(length: number = 16): string {
+export function generateToken(length: number = 32): string {
+    const VOCAB = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     let token = ''
     for (let i = 0; i < length; i++) {
         token += VOCAB[Math.floor(Math.random() * VOCAB.length)];
@@ -82,8 +102,10 @@ export async function hash(secret: string): Promise<string> {
     return argon2.hash(secret)
 }
 
+// Hashing used for tokens, doesn't need a salt since dictionary attacks aren't
+// an issue with randomly generated tokens
 export function quickHash(secret: string): string {
-    return crypto.createHash('md5').update(secret).digest("hex")
+    return crypto.createHash(QUICKHASH_ALGORITHM).update(secret).digest("hex")
 }
 
 // Retrieves an encrypted user key
@@ -234,7 +256,7 @@ async function decrypt(encryptionStr: string | undefined) {
         const ad = Buffer.from(adStr, ENCODING_FORMAT)
         const tag = Buffer.from(tagStr, ENCODING_FORMAT)
 
-        const decipher = crypto.createDecipheriv(ALGORITHM, MASTER_KEY, iv, { authTagLength: TAG_LENGTH })
+        const decipher = crypto.createDecipheriv(SYMMETRIC_ALGORITHM, MASTER_KEY!, iv, { authTagLength: TAG_LENGTH })
         decipher.setAAD(ad, { plaintextLength: data.length })
         decipher.setAuthTag(Buffer.from(tag))
 
@@ -251,7 +273,7 @@ export function encrypt(data: string) {
     try {
         const iv = crypto.randomBytes(IV_LENGTH)
         const ad = crypto.randomBytes(AD_LENGTH);
-        const cipher = crypto.createCipheriv(ALGORITHM, MASTER_KEY, iv, {
+        const cipher = crypto.createCipheriv(SYMMETRIC_ALGORITHM, MASTER_KEY!, iv, {
             authTagLength: 16,
         })
 
