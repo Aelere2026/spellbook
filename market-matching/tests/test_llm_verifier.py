@@ -47,6 +47,9 @@ def test_llm_verifier_reviews_band_and_caches():
     verifier = LLMMatchVerifier(cache_path=path, chat_func=chat)
     assert verifier.verify(k, p, 88.0)
     assert verifier.calls == 1
+    assert len(verifier.reviews) == 1
+    assert verifier.reviews[0].verdict.is_match is True
+    assert verifier.reviews[0].verdict.cached is False
     verifier.save()
 
     def fail_chat(_payload):
@@ -56,6 +59,8 @@ def test_llm_verifier_reviews_band_and_caches():
     assert cached.verify(k, p, 88.0)
     assert cached.calls == 0
     assert cached.cache_hits == 1
+    assert len(cached.reviews) == 1
+    assert cached.reviews[0].verdict.cached is True
     assert len(load_llm_cache(path)) == 1
 
 
@@ -156,6 +161,15 @@ def test_llm_verifier_uses_fast_ollama_options():
     assert seen["keep_alive"] == "30m"
     assert seen["options"]["num_predict"] == 160
     assert seen["options"]["num_ctx"] == 2048
+    system_prompt = seen["messages"][0]["content"]
+    assert "different dates as a warning" in system_prompt
+    assert "not an automatic rejection" in system_prompt
+    assert "Do not reject solely because close/resolution dates differ by a day or two" in system_prompt
+    prompt = json.loads(seen["messages"][1]["content"])
+    assert "event_title" not in prompt["kalshi"]
+    assert "event_title" not in prompt["polymarket"]
+    assert "series_title" not in prompt["kalshi"]
+    assert "series_title" not in prompt["polymarket"]
 
 
 def test_llm_verifier_truncates_long_descriptions_in_prompt():
@@ -192,6 +206,31 @@ def test_llm_verifier_accepts_high_scores_without_calling_model():
     verifier = LLMMatchVerifier(chat_func=fail_chat)
     assert verifier.verify(k, p, 92.0)
     assert verifier.calls == 0
+    assert verifier.reviews == []
+
+
+def test_llm_verifier_max_reviews_skips_without_calling_model_again():
+    calls = 0
+
+    def chat(_payload):
+        nonlocal calls
+        calls += 1
+        return {
+            "message": {
+                "content": json.dumps(
+                    {"is_match": True, "confidence": 0.92, "reason": "same event"}
+                )
+            }
+        }
+
+    verifier = LLMMatchVerifier(max_reviews=1, progress_interval=0, chat_func=chat)
+    changed = market("polymarket", "P2", p.title, description="changed")
+
+    assert verifier.verify(k, p, 88.0)
+    assert not verifier.verify(k, changed, 88.0)
+    assert calls == 1
+    assert len(verifier.reviews) == 1
+    assert verifier.skipped_after_cap == 1
 
 
 def test_llm_verifier_rejects_below_review_band_without_calling_model():
@@ -201,6 +240,7 @@ def test_llm_verifier_rejects_below_review_band_without_calling_model():
     verifier = LLMMatchVerifier(chat_func=fail_chat)
     assert not verifier.verify(k, p, 84.9)
     assert verifier.calls == 0
+    assert verifier.reviews == []
 
 
 def test_llm_verifier_rejects_string_boolean_response():

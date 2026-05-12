@@ -26,6 +26,10 @@ off by default.
 9. Save match-score cache, write `matches.txt`, and persist to DB when
    `DATABASE_URL` is available.
 
+When LLM verification is enabled, `runner.py` also writes `matches_llm.txt`
+with separate LLM-approved and LLM-rejected sections, including model
+confidence, cache/live source, and reasoning for each reviewed pair.
+
 ## Default Matching
 
 Run from this directory:
@@ -121,11 +125,17 @@ receives the fuzzy score plus structured Kalshi and Polymarket market records:
 - title
 - description
 - outcomes
-- event title
-- series title
 - category
 - close time
 - resolution date
+
+Different dates are treated as a warning, not an automatic denial. The LLM is
+instructed to allow date differences when both contracts clearly settle on the
+same underlying event, and to reject only when the date difference changes what
+can make the contract resolve Yes or No. One- or two-day close/resolution date
+differences should not reject an otherwise equivalent pair. Event and series
+titles are intentionally omitted from the LLM payload because platforms often
+group matching markets under different parent events.
 
 The model must return JSON matching this schema:
 
@@ -156,6 +166,8 @@ LLM_ENDPOINT=http://localhost:11434/api/chat
 LLM_REVIEW_MIN_SCORE=85.0
 LLM_AUTO_ACCEPT_SCORE=92.0
 LLM_TIMEOUT_SECONDS=120.0
+LLM_MAX_REVIEWS=
+LLM_PROGRESS_INTERVAL=25
 ```
 
 Examples:
@@ -164,6 +176,18 @@ Examples:
 LLM_VERIFY_ENABLED=1 LLM_MODEL=qwen3:4b PYTHONPATH=. python3 runner.py
 LLM_VERIFY_ENABLED=1 LLM_MODEL=qwen3:4b LLM_TIMEOUT_SECONDS=180 PYTHONPATH=. python3 runner.py
 LLM_VERIFY_ENABLED=1 LLM_REVIEW_MIN_SCORE=87 LLM_AUTO_ACCEPT_SCORE=92 PYTHONPATH=. python3 runner.py
+LLM_VERIFY_ENABLED=1 LLM_REVIEW_MIN_SCORE=92 LLM_AUTO_ACCEPT_SCORE=101 PYTHONPATH=. python3 runner.py
+LLM_VERIFY_ENABLED=1 LLM_MODEL=qwen3:4b LLM_MAX_REVIEWS=100 PYTHONPATH=. python3 runner.py
+```
+
+Use `LLM_REVIEW_MIN_SCORE=92 LLM_AUTO_ACCEPT_SCORE=101` when you want a less
+frequent but stricter run: fuzzy scores below 92 are ignored, and every kept
+candidate is checked by the LLM instead of auto-accepting high scores.
+
+For a fast first validation run, cap the LLM reviews from the repo root:
+
+```bash
+LLM_MAX_REVIEWS=100 ./start.sh --llm
 ```
 
 ## Caching
@@ -181,6 +205,7 @@ Generated cache/output files are local runtime artifacts:
 - `match_cache.json`
 - `llm_match_cache.json`
 - `matches.txt`
+- `matches_llm.txt`
 
 ## Database Persistence
 

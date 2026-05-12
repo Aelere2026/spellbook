@@ -9,6 +9,7 @@ node_modules/
 /trading/prisma/generated/
 
 market-matching/matches.txt
+market-matching/matches_llm.txt
 market-matching/match_cache.json
 market-matching/llm_match_cache.json
 market-matching/.coverage

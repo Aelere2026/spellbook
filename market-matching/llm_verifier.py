@@ -18,7 +18,7 @@ import requests
 from normalizers.models import NormalizedMarket
 
 LLM_CACHE_PATH = Path("llm_match_cache.json")
-PROMPT_VERSION = "market-match-v1"
+PROMPT_VERSION = "market-match-v3"
 
 
 @dataclass(frozen=True)
@@ -27,6 +27,14 @@ class LLMVerdict:
     confidence: float
     reason: str
     cached: bool = False
+
+
+@dataclass(frozen=True)
+class LLMReview:
+    kalshi: NormalizedMarket
+    polymarket: NormalizedMarket
+    score: float
+    verdict: LLMVerdict
 
 
 def _dt(value: Any) -> str | None:
@@ -43,8 +51,6 @@ def llm_fingerprint(m: NormalizedMarket) -> str:
         "close_time": _dt(m.close_time),
         "resolution_date": _dt(m.resolution_date),
         "outcomes": m.outcomes,
-        "event_title": m.event_title,
-        "series_title": m.series_title,
         "category": m.category,
     }
     raw = json.dumps(payload, sort_keys=True, separators=(",", ":"))
@@ -116,6 +122,8 @@ class LLMMatchVerifier:
         keep_alive: str = "30m",
         num_predict: int = 160,
         num_ctx: int = 2048,
+        max_reviews: int | None = None,
+        progress_interval: int = 25,
         chat_func: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
     ) -> None:
         if review_min_score >= auto_accept_score:
@@ -129,10 +137,14 @@ class LLMMatchVerifier:
         self.keep_alive = keep_alive
         self.num_predict = num_predict
         self.num_ctx = num_ctx
+        self.max_reviews = max_reviews
+        self.progress_interval = progress_interval
         self._chat_func = chat_func
         self.cache = load_llm_cache(cache_path)
+        self.reviews: list[LLMReview] = []
         self.calls = 0
         self.cache_hits = 0
+        self.skipped_after_cap = 0
 
     def should_review(self, score: float) -> bool:
         return self.review_min_score <= score < self.auto_accept_score
@@ -148,20 +160,47 @@ class LLMMatchVerifier:
             return True
         if score < self.review_min_score:
             return False
+        if self.max_reviews is not None and len(self.reviews) >= self.max_reviews:
+            self.skipped_after_cap += 1
+            self._print_progress(force=self.skipped_after_cap == 1)
+            return False
 
         key = self._cache_key(kalshi, polymarket)
         cached = self.cache.get(key)
         if cached is not None:
             self.cache_hits += 1
-            return cached.is_match
+            verdict = LLMVerdict(cached.is_match, cached.confidence, cached.reason, cached=True)
+            self.reviews.append(LLMReview(kalshi, polymarket, score, verdict))
+            self._print_progress()
+            return verdict.is_match
 
         verdict = self._ask_llm(kalshi, polymarket, score)
         self.cache[key] = verdict
+        self.reviews.append(LLMReview(kalshi, polymarket, score, verdict))
         self.calls += 1
+        self._print_progress()
         return verdict.is_match
 
     def save(self) -> None:
         save_llm_cache(self.cache_path, self.cache)
+
+    def _print_progress(self, force: bool = False) -> None:
+        if self.progress_interval <= 0:
+            return
+        reviewed = len(self.reviews)
+        if not force and reviewed % self.progress_interval != 0:
+            return
+        approved = sum(1 for r in self.reviews if r.verdict.is_match)
+        rejected = reviewed - approved
+        print(
+            f"[llm] reviewed={reviewed}"
+            f"  approved={approved}"
+            f"  rejected={rejected}"
+            f"  calls={self.calls}"
+            f"  cache_hits={self.cache_hits}"
+            f"  skipped_after_cap={self.skipped_after_cap}",
+            flush=True,
+        )
 
     def _cache_key(self, kalshi: NormalizedMarket, polymarket: NormalizedMarket) -> str:
         raw = "|".join(
@@ -191,8 +230,12 @@ class LLMMatchVerifier:
                     "role": "system",
                     "content": (
                         "You verify whether two prediction-market contracts are the same tradable event. "
-                        "Be conservative: if entity, threshold, date/cycle, resolution condition, or outcome differs, "
-                        "return is_match=false. Ignore harmless wording differences. Keep reason under 20 words."
+                        "Be conservative: if entity, threshold, resolution condition, or outcome differs, "
+                        "return is_match=false. Treat different dates as a warning, not an automatic rejection: "
+                        "allow them if both contracts clearly settle on the same underlying event, but reject if "
+                        "the date difference changes what can make the contract resolve Yes or No. "
+                        "Do not reject solely because close/resolution dates differ by a day or two. "
+                        "Ignore harmless wording differences. Keep reason under 20 words."
                     ),
                 },
                 {
@@ -242,8 +285,6 @@ class LLMMatchVerifier:
             "title": m.title,
             "description": m.description[:1500],
             "outcomes": m.outcomes,
-            "event_title": m.event_title,
-            "series_title": m.series_title,
             "category": m.category,
             "close_time": _dt(m.close_time),
             "resolution_date": _dt(m.resolution_date),

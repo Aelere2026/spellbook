@@ -12,6 +12,7 @@ from matchers.match import find_matches, is_binary
 from match_cache import CACHE_PATH, load_cache, save_cache, build_score_cache
 
 OUTPUT = Path("matches.txt")
+OUTPUT_LLM = Path("matches_llm.txt")
 TIME_WINDOW = timedelta(days=7)
 MIN_SCORE = 84.0
 BM25_TOP_K = 20  # Polymarket candidates per Kalshi market from BM25 retrieval
@@ -21,10 +22,73 @@ LLM_AUTO_ACCEPT_SCORE = float(os.getenv("LLM_AUTO_ACCEPT_SCORE", "92.0"))
 LLM_MODEL = os.getenv("LLM_MODEL", "qwen3:8b")
 LLM_ENDPOINT = os.getenv("LLM_ENDPOINT", "http://localhost:11434/api/chat")
 LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "120.0"))
+LLM_MAX_REVIEWS = os.getenv("LLM_MAX_REVIEWS")
+LLM_PROGRESS_INTERVAL = int(os.getenv("LLM_PROGRESS_INTERVAL", "25"))
 
 
 def _elapsed(t0: float) -> str:
     return f"{time.monotonic() - t0:.1f}s"
+
+
+def _market_report_lines(index: int, score: float, kalshi, polymarket) -> list[str]:
+    k_close = kalshi.close_time.date() if kalshi.close_time else "?"
+    p_close = polymarket.close_time.date() if polymarket.close_time else "?"
+    k_url = f"https://kalshi.com/events/{kalshi.platform_id}"
+    p_url = f"https://polymarket.com/market/{polymarket.slug}"
+    return [
+        f"[{index}] score={score:.1f}",
+        f"  K  {kalshi.title}",
+        f"     {k_url}  |  {kalshi.platform_id}  |  closes {k_close}",
+        f"  P  {polymarket.title}",
+        f"     {p_url}  |  {polymarket.platform_id}  |  closes {p_close}",
+    ]
+
+
+def build_llm_report(now: datetime, verifier) -> str:
+    approved = [r for r in verifier.reviews if r.verdict.is_match]
+    rejected = [r for r in verifier.reviews if not r.verdict.is_match]
+
+    lines = [
+        f"Generated:       {now.isoformat()}",
+        f"Model:           {verifier.model}",
+        f"Review band:     {verifier.review_min_score:.1f} <= score < {verifier.auto_accept_score:.1f}",
+        f"LLM calls:       {verifier.calls}",
+        f"LLM cache hits:  {verifier.cache_hits}",
+        f"Skipped by cap:  {verifier.skipped_after_cap}",
+        f"LLM approved:    {len(approved)}",
+        f"LLM rejected:    {len(rejected)}",
+        "",
+        "LLM APPROVED",
+        "",
+    ]
+
+    if approved:
+        for i, review in enumerate(approved, 1):
+            source = "cache" if review.verdict.cached else "live"
+            lines += _market_report_lines(i, review.score, review.kalshi, review.polymarket)
+            lines += [
+                f"  LLM confidence={review.verdict.confidence:.2f}  |  source={source}",
+                f"  Reason: {review.verdict.reason}",
+                "",
+            ]
+    else:
+        lines += ["  none", ""]
+
+    lines += ["LLM REJECTED", ""]
+
+    if rejected:
+        for i, review in enumerate(rejected, 1):
+            source = "cache" if review.verdict.cached else "live"
+            lines += _market_report_lines(i, review.score, review.kalshi, review.polymarket)
+            lines += [
+                f"  LLM confidence={review.verdict.confidence:.2f}  |  source={source}",
+                f"  Reason: {review.verdict.reason}",
+                "",
+            ]
+    else:
+        lines += ["  none", ""]
+
+    return "\n".join(lines)
 
 
 def run():
@@ -87,6 +151,8 @@ def run():
             review_min_score=LLM_REVIEW_MIN_SCORE,
             auto_accept_score=LLM_AUTO_ACCEPT_SCORE,
             timeout_seconds=LLM_TIMEOUT_SECONDS,
+            max_reviews=int(LLM_MAX_REVIEWS) if LLM_MAX_REVIEWS else None,
+            progress_interval=LLM_PROGRESS_INTERVAL,
         )
         match_verifier = verifier.verify
         min_score = LLM_REVIEW_MIN_SCORE
@@ -94,6 +160,8 @@ def run():
             f"[match] LLM verifier enabled  |  model={LLM_MODEL}  |  "
             f"review {LLM_REVIEW_MIN_SCORE:.1f}-{LLM_AUTO_ACCEPT_SCORE:.1f}"
         )
+        if LLM_MAX_REVIEWS:
+            print(f"[match] LLM review cap enabled  |  max_reviews={LLM_MAX_REVIEWS}")
 
     matches, all_scores = find_matches(
         kalshi_markets,
@@ -107,6 +175,7 @@ def run():
     llm_stats = ""
     if verifier is not None:
         verifier.save()
+        OUTPUT_LLM.write_text(build_llm_report(now, verifier))
         llm_stats = f"  |  LLM calls: {verifier.calls}  |  LLM cache hits: {verifier.cache_hits}"
     print(f"[match] Done in {_elapsed(t)}  |  {len(matches)} matches found  |  {len(all_scores)} pairs scored{llm_stats}")
 
@@ -135,20 +204,12 @@ def run():
     ]
 
     for i, m in enumerate(matches, 1):
-        k_close = m.kalshi.close_time.date() if m.kalshi.close_time else "?"
-        p_close = m.polymarket.close_time.date() if m.polymarket.close_time else "?"
-        k_url = f"https://kalshi.com/events/{m.kalshi.platform_id}"
-        p_url = f"https://polymarket.com/market/{m.polymarket.slug}"
-        lines += [
-            f"[{i}] score={m.score:.1f}",
-            f"  K  {m.kalshi.title}",
-            f"     {k_url}  |  {m.kalshi.platform_id}  |  closes {k_close}",
-            f"  P  {m.polymarket.title}",
-            f"     {p_url}  |  {m.polymarket.platform_id}  |  closes {p_close}",
-            "",
-        ]
+        lines += _market_report_lines(i, m.score, m.kalshi, m.polymarket)
+        lines.append("")
 
     OUTPUT.write_text("\n".join(lines))
+    if verifier is not None:
+        print(f"[done] Written LLM review report to {OUTPUT_LLM.resolve()}")
     print(f"[done] Written to {OUTPUT.resolve()}  |  Total: {_elapsed(run_start)}")
 
 

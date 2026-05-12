@@ -5,6 +5,10 @@ SESSION="spellbook"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 USE_LLM=0
 LLM_MODEL="${LLM_MODEL:-qwen3:4b}"
+LLM_MAX_REVIEWS="${LLM_MAX_REVIEWS:-}"
+LLM_REVIEW_MIN_SCORE="${LLM_REVIEW_MIN_SCORE:-85.0}"
+LLM_AUTO_ACCEPT_SCORE="${LLM_AUTO_ACCEPT_SCORE:-92.0}"
+LLM_PROGRESS_INTERVAL="${LLM_PROGRESS_INTERVAL:-25}"
 
 usage() {
     echo "Usage: $0 [--llm] [--llm-model MODEL]"
@@ -42,7 +46,7 @@ fi
 
 tmux new-session -d -s "$SESSION" -n "market-matching"
 if [[ "$USE_LLM" -eq 1 ]]; then
-    tmux send-keys -t "$SESSION:0" "if ! command -v ollama >/dev/null 2>&1; then echo '[ollama] command not found'; exit 1; fi; until ollama list >/dev/null 2>&1; do echo '[ollama] waiting for local server...'; sleep 2; done; cd '$SCRIPT_DIR/market-matching' && LLM_VERIFY_ENABLED=1 LLM_MODEL='$LLM_MODEL' bash run_loop.sh" Enter
+    tmux send-keys -t "$SESSION:0" "if ! command -v ollama >/dev/null 2>&1; then echo '[ollama] command not found'; exit 1; fi; until ollama list >/dev/null 2>&1; do echo '[ollama] waiting for local server...'; sleep 2; done; cd '$SCRIPT_DIR/market-matching' && LLM_VERIFY_ENABLED=1 LLM_MODEL='$LLM_MODEL' LLM_MAX_REVIEWS='$LLM_MAX_REVIEWS' LLM_REVIEW_MIN_SCORE='$LLM_REVIEW_MIN_SCORE' LLM_AUTO_ACCEPT_SCORE='$LLM_AUTO_ACCEPT_SCORE' LLM_PROGRESS_INTERVAL='$LLM_PROGRESS_INTERVAL' bash run_loop.sh" Enter
 else
     tmux send-keys -t "$SESSION:0" "cd '$SCRIPT_DIR/market-matching' && bash run_loop.sh" Enter
 fi
