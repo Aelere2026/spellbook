@@ -1,6 +1,6 @@
 import arbitrageRouter from "./arbitrageRouter"
 import authRouter from "./authRouter"
-import preferenecsRouter from "./preferencesRouter"
+import configRouter from "./configRouter"
 import marketRouter from "./marketRouter"
 import matchRouter from "./matchRouter"
 
@@ -11,7 +11,7 @@ export { createContext } from "./context"
 export const appRouter = router({
     arbitrages: arbitrageRouter,
     auth: authRouter,
-    config: preferenecsRouter,
+    config: configRouter,
     markets: marketRouter,
     matches: matchRouter
 })

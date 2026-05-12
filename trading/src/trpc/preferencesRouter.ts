@@ -1,6 +1,6 @@
 import { userProcedure, router } from "./trpc"
 import { prisma } from "../util/prisma"
-import { Prisma } from "../../prisma/generated/client"
+import { Prisma, User } from "../../prisma/generated/client"
 import { z } from "zod"
 import { later } from "../auth"
 
@@ -12,37 +12,69 @@ export type UserPreferences = {
     resolutionEnd: Date
 }
 
-// Ensures a single BotConfig row always exists (id = 1)
-async function getPreferences(userId: number): Promise<UserPreferences> {
+const APIKeysValidator = z.object({
+    polymarket: z.object({
+        iv: z.string()
+    }).optional(),
+    kalshi: z.object({
+        iv: z.string()
+    }).optional(),
+    discord: z.object({
+        iv: z.string(),
+        webhookUrl: z.string()
+    }).optional(),
+    sendgrid: z.object({
+        iv: z.string(),
+        key: z.string(),
+        recipient: z.string()
+    }).optional(),
+    slack: z.object({
+        iv: z.string(),
+        webhookUrl: z.string()
+    }).optional(),
+    twilio: z.object({
+        iv: z.string(),
+        sid: z.string(),
+        authToken: z.string()
+    }).optional()
+})
+type APIKeys = z.infer<typeof APIKeysValidator>
+
+
+async function getPreferences(userId: number): Promise<Partial<UserPreferences>> {
     let rawPreferences = await prisma.user.findUnique({
         select: { preferences: true },
         where: { id: userId }
     })
 
+    // TODO: is any of this type casting okay? need to test but can't without the page :/
     let preferences
     if (!rawPreferences) {
-        preferences = {} as Prisma.JsonObject
+        return {}
     } else {
-        preferences = rawPreferences.preferences as Prisma.JsonObject
-    }
-
-    return {
-        usePresetAlgorithm: preferences.usePresetAlgorithm as boolean ?? true,
-        manualShares: preferences.manualShares as number ?? 1,
-        maxShares: preferences.maxShares as number ?? 1,
-        resolutionStart: new Date(preferences.resolutionStart as string) ?? new Date(),
-        resolutionEnd: new Date(preferences.resolutionStart as string) ?? later(30)
+        return (rawPreferences.preferences as Prisma.JsonObject)
     }
 }
 
-const preferenecsRouter = router({
+async function getPreferencesOrDefault(userId: number): Promise<UserPreferences> {
+    const prefs = await getPreferences(userId)
+
+    return {
+        usePresetAlgorithm: prefs.usePresetAlgorithm as boolean ?? true,
+        manualShares: prefs.manualShares as number ?? 1,
+        maxShares: prefs.maxShares as number ?? 1,
+        resolutionStart: new Date(prefs.resolutionStart ?? later(0)),
+        resolutionEnd: new Date(prefs.resolutionStart ?? later(30))
+    }
+}
+
+const configRouter = router({
     // Get current bot preferences
-    get: userProcedure.query(async ({ ctx }) => {
+    getPreferences: userProcedure.query(async ({ ctx }) => {
         return await getPreferences(ctx.data.userId)
     }),
-
     // Update bot preferences
-    update: userProcedure
+    updatePreferences: userProcedure
         .input(
             z.object({
                 usePresetAlgorithm: z.boolean().optional(),
@@ -68,6 +100,14 @@ const preferenecsRouter = router({
                 }
             })
         }),
+    updateKeys: userProcedure
+        .input(APIKeysValidator)
+        .mutation(async ({ ctx, input }) => {
+            const userId = ctx.data.userId
+            // return await prisma.user.update({
+
+            // })
+        }),
 })
 
-export default preferenecsRouter
+export default configRouter
