@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from llm_verifier import LLMMatchVerifier
+from matchers.match import MatchResult
 from normalizers.models import NormalizedMarket
 from runner import build_llm_report, filter_open_markets
 
@@ -45,14 +46,23 @@ def test_build_llm_report_separates_approved_and_rejected_reviews():
     assert not verifier.verify(wc_k, wc_p, 87.0)
     verifier.skipped_after_cap = 3
 
-    report = build_llm_report(datetime(2026, 6, 2, tzinfo=timezone.utc), verifier)
+    report = build_llm_report(
+        datetime(2026, 6, 2, tzinfo=timezone.utc),
+        verifier,
+        [MatchResult(btc_k, btc_p, 88.0)],
+    )
 
     assert "Model:           qwen3:4b" in report
     assert "LLM approved:    1" in report
+    assert "Final selected:  1" in report
+    assert "Not selected:    0" in report
     assert "LLM rejected:    1" in report
     assert "Skipped by cap:  3" in report
-    assert "LLM APPROVED" in report
+    assert "LLM APPROVED AND SELECTED" in report
+    assert "LLM APPROVED BUT NOT SELECTED" in report
     assert "LLM REJECTED" in report
+    assert "Final selected: yes" in report
+    assert "Final match output:   1" in report
     assert "Reason: same event" in report
     assert "Reason: different event" in report
     assert "source=live" in report

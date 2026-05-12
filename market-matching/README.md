@@ -28,8 +28,10 @@ off by default.
    `DATABASE_URL` is available.
 
 When LLM verification is enabled, `runner.py` also writes `matches_llm.txt`
-with separate LLM-approved and LLM-rejected sections, including model
-confidence, cache/live source, and reasoning for each reviewed pair.
+with separate sections for LLM-approved selected pairs, LLM-approved pairs that
+lost final one-to-one assignment, and LLM-rejected pairs. Each reviewed pair
+includes model confidence, cache/live source, final-selected status, and
+reasoning.
 
 ## Default Matching
 

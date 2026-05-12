@@ -54,8 +54,19 @@ def filter_open_markets(markets: list, now: datetime) -> tuple[list, int]:
     return open_markets, len(markets) - len(open_markets)
 
 
-def build_llm_report(now: datetime, verifier) -> str:
-    approved = [r for r in verifier.reviews if r.verdict.is_match]
+def build_llm_report(now: datetime, verifier, matches: list | None = None) -> str:
+    selected_pairs = {
+        (m.kalshi.platform_id, m.polymarket.platform_id)
+        for m in (matches or [])
+    }
+    approved_selected = [
+        r for r in verifier.reviews
+        if r.verdict.is_match and (r.kalshi.platform_id, r.polymarket.platform_id) in selected_pairs
+    ]
+    approved_not_selected = [
+        r for r in verifier.reviews
+        if r.verdict.is_match and (r.kalshi.platform_id, r.polymarket.platform_id) not in selected_pairs
+    ]
     rejected = [r for r in verifier.reviews if not r.verdict.is_match]
 
     lines = [
@@ -65,40 +76,44 @@ def build_llm_report(now: datetime, verifier) -> str:
         f"LLM calls:       {verifier.calls}",
         f"LLM cache hits:  {verifier.cache_hits}",
         f"Skipped by cap:  {verifier.skipped_after_cap}",
-        f"LLM approved:    {len(approved)}",
+        f"LLM approved:    {len(approved_selected) + len(approved_not_selected)}",
+        f"Final selected:  {len(approved_selected)}",
+        f"Not selected:    {len(approved_not_selected)}",
         f"LLM rejected:    {len(rejected)}",
         "",
-        "LLM APPROVED",
+        "SUMMARY",
+        "",
+        f"  Reviewed pairs:       {len(verifier.reviews)}",
+        f"  Final match output:   {len(matches or [])}",
+        f"  Approved not selected pairs usually lost greedy one-to-one assignment to a higher-scoring reviewed pair.",
         "",
     ]
 
-    if approved:
-        for i, review in enumerate(approved, 1):
-            source = "cache" if review.verdict.cached else "live"
-            lines += _market_report_lines(i, review.score, review.kalshi, review.polymarket)
-            lines += [
-                f"  LLM confidence={review.verdict.confidence:.2f}  |  source={source}",
-                f"  Reason: {review.verdict.reason}",
-                "",
-            ]
-    else:
-        lines += ["  none", ""]
+    def add_reviews(title: str, reviews: list) -> None:
+        lines.extend([title, ""])
+        if reviews:
+            for i, review in enumerate(sorted(reviews, key=lambda r: r.score, reverse=True), 1):
+                source = "cache" if review.verdict.cached else "live"
+                selected = (review.kalshi.platform_id, review.polymarket.platform_id) in selected_pairs
+                lines.extend(_market_report_lines(i, review.score, review.kalshi, review.polymarket))
+                lines.extend([
+                    f"  Final selected: {'yes' if selected else 'no'}",
+                    f"  LLM confidence={review.verdict.confidence:.2f}  |  source={source}",
+                    f"  Reason: {review.verdict.reason}",
+                    "",
+                ])
+        else:
+            lines.extend(["  none", ""])
 
-    lines += ["LLM REJECTED", ""]
-
-    if rejected:
-        for i, review in enumerate(rejected, 1):
-            source = "cache" if review.verdict.cached else "live"
-            lines += _market_report_lines(i, review.score, review.kalshi, review.polymarket)
-            lines += [
-                f"  LLM confidence={review.verdict.confidence:.2f}  |  source={source}",
-                f"  Reason: {review.verdict.reason}",
-                "",
-            ]
-    else:
-        lines += ["  none", ""]
+    add_reviews("LLM APPROVED AND SELECTED", approved_selected)
+    add_reviews("LLM APPROVED BUT NOT SELECTED", approved_not_selected)
+    add_reviews("LLM REJECTED", rejected)
 
     return "\n".join(lines)
+
+
+def write_llm_report(path: Path, now: datetime, verifier, matches: list) -> None:
+    path.write_text(build_llm_report(now, verifier, matches))
 
 
 def run():
@@ -197,7 +212,7 @@ def run():
     llm_stats = ""
     if verifier is not None:
         verifier.save()
-        OUTPUT_LLM.write_text(build_llm_report(now, verifier))
+        write_llm_report(OUTPUT_LLM, now, verifier, matches)
         llm_stats = f"  |  LLM calls: {verifier.calls}  |  LLM cache hits: {verifier.cache_hits}"
     print(f"[match] Done in {_elapsed(t)}  |  {len(matches)} matches found  |  {len(all_scores)} pairs scored{llm_stats}")
 
