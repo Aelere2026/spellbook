@@ -5,6 +5,7 @@ import { z } from "zod"
 import * as time from "../util/time"
 import * as log from "../util/log"
 import { APIKeysValidator, setKey } from "../cryptography"
+import { updateUserPreferencesCache } from "../detector"
 
 export type UserPreferences = {
     usePresetAlgorithm: boolean,
@@ -20,9 +21,6 @@ async function getPreferences(userId: number): Promise<Partial<UserPreferences>>
         where: { id: userId }
     })
 
-    console.info("Raw Prefs: ", rawPreferences)
-
-    // TODO: is any of this type casting okay? need to test but can't without the page :/
     let preferences
     if (!rawPreferences?.preferences) {
         return {}
@@ -33,6 +31,10 @@ async function getPreferences(userId: number): Promise<Partial<UserPreferences>>
 
 export async function getPreferencesOrDefault(userId: number): Promise<UserPreferences> {
     const prefs = await getPreferences(userId)
+    return addDefaultPreferences(prefs)
+}
+
+function addDefaultPreferences(prefs: Partial<UserPreferences>): UserPreferences {
     return {
         usePresetAlgorithm: prefs.usePresetAlgorithm as boolean ?? true,
         manualShares: prefs.manualShares as number ?? 1,
@@ -60,17 +62,19 @@ const preferencesRouter = router({
         )
         .mutation(async ({ ctx, input }) => {
             const userId = ctx.data.userId
-            const preferences = await getPreferences(userId)
+            const prefs = await getPreferences(userId)
+            const updatedPrefs = {
+                usePresetAlgorithm: input.usePresetAlgorithm ?? prefs.usePresetAlgorithm,
+                manualShares: input.manualShares ?? prefs.manualShares,
+                maxShares: input.maxShares ?? prefs.manualShares,
+                resolutionStart: input.resolutionStart ?? prefs.resolutionStart,
+                resolutionEnd: input.resolutionEnd ?? prefs.resolutionEnd
+            }
+            updateUserPreferencesCache(ctx.data.userId, addDefaultPreferences(updatedPrefs))
             return await prisma.user.update({
                 where: { id: userId },
                 data: {
-                    preferences: {
-                        usePresetAlgorithm: input.usePresetAlgorithm ?? preferences.usePresetAlgorithm,
-                        manualShares: input.manualShares ?? preferences.manualShares,
-                        maxShares: input.maxShares ?? preferences.manualShares,
-                        resolutionStart: input.resolutionStart ?? preferences.resolutionStart,
-                        resolutionEnd: input.resolutionEnd ?? preferences.resolutionEnd
-                    }
+                    preferences: updatedPrefs
                 }
             })
         }),

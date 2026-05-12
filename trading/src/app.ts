@@ -83,9 +83,9 @@ app.listen(PORT, () => {
 })
 
 // Start the detector
-// detector.run().catch((err) => {
-//     log.fatal(`Fatal error: ${err}`);
-//     process.exit(1)
-// })
+detector.run().catch((err) => {
+    log.fatal(`Fatal error: ${err}`);
+    process.exit(1)
+})
 
 initAdmin()

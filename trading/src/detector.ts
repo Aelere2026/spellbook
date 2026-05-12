@@ -16,18 +16,10 @@ const POLL_INTERVAL_MS = 5_000
 const zero = new Decimal(0)
 const one = new Decimal(1)
 
-let KALSHI_FEE = zero
+const userPreferencesCache = new Map<number, UserPreferences>()
 
-const userPreferences = new Map<number, UserPreferences>()
-
-async function loadPlatformFees(): Promise<void> {
-    const platforms = await prisma.platform.findMany()
-    const kal = platforms.find((p) => p.id === 2)
-    if (!kal) {
-        KALSHI_FEE = zero
-        throw new Error("Could not find Kalshi platform fee record")
-    }
-    KALSHI_FEE = kal.baseFee
+export async function updateUserPreferencesCache(userId: number, preferences: UserPreferences) {
+    userPreferencesCache.set(userId, preferences)
 }
 
 async function loadUserPreferences(): Promise<void> {
@@ -38,7 +30,7 @@ async function loadUserPreferences(): Promise<void> {
     })
 
     await Promise.all(users.map(async (user) => {
-        userPreferences.set(user.id, await getPreferencesOrDefault(user.id))
+        userPreferencesCache.set(user.id, await getPreferencesOrDefault(user.id))
     }))
 }
 
@@ -154,7 +146,6 @@ async function persistArbitrage(userId: number, shares: number, opp: ArbOpportun
 // ─── Main Loop ─────────────────────────────────────────────────────────────
 
 export async function run(): Promise<void> {
-    await loadPlatformFees()
     await loadUserPreferences()
     log.info("Arbitrage detector starting...")
 
@@ -217,7 +208,7 @@ export async function run(): Promise<void> {
                     `NO(${opp.polymarketYes ? "kalshi" : "poly"})=${opp.noPrice.toFixed(3)}`
                 )
 
-                userPreferences.forEach((preferences, userId) => {
+                userPreferencesCache.forEach((preferences, userId) => {
                     const { resolutionStart, resolutionEnd, usePresetAlgorithm, maxShares, manualShares } = preferences
 
                     if (time.isEarlierThan(marketResDate, resolutionStart)) return
