@@ -80,3 +80,24 @@ def test_filter_open_markets_removes_closed_and_keeps_missing_close_time():
 
     assert removed == 1
     assert [m.platform_id for m in markets] == ["K-OPEN", "P-MISSING"]
+
+
+def test_filter_open_markets_handles_naive_and_aware_datetimes():
+    aware_now = datetime(2026, 6, 1, 12, tzinfo=timezone.utc)
+    naive_closed = market(
+        "kalshi",
+        "K-NAIVE-CLOSED",
+        "Naive closed market",
+        close_time=datetime(2026, 6, 1, 11, 59, 59),
+    )
+    naive_open = market(
+        "kalshi",
+        "K-NAIVE-OPEN",
+        "Naive open market",
+        close_time=datetime(2026, 6, 1, 12),
+    )
+
+    markets, removed = filter_open_markets([naive_closed, naive_open], aware_now)
+
+    assert removed == 1
+    assert [m.platform_id for m in markets] == ["K-NAIVE-OPEN"]

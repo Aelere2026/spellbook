@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 from pathlib import Path
 import time
@@ -50,7 +50,18 @@ def filter_open_markets(markets: list, now: datetime) -> tuple[list, int]:
     Markets with missing close_time are kept. Some platforms omit close times,
     and the matcher can still use title/resolution data for those.
     """
-    open_markets = [m for m in markets if m.close_time is None or m.close_time >= now]
+    def is_open(m) -> bool:
+        if m.close_time is None:
+            return True
+        close_time = m.close_time
+        compare_now = now
+        if close_time.tzinfo is None and now.tzinfo is not None:
+            close_time = close_time.replace(tzinfo=timezone.utc)
+        elif close_time.tzinfo is not None and now.tzinfo is None:
+            compare_now = now.replace(tzinfo=timezone.utc)
+        return close_time >= compare_now
+
+    open_markets = [m for m in markets if is_open(m)]
     return open_markets, len(markets) - len(open_markets)
 
 
@@ -118,7 +129,7 @@ def write_llm_report(path: Path, now: datetime, verifier, matches: list) -> None
 
 def run():
     run_start = time.monotonic()
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     print(f"[{now.isoformat()}] Starting run")
 
     # --- Fetch ---
