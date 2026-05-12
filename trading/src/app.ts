@@ -67,7 +67,7 @@ const app = express()
 app.use(cors({
     origin: "http://localhost:5173",
     credentials: true,
-  }))
+}))
 app.use(cookieParser())
 app.use(
     "/trpc",
@@ -83,9 +83,9 @@ app.listen(PORT, () => {
 })
 
 // Start the detector
-detector.run().catch((err) => {
-    log.fatal(`Fatal error: ${err}`);
-    process.exit(1)
-})
+// detector.run().catch((err) => {
+//     log.fatal(`Fatal error: ${err}`);
+//     process.exit(1)
+// })
 
 initAdmin()

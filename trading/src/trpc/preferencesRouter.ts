@@ -3,6 +3,7 @@ import { prisma } from "../util/prisma"
 import { Prisma, User } from "../../prisma/generated/client"
 import { z } from "zod"
 import * as time from "../util/time"
+import * as log from "../util/log"
 import { APIKeysValidator, setKey } from "../cryptography"
 
 export type UserPreferences = {
@@ -19,9 +20,11 @@ async function getPreferences(userId: number): Promise<Partial<UserPreferences>>
         where: { id: userId }
     })
 
+    console.info("Raw Prefs: ", rawPreferences)
+
     // TODO: is any of this type casting okay? need to test but can't without the page :/
     let preferences
-    if (!rawPreferences) {
+    if (!rawPreferences?.preferences) {
         return {}
     } else {
         return (rawPreferences.preferences as Prisma.JsonObject)
@@ -31,16 +34,20 @@ async function getPreferences(userId: number): Promise<Partial<UserPreferences>>
 async function getPreferencesOrDefault(userId: number): Promise<UserPreferences> {
     const prefs = await getPreferences(userId)
 
-    return {
+    log.info("Prefs: ", prefs)
+
+    const cool = {
         usePresetAlgorithm: prefs.usePresetAlgorithm as boolean ?? true,
         manualShares: prefs.manualShares as number ?? 1,
         maxShares: prefs.maxShares as number ?? 1,
         resolutionStart: new Date(prefs.resolutionStart ?? time.now()),
         resolutionEnd: new Date(prefs.resolutionStart ?? time.later(30))
     }
+    log.info("cool: ", cool)
+    return cool
 }
 
-const configRouter = router({
+const preferencesRouter = router({
     // Get current bot preferences
     getPreferences: userProcedure.query(async ({ ctx }) => {
         return await getPreferencesOrDefault(ctx.data.userId)
@@ -89,4 +96,4 @@ const configRouter = router({
         }),
 })
 
-export default configRouter
+export default preferencesRouter
