@@ -3,6 +3,7 @@ from normalizers.models import NormalizedMarket
 from matchers.match import (
     find_matches,
     MatchResult,
+    _cutoff_year_mismatch,
     _entity_mismatch,
     _prop_threshold_mismatch,
     _year_mismatch,
@@ -268,6 +269,26 @@ assert _entity_mismatch(
     market("kalshi", "K-DIFF", "Will OpenSea launch a token?"),
     market("polymarket", "P-DIFF", "Will OpenAI launch a model?"),
 )
+
+# Cutoff-year guard: "before 2027" is equivalent to "before Jan 1, 2027",
+# but different cutoff years are a hard mismatch.
+assert not _cutoff_year_mismatch(
+    market("kalshi", "K-CUTOFF-SAME", "Will Israel and Saudi Arabia normalize relations before Jan 1, 2027?"),
+    market("polymarket", "P-CUTOFF-SAME", "Israel and Saudi Arabia normalize relations before 2027?"),
+)
+assert _cutoff_year_mismatch(
+    market("kalshi", "K-CUTOFF-DIFF", "Musk out as Tesla CEO before 2026?"),
+    market("polymarket", "P-CUTOFF-DIFF", "Musk out as Tesla CEO before 2027?"),
+)
+
+results, _ = find_matches(
+    [market("kalshi", "K-CUTOFF-DIFF", "Musk out as Tesla CEO before 2026?")],
+    [market("polymarket", "P-CUTOFF-DIFF", "Musk out as Tesla CEO before 2027?")],
+    min_score=90.0,
+    score_cache={("K-CUTOFF-DIFF", "P-CUTOFF-DIFF"): 99.0},
+    match_verifier=lambda *_args: True,
+)
+assert results == [], "different cutoff years must be rejected before LLM verification"
 
 # IDF retrieval guard branches
 assert idf_candidates([], [p_fed]) == []

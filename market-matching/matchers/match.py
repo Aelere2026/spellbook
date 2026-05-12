@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import Callable
 
 from normalizers.models import NormalizedMarket
 from matchers.utils import canon, fuzzy_score
@@ -37,6 +38,25 @@ def is_binary(m: NormalizedMarket) -> bool:
 
 
 _TITLE_YEAR = re.compile(r'\b(20\d{2})\b')
+_BEFORE_YEAR = re.compile(r'\bbefore\s+(?:jan(?:uary)?\s+1(?:st)?\s*,?\s+)?(20\d{2})\b', re.IGNORECASE)
+
+
+def _before_cutoff_year(title: str) -> int | None:
+    """Return the cutoff year from phrases like "before 2027" or "before Jan 1, 2027"."""
+    match = _BEFORE_YEAR.search(title)
+    return int(match.group(1)) if match else None
+
+
+def _cutoff_year_mismatch(k: NormalizedMarket, p: NormalizedMarket) -> bool:
+    """Reject pairs with incompatible explicit cutoff years.
+
+    "before 2027" and "before Jan 1, 2027" are equivalent.  But
+    "before 2026" vs "before 2027" changes the event window, so it is a hard
+    mismatch regardless of fuzzy score or LLM opinion.
+    """
+    k_cutoff = _before_cutoff_year(k.title)
+    p_cutoff = _before_cutoff_year(p.title)
+    return bool(k_cutoff and p_cutoff and k_cutoff != p_cutoff)
 
 
 def _year_mismatch(k: NormalizedMarket, p: NormalizedMarket) -> bool:
@@ -152,6 +172,7 @@ def find_matches(
     max_time_delta: timedelta = timedelta(days=14),
     score_cache: dict[tuple[str, str], float] | None = None,
     idf_top_k: int = 20,
+    match_verifier: Callable[[NormalizedMarket, NormalizedMarket, float], bool] | None = None,
 ) -> tuple[list[MatchResult], dict[tuple[str, str], float]]:
     """Return scored (kalshi, polymarket) pairs that likely describe the same event.
 
@@ -165,7 +186,8 @@ def find_matches(
       4. Score each unique candidate pair with (token_set_ratio + token_sort_ratio
          + partial_ratio) / 3 on canonicalized titles. Cached scores are reused
          for pairs where both market fingerprints are unchanged since last run.
-      5. Keep pairs at or above min_score, sorted best-first.
+      5. Keep pairs at or above min_score that pass deterministic guards and,
+         if supplied, the optional match_verifier.
       6. Greedy 1-to-1 assignment: each market appears in at most one match.
     """
     eligible = [k for k in kalshi if is_binary(k)]
@@ -195,7 +217,14 @@ def find_matches(
         cached = score_cache.get(key) if score_cache is not None else None
         score = cached if cached is not None else fuzzy_score(canon(k.title), canon(p.title))
         all_scores[key] = score
-        if score >= min_score and not _year_mismatch(k, p) and not _prop_threshold_mismatch(k, p) and not _entity_mismatch(k, p):
+        if (
+            score >= min_score
+            and not _year_mismatch(k, p)
+            and not _cutoff_year_mismatch(k, p)
+            and not _prop_threshold_mismatch(k, p)
+            and not _entity_mismatch(k, p)
+            and (match_verifier is None or match_verifier(k, p, score))
+        ):
             results.append(MatchResult(k, p, round(score, 1)))
 
     results.sort(key=lambda r: r.score, reverse=True)
