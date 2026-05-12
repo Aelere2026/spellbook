@@ -202,19 +202,6 @@ const Navbar: React.FC = () => {
           >
             ⚙️
           </Link>
-
-          {/* Sign Out */}
-          <button
-            onClick={handleSignOut}
-            disabled={signout.isPending}
-            className={`ml-2 inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium backdrop-blur-xl transition-all duration-200 disabled:opacity-50 ${
-              isDark
-                ? "border-rose-400/20 bg-rose-500/10 text-rose-300 hover:-translate-y-0.5 hover:border-rose-400/40 hover:text-rose-100"
-                : "border-rose-300 bg-rose-50 text-rose-600 hover:-translate-y-0.5 hover:border-rose-400 hover:text-rose-800"
-            }`}
-          >
-            {signout.isPending ? "Signing out..." : "Sign Out"}
-          </button>
         </nav>
       </div>
     </header>
