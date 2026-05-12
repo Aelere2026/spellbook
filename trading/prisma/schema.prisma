@@ -108,7 +108,7 @@ model Session {
   expiration  DateTime
   createdAt   DateTime @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index(hashedToken)
 }
