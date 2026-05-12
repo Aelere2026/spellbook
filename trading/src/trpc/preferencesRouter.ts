@@ -31,7 +31,7 @@ async function getPreferences(userId: number): Promise<Partial<UserPreferences>>
     }
 }
 
-async function getPreferencesOrDefault(userId: number): Promise<UserPreferences> {
+export async function getPreferencesOrDefault(userId: number): Promise<UserPreferences> {
     const prefs = await getPreferences(userId)
     return {
         usePresetAlgorithm: prefs.usePresetAlgorithm as boolean ?? true,

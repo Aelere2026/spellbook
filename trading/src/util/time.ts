@@ -9,5 +9,13 @@ export function later(days: number) {
 }
 
 export function isExpired(event: { expiration: Date }) {
-    return event.expiration < new Date(Date.now())
+    return isEarlierThan(event.expiration, now())
+}
+
+export function isEarlierThan(check: Date, reference: Date) {
+    return check < reference
+}
+
+export function isLaterThan(check: Date, reference: Date) {
+    return check > reference
 }
