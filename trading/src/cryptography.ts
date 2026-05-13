@@ -30,7 +30,7 @@ const AD_LENGTH = 16
 const TAG_LENGTH = 16
 const MASTER_KEY = process.env.MASTER_KEY ?? generateMasterKey()
 
-const QUICKHASH_ALGORITHM = "sha256"
+const TOKEN_HASH_ALGORITHM = "sha256"
 
 function generateMasterKey(): string {
     const envPath = path.join(__dirname, "..", "..", "secrets", "bot.env")
@@ -99,14 +99,14 @@ export async function verify(secret: string, hash: string | undefined): Promise<
 }
 
 // Hashes a secret (password, etc)
-export async function hash(secret: string): Promise<string> {
+export async function hashPassword(secret: string): Promise<string> {
     return argon2.hash(secret)
 }
 
 // Hashing used for tokens, doesn't need a salt since dictionary attacks aren't
 // an issue with randomly generated tokens
-export function quickHash(secret: string): string {
-    return crypto.createHash(QUICKHASH_ALGORITHM).update(secret).digest("hex")
+export function hashToken(secret: string): string {
+    return crypto.createHash(TOKEN_HASH_ALGORITHM).update(secret).digest("hex")
 }
 
 // Retrieves an encrypted user key

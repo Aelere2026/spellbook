@@ -33,8 +33,14 @@ const authRouter = router({
                 password: z.string()
             }),
         )
-        .mutation(async ({ input }) => {
-            return await auth.signup(input.token, input.password)
+        .mutation(async ({ ctx, input }) => {
+            const token = await auth.signup(input.token, input.password)
+            ctx.data.res.cookie("session-token", token, {
+                maxAge: 60 * 60 * 24 * 30, // 30 Days
+                httpOnly: true,
+                secure: true,
+                sameSite: "strict"
+            })
         }),
     signout: userProcedure
         .input(

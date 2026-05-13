@@ -20,7 +20,7 @@ export async function validateSession(cookies: string) {
     let hashedToken: string | undefined
 
     if (!sessionCache.has(token)) {
-        hashedToken = crypt.quickHash(token)
+        hashedToken = crypt.hashToken(token)
         session = await prisma.session.findFirst({
             where: {
                 hashedToken
@@ -44,7 +44,7 @@ export async function validateSession(cookies: string) {
         sessionCache.delete(token)
         await prisma.session.deleteMany({
             where: {
-                hashedToken: hashedToken ?? await crypt.hash(token)
+                hashedToken: hashedToken ?? await crypt.hashPassword(token)
             }
         })
         throw new TRPCError({ code: "UNAUTHORIZED" })
@@ -62,7 +62,7 @@ async function createSession(userId: number): Promise<string> {
     const session = await prisma.session.create({
         data: {
             userId,
-            hashedToken: crypt.quickHash(token),
+            hashedToken: crypt.hashToken(token),
             expiration: time.later(30)
         }
     })
@@ -120,7 +120,7 @@ export async function changePassword(userId: number, oldPassword: string, newPas
 
     await prisma.user.update({
         where: { id: userId },
-        data: { hashedPassword: await crypt.hash(newPassword) }
+        data: { hashedPassword: await crypt.hashPassword(newPassword) }
     })
 
     return true
@@ -129,15 +129,15 @@ export async function changePassword(userId: number, oldPassword: string, newPas
 export async function checkInvite(token: string): Promise<string | null> {
     const invite = await prisma.invite.findFirst({
         select: { name: true },
-        where: { hashedToken: await crypt.hash(token) }
+        where: { hashedToken: crypt.hashToken(token) }
     })
 
     return invite?.name ?? null
 }
 
-export async function signup(token: string, password: string): Promise<string | null> {
+export async function signup(token: string, password: string): Promise<string> {
     const invite = await prisma.invite.findFirst({
-        where: { hashedToken: await crypt.hash(token) }
+        where: { hashedToken: crypt.hashToken(token) }
     })
 
     if (!invite) {
@@ -147,13 +147,13 @@ export async function signup(token: string, password: string): Promise<string | 
     const user = await prisma.user.create({
         data: {
             name: invite.name,
-            hashedPassword: await crypt.hash(password)
+            hashedPassword: await crypt.hashPassword(password)
         }
     })
 
     await prisma.invite.delete({ where: { id: invite.id } })
 
-    return createSession(user.id)
+    return await createSession(user.id)
 }
 
 export async function invite(name: string): Promise<string | null> {
@@ -173,7 +173,7 @@ export async function invite(name: string): Promise<string | null> {
     await prisma.invite.create({
         data: {
             name,
-            hashedToken: await crypt.hash(token),
+            hashedToken: crypt.hashToken(token),
             expiration: time.later(30)
         }
     })
@@ -210,6 +210,27 @@ export function isAdmin(userId: number): boolean {
 }
 
 export async function initAdmin(): Promise<boolean> {
+    async function createCustomInvite(token: string, username: string, id: number) {
+        if (
+            await prisma.invite.findUnique({ where: { id } }) ||
+            await prisma.user.findUnique({ where: { name: username } })
+        ) return
+        log.info(`Creating custom invite for ${username}!`)
+        await prisma.invite.create({
+            data: {
+                id,
+                name: username,
+                hashedToken: crypt.hashToken(token),
+                expiration: time.later(30)
+            }
+        })
+    }
+
+    // Obviously remove these in a real environment
+    createCustomInvite("christo-token-singleuse", "maherasc", -1)
+    createCustomInvite("xia-token-singleuse", "xiag", -2)
+    createCustomInvite("crain-token-singleuse", "crainm", -3)
+
     if (await prisma.user.findUnique({ where: { id: ADMIN_UID } })) {
         return false
     }
@@ -223,12 +244,13 @@ export async function initAdmin(): Promise<boolean> {
         data: {
             id: ADMIN_UID,
             name,
-            hashedPassword: await crypt.hash(password)
+            hashedPassword: await crypt.hashPassword(password)
         }
     })
 
     log.warn("Save the following information. It cannot be retrieved!!!")
     log.warn(`Admin username: ${name}`)
     log.warn(`Admin password: ${password}`)
+
     return true
 }
