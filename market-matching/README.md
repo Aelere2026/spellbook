@@ -88,24 +88,31 @@ The root start script starts an `ollama` tmux window when needed and waits for
 Ollama before starting the matching loop. If Ollama or the requested model is
 missing, the market-matching pane prints the exact install command to run.
 
+For non-technical setup from the repo root, run:
+
+```bash
+./install_llm.sh
+```
+
+This installs Ollama if needed, starts the local Ollama server, and pulls the
+default model. Ollama stores models in its own local model store; do not place
+model files inside `market-matching/`. This service only needs the model name,
+which defaults to `qwen3:4b`.
+
 ### Recommended Local Model
 
 For the current laptop-GPU setup, use:
 
 ```bash
-ollama pull qwen3:4b
+./install_llm.sh --model qwen3:4b
 ```
 
-If Ollama itself is not installed:
+Manual alternative:
 
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
-```
-
-Then make sure Ollama is running:
-
-```bash
 ollama serve
+ollama pull qwen3:4b
 ```
 
 If `ollama serve` says the address is already in use, the server is already
