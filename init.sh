@@ -26,6 +26,8 @@ main() {
         exit 1
     fi
 
+    preflight
+
     cleaned=false
     if prompt "Clean install?" "N"; then
         echo ""
@@ -53,6 +55,124 @@ main() {
     setup_tool POSTGRES
 }
 
+preflight() {
+    echo ""
+    echo "Checking prerequisites..."
+
+    check_command "git" "clean install"
+    check_command "python3" "Python setup"
+    check_command "pip" "Python setup"
+    check_python_venv
+    check_command "npm" "Dashboard and trading setup"
+    check_command "npx" "Postgres migrations"
+    check_node
+    check_docker
+    check_command "curl" "optional LLM setup"
+    check_command "tmux" "start.sh"
+    check_ollama
+
+    echo ""
+    echo "Preflight complete. Missing optional tools can be skipped at their setup prompt."
+    echo ""
+}
+
+check_command() {
+    local program=$1
+    local purpose=$2
+
+    if command -v "$program" > /dev/null; then
+        echo "[OK] $program ($purpose)"
+    else
+        echo "[MISSING] $program ($purpose)"
+    fi
+}
+
+check_python_venv() {
+    if ! command -v python3 > /dev/null; then
+        echo "[MISSING] python3-venv (Python setup)"
+        return
+    fi
+
+    if python3 -m venv --help > /dev/null 2>&1; then
+        echo "[OK] python3-venv (Python setup)"
+    else
+        echo "[MISSING] python3-venv (Python setup)"
+    fi
+}
+
+check_node() {
+    if ! command -v node > /dev/null; then
+        echo "[MISSING] node >=20.19, >=22.12, or >=24 (Dashboard and trading setup)"
+        return
+    fi
+
+    local version
+    version=$(node --version)
+
+    if node_version_supported "$version"; then
+        echo "[OK] node $version (Dashboard and trading setup)"
+    else
+        echo "[WARN] node $version found; recommended version is >=20.19, >=22.12, or >=24"
+    fi
+}
+
+node_version_supported() {
+    local version=${1#v}
+    local major=${version%%.*}
+    local rest=${version#*.}
+    local minor=${rest%%.*}
+
+    if ((major >= 24)); then
+        return 0
+    fi
+
+    if ((major >= 23)); then
+        return 0
+    fi
+
+    if ((major == 22 && minor >= 12)); then
+        return 0
+    fi
+
+    if ((major == 20 && minor >= 19)); then
+        return 0
+    fi
+
+    return 1
+}
+
+check_docker() {
+    if ! command -v docker > /dev/null; then
+        echo "[MISSING] docker (Docker and Postgres setup)"
+        return
+    fi
+
+    if ! docker version > /dev/null 2>&1; then
+        echo "[WARN] docker found, but the Docker daemon is not available"
+        return
+    fi
+
+    if ! docker compose version > /dev/null 2>&1; then
+        echo "[MISSING] docker compose plugin (Docker and Postgres setup)"
+        return
+    fi
+
+    echo "[OK] docker and docker compose (Docker and Postgres setup)"
+}
+
+check_ollama() {
+    if ! command -v ollama > /dev/null; then
+        echo "[MISSING] ollama (optional LLM setup; install script can handle Linux)"
+        return
+    fi
+
+    if ollama list > /dev/null 2>&1; then
+        echo "[OK] ollama server (optional LLM setup)"
+    else
+        echo "[WARN] ollama found, but the server is not running"
+    fi
+}
+
 # Usage: require <program>
 require() {
     local program=$1
@@ -66,9 +186,37 @@ require() {
     fi
 }
 
+require_docker() {
+    if ! command -v docker > /dev/null; then
+        docker_help
+        exit 1
+    fi
+
+    if ! docker version > /dev/null 2>&1; then
+        docker_help
+        exit 1
+    fi
+
+    if ! docker compose version > /dev/null 2>&1; then
+        echo "Docker Compose is required. Install the Docker Compose plugin, then rerun this script."
+        exit 1
+    fi
+}
+
+docker_help() {
+    echo "Docker is required for database setup, but it is not available in this shell."
+
+    if grep -qi microsoft /proc/version 2> /dev/null; then
+        echo "WSL detected: install Docker Desktop on Windows and enable WSL integration for this distro."
+        echo "After enabling it, restart this shell and rerun ./init.sh."
+    else
+        echo "Install Docker Engine for your OS, start Docker, then rerun ./init.sh."
+    fi
+}
+
 clean() {
     require git
-    require docker
+    require_docker
 
     echo ""
     echo "Removing .gitignored files..."
@@ -170,7 +318,7 @@ LLM() {
 }
 
 DOCKER() {
-    require docker
+    require_docker
 
     cd "$SECRETS_DIR"
     read -rep $'Timezone:\n > ' -i "$DEFAULT_TIMEZONE" timezone
@@ -182,7 +330,7 @@ DOCKER() {
 
 # Sets up
 POSTGRES() {
-    require docker
+    require_docker
     require npx
 
     cd "$SECRETS_DIR"
