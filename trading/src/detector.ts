@@ -179,7 +179,7 @@ export async function run(): Promise<void> {
 
                 // Log first 3 matches for debugging
                 if (count < 3) {
-                    log.info(`Match ${match.id} | K(ask)=${JSON.stringify(kalshiPrices)} P(ask)=${JSON.stringify(polyPrices)} polyFeeRate=${polyFeeRate}`)
+                    log.debug(`Match ${match.id} | K(ask)=${JSON.stringify(kalshiPrices)} P(ask)=${JSON.stringify(polyPrices)} polyFeeRate=${polyFeeRate}`)
                     count++
                 }
 
@@ -195,7 +195,7 @@ export async function run(): Promise<void> {
                 }
 
                 opportunitiesFound++
-                log.debug(
+                log.info(
                     `ARB FOUND | match=${match.id} | ` +
                     `net=${opp.netProfit.toFixed(4)} | ` +
                     `fee=${opp.totalFee.toFixed(4)} | polyFeeRate=${polyFeeRate} | ` +
@@ -206,8 +206,8 @@ export async function run(): Promise<void> {
                 userPreferencesCache.forEach((preferences, userId) => {
                     const { resolutionStart, resolutionEnd, usePresetAlgorithm, maxShares, manualShares } = preferences
 
-                    if (time.isEarlierThan(marketResDate, resolutionStart)) return
-                    if (time.isLaterThan(marketResDate, resolutionEnd)) return
+                    if (resolutionStart && time.isEarlierThan(marketResDate, resolutionStart)) return
+                    if (resolutionEnd && time.isLaterThan(marketResDate, resolutionEnd)) return
 
                     const shares = usePresetAlgorithm
                         ? calcPresetShares(grossEstimate, maxShares)

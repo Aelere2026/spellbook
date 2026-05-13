@@ -9,8 +9,8 @@ const Settings: React.FC = () => {
   const navigate = useNavigate();
 
   const [maxShares, setMaxShares] = useState(50);
-  const [resolutionStart, setResolutionStart] = useState(new Date());
-  const [resolutionEnd, setResolutionEnd] = useState(new Date());
+  const [resolutionStart, setResolutionStart] = useState<Date | null>(null)
+  const [resolutionEnd, setResolutionEnd] = useState<Date | null>(null)
   const [apiKey1, setApiKey1] = useState("");
   const [apiKey2, setApiKey2] = useState("");
 
@@ -29,8 +29,8 @@ const Settings: React.FC = () => {
   useEffect(() => {
     if (!config) return;
     setMaxShares(config.maxShares);
-    setResolutionStart(config.resolutionStart);
-    setResolutionEnd(config.resolutionEnd);
+    setResolutionStart(config.resolutionStart ? new Date(config.resolutionStart) : null);
+    setResolutionEnd(config.resolutionEnd ? new Date(config.resolutionEnd) : null);
   }, [config]);
 
   const handleSaveMaxShares = async () => {
@@ -38,21 +38,19 @@ const Settings: React.FC = () => {
       usePresetAlgorithm: true,
       manualShares: 5,
       maxShares,
-      resolutionStart: resolutionStart,
-      resolutionEnd: resolutionEnd,
+      resolutionStart: resolutionStart ? new Date(resolutionStart) : null,
+      resolutionEnd: resolutionEnd ? new Date(resolutionEnd) : null,
     });
   };
 
-  console.log()
-
-  const formatDateToYYYYMMDD = (dateInput: string | Date): string => {
-    if (!dateInput) return "";
-    const date = new Date(dateInput);
-    if (isNaN(date.getTime())) return "";
+  const formatDateToYYYYMMDD = (date: Date | null): string => {
+    if (!date) {
+      return ""
+    }
 
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const day = date.getDate().toString().padStart(2, "0");
+    const day = (date.getDate() + 1).toString().padStart(2, "0");
 
     return `${year}-${month}-${day}`;
   };
@@ -64,27 +62,26 @@ const Settings: React.FC = () => {
     await api.prefs.updateKeys.useMutation().mutateAsync({
       ...(apiKey1 !== ""
         ? {
-            discord: {
-              webhookURL: apiKey1,
-            },
-          }
+          discord: {
+            webhookURL: apiKey1,
+          },
+        }
         : {}),
       ...(apiKey1 !== "" && apiKey2 !== ""
         ? {
-            twilio: {
-              sid: apiKey1,
-              authToken: apiKey2,
-            },
-          }
+          twilio: {
+            sid: apiKey1,
+            authToken: apiKey2,
+          },
+        }
         : {}),
     });
   };
 
   return (
     <div
-      className={`relative min-h-screen ${
-        isDark ? "text-violet-50" : "text-gray-900"
-      }`}
+      className={`relative min-h-screen ${isDark ? "text-violet-50" : "text-gray-900"
+        }`}
     >
       <div className="mx-auto max-w-5xl px-6 py-10 sm:px-8 lg:px-10">
         {/* Header */}
@@ -102,16 +99,14 @@ const Settings: React.FC = () => {
           ].join(" ")}
         >
           <h1
-            className={`text-4xl font-semibold tracking-tight ${
-              isDark ? "text-white" : "text-violet-900"
-            }`}
+            className={`text-4xl font-semibold tracking-tight ${isDark ? "text-white" : "text-violet-900"
+              }`}
           >
             Settings
           </h1>
           <p
-            className={`mt-2 text-sm ${
-              isDark ? "text-violet-200/60" : "text-violet-500"
-            }`}
+            className={`mt-2 text-sm ${isDark ? "text-violet-200/60" : "text-violet-500"
+              }`}
           >
             Customize your preferences :)
           </p>
@@ -125,9 +120,8 @@ const Settings: React.FC = () => {
                 ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
                 : undefined
             }
-            className={`rounded-2xl border p-6 backdrop-blur-md ${
-              isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
-            }`}
+            className={`rounded-2xl border p-6 backdrop-blur-md ${isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
+              }`}
           >
             <h2 className="text-xl font-semibold">Appearance</h2>
             <p className="mt-1 text-sm opacity-70">
@@ -135,11 +129,10 @@ const Settings: React.FC = () => {
             </p>
             <button
               onClick={toggleTheme}
-              className={`ml-2 mt-6 inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium backdrop-blur-xl transition-all duration-200 ${
-                isDark
-                  ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
-                  : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
-              }`}
+              className={`ml-2 mt-6 inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium backdrop-blur-xl transition-all duration-200 ${isDark
+                ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
+                : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
+                }`}
             >
               <span className="text-base">{isDark ? "☀️" : "🌙"}</span>
               <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
@@ -153,20 +146,18 @@ const Settings: React.FC = () => {
                 ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
                 : undefined
             }
-            className={`rounded-2xl border p-6 backdrop-blur-md ${
-              isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
-            }`}
+            className={`rounded-2xl border p-6 backdrop-blur-md ${isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
+              }`}
           >
             <h2 className="text-xl font-semibold">Account</h2>
             <p className="mt-1 text-sm opacity-70">Manage your session</p>
             <button
               onClick={handleSignOut}
               disabled={signout.isPending}
-              className={`mt-4 inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all duration-200 disabled:opacity-50 ${
-                isDark
-                  ? "border-rose-400/20 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-rose-300 shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
-                  : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-rose-500 shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-rose-700 hover:shadow-md"
-              }`}
+              className={`mt-4 inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all duration-200 disabled:opacity-50 ${isDark
+                ? "border-rose-400/20 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-rose-300 shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
+                : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-rose-500 shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-rose-700 hover:shadow-md"
+                }`}
             >
               {signout.isPending ? "Signing out..." : "Sign Out"}
             </button>
@@ -179,9 +170,8 @@ const Settings: React.FC = () => {
                 ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
                 : undefined
             }
-            className={`rounded-2xl border p-6 backdrop-blur-md ${
-              isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
-            }`}
+            className={`rounded-2xl border p-6 backdrop-blur-md ${isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
+              }`}
           >
             <h2 className="text-xl font-semibold">Notifications</h2>
             <p className="mt-1 text-sm opacity-70">Enable notifications</p>
@@ -208,9 +198,8 @@ const Settings: React.FC = () => {
                 ? { background: "linear-gradient(135deg, #f0e8ff, #e8deff)" }
                 : undefined
             }
-            className={`rounded-2xl border p-6 backdrop-blur-md ${
-              isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
-            }`}
+            className={`rounded-2xl border p-6 backdrop-blur-md ${isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
+              }`}
           >
             <h2 className="text-xl font-semibold">Trade Settings</h2>
             <p className="mt-1 text-sm opacity-70">
@@ -230,23 +219,19 @@ const Settings: React.FC = () => {
                     onChange={(e) =>
                       setResolutionStart(new Date(e.target.value))
                     }
-                    className={`w-full rounded-xl border px-3 py-2 text-sm ${
-                      isDark
-                        ? "border-gray-600 bg-gray-800 text-white"
-                        : "border-violet-300 bg-white"
-                    }`}
+                    className={`w-full rounded-xl border px-3 py-2 text-sm ${isDark
+                      ? "border-gray-600 bg-gray-800 text-white"
+                      : "border-violet-300 bg-white"
+                      }`}
                   />
                   <input
                     type="date"
                     value={formatDateToYYYYMMDD(resolutionEnd)}
-                    onChange={(e) => {setResolutionEnd(new Date(e.target.value))
-                     console.log("Hi there", e.target.value)}
-                    }
-                    className={`w-full rounded-xl border px-3 py-2 text-sm ${
-                      isDark
-                        ? "border-gray-600 bg-gray-800 text-white"
-                        : "border-violet-300 bg-white"
-                    }`}
+                    onChange={(e) => setResolutionEnd(new Date(e.target.value))}
+                    className={`w-full rounded-xl border px-3 py-2 text-sm ${isDark
+                      ? "border-gray-600 bg-gray-800 text-white"
+                      : "border-violet-300 bg-white"
+                      }`}
                   />
                 </div>
                 <div className="flex justify-between text-xs opacity-60">
@@ -271,11 +256,10 @@ const Settings: React.FC = () => {
                   step={1}
                   value={maxShares}
                   onChange={(e) => setMaxShares(Number(e.target.value))}
-                  className={`w-40 rounded-xl border px-3 py-2 text-sm ${
-                    isDark
-                      ? "border-gray-600 bg-gray-800 text-white"
-                      : "border-violet-300 bg-white"
-                  }`}
+                  className={`w-40 rounded-xl border px-3 py-2 text-sm ${isDark
+                    ? "border-gray-600 bg-gray-800 text-white"
+                    : "border-violet-300 bg-white"
+                    }`}
                 />
               </div>
 
@@ -285,11 +269,10 @@ const Settings: React.FC = () => {
                   Choose a market category to purchase in
                 </label>
                 <select
-                  className={`rounded-xl border px-3 py-2 text-sm ${
-                    isDark
-                      ? "border-gray-600 bg-gray-800 text-white"
-                      : "border-violet-300 bg-white"
-                  }`}
+                  className={`rounded-xl border px-3 py-2 text-sm ${isDark
+                    ? "border-gray-600 bg-gray-800 text-white"
+                    : "border-violet-300 bg-white"
+                    }`}
                 >
                   <option>Sports</option>
                   <option>Crypto</option>
@@ -311,45 +294,41 @@ const Settings: React.FC = () => {
                   placeholder="Key 1"
                   value={apiKey1}
                   onChange={(e) => setApiKey1(e.target.value)}
-                  className={`w-40 rounded-xl border px-3 py-2 text-sm ${
-                    isDark
-                      ? "border-gray-600 bg-gray-800 text-white"
-                      : "border-violet-300 bg-white"
-                  }`}
+                  className={`w-40 rounded-xl border px-3 py-2 text-sm ${isDark
+                    ? "border-gray-600 bg-gray-800 text-white"
+                    : "border-violet-300 bg-white"
+                    }`}
                 />
                 <input
                   type="text"
                   placeholder="Key 2"
                   value={apiKey2}
-                  onChange={(e) => 
+                  onChange={(e) =>
                     setApiKey2(e.target.value)
                   }
-                  className={`mt-2 w-40 rounded-xl border px-3 py-2 text-sm ${
-                    isDark
-                      ? "border-gray-600 bg-gray-800 text-white"
-                      : "border-violet-300 bg-white"
-                  }`}
+                  className={`mt-2 w-40 rounded-xl border px-3 py-2 text-sm ${isDark
+                    ? "border-gray-600 bg-gray-800 text-white"
+                    : "border-violet-300 bg-white"
+                    }`}
                 />
               </div>
             </div>
 
             <div className="flex justify-center p-6 mt-2 gap-4">
               <button
-                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-medium backdrop-blur-xl transition-all duration-200 ${
-                  isDark
-                    ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
-                    : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
-                }`}
+                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-medium backdrop-blur-xl transition-all duration-200 ${isDark
+                  ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
+                  : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
+                  }`}
                 onClick={handleSaveMaxShares}
               >
                 Save
               </button>
               <button
-                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-medium backdrop-blur-xl transition-all duration-200 ${
-                  isDark
-                    ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
-                    : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
-                }`}
+                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-medium backdrop-blur-xl transition-all duration-200 ${isDark
+                  ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
+                  : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
+                  }`}
                 onClick={handleSaveAPIKeys}
               >
                 Save API Keys

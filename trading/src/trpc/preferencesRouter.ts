@@ -11,8 +11,8 @@ export type UserPreferences = {
     usePresetAlgorithm: boolean,
     manualShares: number,
     maxShares: number
-    resolutionStart: Date,
-    resolutionEnd: Date
+    resolutionStart: Date | null,
+    resolutionEnd: Date | null
 }
 
 async function getPreferences(userId: number): Promise<Partial<UserPreferences>> {
@@ -21,7 +21,6 @@ async function getPreferences(userId: number): Promise<Partial<UserPreferences>>
         where: { id: userId }
     })
 
-    let preferences
     if (!rawPreferences?.preferences) {
         return {}
     } else {
@@ -36,16 +35,16 @@ export async function getPreferencesOrDefault(userId: number): Promise<UserPrefe
 
 function addDefaultPreferences(prefs: Partial<UserPreferences>): UserPreferences {
     return {
-        usePresetAlgorithm: prefs.usePresetAlgorithm as boolean ?? true,
-        manualShares: prefs.manualShares as number ?? 1,
-        maxShares: prefs.maxShares as number ?? 1,
-        resolutionStart: new Date(prefs.resolutionStart ?? time.now()),
-        resolutionEnd: new Date(prefs.resolutionStart ?? time.later(30))
+        usePresetAlgorithm: prefs.usePresetAlgorithm ?? true,
+        manualShares: prefs.manualShares ?? 1,
+        maxShares: prefs.maxShares ?? 1,
+        resolutionStart: !prefs.resolutionStart ? null : prefs.resolutionStart,
+        resolutionEnd: !prefs.resolutionEnd ? null : prefs.resolutionEnd
     }
 }
 
 const preferencesRouter = router({
-    // Get current bot preferences
+    // Get current bot preferences5)
     getPreferences: userProcedure.query(async ({ ctx }) => {
         return await getPreferencesOrDefault(ctx.data.userId)
     }),
@@ -67,8 +66,8 @@ const preferencesRouter = router({
                 usePresetAlgorithm: input.usePresetAlgorithm ?? prefs.usePresetAlgorithm,
                 manualShares: input.manualShares ?? prefs.manualShares,
                 maxShares: input.maxShares ?? prefs.manualShares,
-                resolutionStart: input.resolutionStart ?? prefs.resolutionStart,
-                resolutionEnd: input.resolutionEnd ?? prefs.resolutionEnd
+                resolutionStart: input.resolutionStart === undefined ? prefs.resolutionStart : input.resolutionStart,
+                resolutionEnd: input.resolutionEnd === undefined ? prefs.resolutionEnd : input.resolutionEnd
             }
             updateUserPreferencesCache(ctx.data.userId, addDefaultPreferences(updatedPrefs))
             return await prisma.user.update({
