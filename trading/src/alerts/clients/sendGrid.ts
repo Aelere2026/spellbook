@@ -2,6 +2,16 @@ import { AlertClient, Alert, defaults } from ".."
 import sgMail from "@sendgrid/mail"
 import * as log from "../../util/log"
 
+
+/**
+ * Creates an alert client to send notifications via email
+ *
+ * @param apiKey - SendGrid account API key.
+ * @param from - Email address of the notification bot.
+ * @param to - Recipient email address(es).
+ * @param [name] - Sender name of the notification bot.
+ * @see {@link https://www.twilio.com/docs/sendgrid/ui/account-and-settings/api-keys | SendGrid API Key}
+ */
 export class SendGridAlertClient implements AlertClient {
     readonly apiKey: string
     readonly from: string

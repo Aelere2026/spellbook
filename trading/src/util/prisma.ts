@@ -6,6 +6,12 @@ import * as dotenv from "dotenv"
 import * as path from "path"
 import * as log from "./log"
 
+/*
+ * This file creates a connection to a database, and continusouly
+ * checks for connection health. It also exports the types for
+ * each model (table) for convenience.
+ */
+
 const envFile = path.resolve(path.join(__dirname), "../prisma/.env")
 dotenv.config({ path: envFile, quiet: true })
 const connectionString = `${process.env.DATABASE_URL}`

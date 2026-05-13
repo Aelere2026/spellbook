@@ -5,10 +5,17 @@ import { Context } from "./context"
 import { isAdmin } from "../auth"
 import * as log from "../util/log"
 
+/**
+ * This file creates the root tRPC router, which allows users to query
+ * our server for information.
+ *
+ * It also sets sets up three types of procedures (public, user, admin),
+ * which are used to enforce authorization rules.
+ */
+
 export const t = initTRPC.context<Context>().create({
     transformer: superjson
 })
-
 export const router = t.router
 export const publicProcedure = t.procedure
 export const userProcedure = publicProcedure.use(

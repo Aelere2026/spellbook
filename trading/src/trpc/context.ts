@@ -1,8 +1,10 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express"
 import * as log from "../util/log"
-
 import { validateSession } from "../auth"
 
+/**
+ * Creates a tRPC context with information about the connecting user.
+ */
 export async function createContext({ req, res }: CreateExpressContextOptions) {
     const FAIL = {
         data: { res },

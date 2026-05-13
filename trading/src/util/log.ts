@@ -1,6 +1,11 @@
 import c from "ansi-colors"
-import { NumberInstance } from "twilio/lib/rest/pricing/v2/number"
 import util from "util"
+
+/*
+ * A simple logging utility, adding fun colors to our print statements!
+ * It also adds customizable timestamps, and can suppress different levels
+ * of logs (e.g. suppress debug info but print errors)
+ */
 
 const verbosityOrder: Verbosity[] = ["DEBUG", "LOG", "INFO", "ALERT", "WARN", "ERROR", "FATAL"]
 type Verbosity = "DEBUG" | "LOG" | "INFO" | "ALERT" | "WARN" | "ERROR" | "FATAL"

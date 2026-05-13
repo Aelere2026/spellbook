@@ -4,22 +4,18 @@ import { z } from "zod"
 import { router, userProcedure } from "./trpc"
 import { prisma } from "../util/prisma"
 
-
+/**
+ * Creates a tPRC router to query data about markets.
+ *
+ * **Endpoint Summary:**
+ * - **[USER]:** get - Returns a list of markets.
+ * - **[USER]:** onArbitrageAdd: Creates a subscription that updates whenever a new market is added.
+ * - **[USER]:** search - Reurns a list of markets with a given category
+ */
 const marketRouter = router({
     get: userProcedure
         .query(async () => {
             return await prisma.market.findMany()
-        }),
-    search: userProcedure
-        .input(z.object({
-            category: z.string()
-        }))
-        .query(async (opts) => {
-            return await prisma.market.findMany({
-                where: {
-                    category: opts.input.category
-                }
-            })
         }),
     onMarketAdd: userProcedure
         .input(z.object({
@@ -46,6 +42,17 @@ const marketRouter = router({
                 }
                 await new Promise((resolve) => setTimeout(resolve, 1000))
             }
+        }),
+    search: userProcedure
+        .input(z.object({
+            category: z.string()
+        }))
+        .query(async (opts) => {
+            return await prisma.market.findMany({
+                where: {
+                    category: opts.input.category
+                }
+            })
         }),
 })
 

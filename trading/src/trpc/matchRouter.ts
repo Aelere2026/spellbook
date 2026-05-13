@@ -4,25 +4,18 @@ import { z } from "zod"
 import { router, userProcedure } from "./trpc"
 import { prisma } from "../util/prisma"
 
-
+/**
+ * Creates a tPRC router to query data about matches.
+ *
+ * **Endpoint Summary:**
+ * - **[USER]:** get - Returns a list of matches.
+ * - **[USER]:** onMatchAdd: Creates a subscription that updates whenever a new match is added.
+ */
 const matchRouter = router({
     get: userProcedure.query(async () => {
         return await prisma.match.findMany()
     }),
-    search: userProcedure
-        .input(
-            z.object({
-                category: z.string(),
-            }),
-        )
-        .query(async (opts) => {
-            return await prisma.match.findMany({
-                orderBy: {
-                    matchScore: "desc",
-                },
-            })
-        }),
-    onMarketAdd: userProcedure
+    onMatchAdd: userProcedure
         .input(
             z.object({
                 lastEventId: z.coerce.date().nullish(),

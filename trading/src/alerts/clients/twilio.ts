@@ -2,7 +2,14 @@ import { AlertClient, Alert } from ".."
 import * as log from "../../util/log"
 import twilio, { Twilio } from "twilio"
 
-
+/**
+ * Creates an alert client to send notifications via SMS
+ * @param sid - String Identifier of the notification bot.
+ * @param authToken - Auth Token of the bot.
+ * @param from - Phone number of the notification bot.
+ * @param to - Recipient phone number(s)
+ * @see {@link https://www.twilio.com/docs/iam/api-keys/keys-in-console | Twilio API Key}
+ */
 export class TwilioAlertClient implements AlertClient {
     readonly from: string
     readonly to: string[]

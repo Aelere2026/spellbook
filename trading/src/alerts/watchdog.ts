@@ -8,6 +8,14 @@ export type target = {
     isFatal?: boolean
 }
 
+/**
+ * This system is left over from before user accounts were a thing.
+ * As such, it wasn't designed with multiple people and various user-
+ * customizable checks. This probably won't be too too difficult to
+ * add in, but we'll leave it up to the future developers :) I believe
+ * in you!
+ */
+
 // Not technically a watchdog :/
 // oh well!
 export class Watchdog {

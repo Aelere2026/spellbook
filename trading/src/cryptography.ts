@@ -7,21 +7,32 @@ import { JsonObject } from "@prisma/client/runtime/client"
 import path from "path"
 import * as fs from "fs"
 
-/**
- * Keys we need to decrypt are encrypted using ChaCha20-Poly1305, a symmetric
+/*
+ * This file contains a number of cryptographic utilities used to safely manage
+ * tokens, API keys, and passwords.
+ *
+ * Tokens have the lowest standard of security, as they're already randomly generated.
+ * We use sha256 to hash the tokens, so we don't store them in plaintext
+ *
+ * API Keys we need to decrypt are encrypted using ChaCha20-Poly1305, a symmetric
  * encryption algorithm. These keys are encrypted at rest, and we currently only
  * decrypt them on the fly. Should this prove to be too slow for trading, you
  * (future developers) might want to cache the decryption results in memory.
  * However, while this is more secure than no enyption, it does provide an additional
  * attack vector.
  *
- * Adapted from https://dev.to/vapourisation/east-encryption-in-typescript-3948
+ * Adapted from https://dev.to/vapourisation/east-encryption-in-typescript-3948.
  *
- * Passwords we do not (and should not!) decrypt, so we can use Argon2 instead.
+ * Passwords we do not (and should not be able to!) decrypt, so we can use Argon2 instead.
  * This is an unreversible hash, and is quantum computer resistant! :)
  */
 
-// Constants used for ChaCha
+// Constsnts used for tokens
+const TOKEN_HASH_ALGORITHM = "sha256"
+
+// Constants used for passwords
+
+// Constants used for API keys
 const SYMMETRIC_ALGORITHM = "chacha20-poly1305"
 const ENCODING_FORMAT: BufferEncoding = "hex"
 const MASTER_KEY_LENGTH = 32
@@ -30,8 +41,10 @@ const AD_LENGTH = 16
 const TAG_LENGTH = 16
 const MASTER_KEY = process.env.MASTER_KEY ?? generateMasterKey()
 
-const TOKEN_HASH_ALGORITHM = "sha256"
-
+/**
+ * Creates a new master key and appends it to a .env file
+ * @returns The master key
+ */
 function generateMasterKey(): string {
     const envPath = path.join(__dirname, "..", "..", "secrets", "bot.env")
     const masterKey = crypto.randomBytes(MASTER_KEY_LENGTH).toBase64()
@@ -48,6 +61,7 @@ function generateMasterKey(): string {
     return masterKey
 }
 
+/** Used to ensure useres are properly typing their API keys. */
 export const APIKeysValidator = z.object({
     polymarket: z.looseObject({}).optional(), // looseObject for now because they're empty. Once Poly/kal get populated, switch to regular objs
     kalshi: z.looseObject({}).optional(),
@@ -68,6 +82,8 @@ export const APIKeysValidator = z.object({
 })
 
 type APIKeys = z.infer<typeof APIKeysValidator>
+
+// Type generic shenanigans to make our lives easier
 type PlatformKey<K extends keyof APIKeys> = { platform: K } & NonNullable<APIKeys[K]> // Adds a platform field
 
 type PolymarketKey = PlatformKey<"polymarket">
@@ -80,6 +96,11 @@ type TwilioKey = PlatformKey<"twilio">
 export type APIKey = PolymarketKey | KalshiKey | DiscordKey | SendGridKey | SlackKey | TwilioKey
 export type Platform = APIKey["platform"]
 
+/**
+ * Creates a randomly generated alphanumeric token.
+ * @param [length=32] - The token's length.
+ * @returns The new token.
+ */
 export function generateToken(length: number = 32): string {
     const VOCAB = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     let token = ''
@@ -89,27 +110,45 @@ export function generateToken(length: number = 32): string {
     return token
 }
 
-// Checks if a potential secret (password, etc) matches the expected hash
-export async function verify(secret: string, hash: string | undefined): Promise<boolean> {
+/**
+ * Checks if a potential password correctly matches it's expected hash.
+ * (i.e. The password is correct).
+ * @param password - The potential password.
+ * @param hash - The password's expected hash.
+ * @returns If the password is correct.
+ */
+export async function verifyPassword(password: string, hash: string | undefined): Promise<boolean> {
     if (hash === undefined) {
         return false
     }
 
-    return argon2.verify(hash, secret)
+    return argon2.verify(hash, password)
 }
 
-// Hashes a secret (password, etc)
-export async function hashPassword(secret: string): Promise<string> {
-    return argon2.hash(secret)
+/**
+ * Hashes a password.
+ * @param password The password to be hashed.
+ * @returns The password's hash.
+ */
+export async function hashPassword(password: string): Promise<string> {
+    return argon2.hash(password)
 }
 
-// Hashing used for tokens, doesn't need a salt since dictionary attacks aren't
-// an issue with randomly generated tokens
+/**
+ * Hashes a token.
+ * @param secret - The token to be hashed.
+ * @returns - The token's hash.
+ */
 export function hashToken(secret: string): string {
     return crypto.createHash(TOKEN_HASH_ALGORITHM).update(secret).digest("hex")
 }
 
-// Retrieves an encrypted user key
+/**
+ * Decrypts a user's key(s) for a given platform.
+ * @param userId - A user's id.
+ * @param platform - The specific platform (Polymarket, Kalshi, etc.).
+ * @returns The user's keys for the given platform.
+ */
 export async function getKey(userId: number, platform: Platform) {
     const rawUserKeys = await prisma.user.findUnique({
         where: { id: userId },
@@ -136,27 +175,26 @@ export async function getKey(userId: number, platform: Platform) {
         case "discord":
             const discord = userKeys.discord
             return {
-                webhookUrl: await decrypt(discord?.webhookURL)
+                webhookUrl: await decryptKey(discord?.webhookURL)
             }
-
         case "sendGrid":
             const sendGrid = userKeys.sendGrid
             return {
-                key: await decrypt(sendGrid?.key),
-                recipient: await decrypt(sendGrid?.recipient)
+                key: await decryptKey(sendGrid?.key),
+                recipient: await decryptKey(sendGrid?.recipient)
             }
 
         case "slack":
             const slack = userKeys.slack
             return {
-                webhookURL: await decrypt(slack?.webhookURL)
+                webhookURL: await decryptKey(slack?.webhookURL)
             }
 
         case "twilio":
             const twilio = userKeys.twilio
             return {
-                sid: await decrypt(twilio?.sid),
-                authToken: await decrypt(twilio?.authToken)
+                sid: await decryptKey(twilio?.sid),
+                authToken: await decryptKey(twilio?.authToken)
             }
         default: // Should not be possible
             log.error("getKey switch default!!")
@@ -164,7 +202,12 @@ export async function getKey(userId: number, platform: Platform) {
     }
 }
 
-// TODO: is there a more elegant way to do this?
+/**
+ * Set's a user's api key.
+ * @param key - The key to be set.
+ * @param userId - The user's id.
+ * @returns The operation's success.
+ */
 export async function setKey(key: APIKey, userId: number): Promise<boolean> {
     const user = await prisma.user.findUnique({
         where: { id: userId },
@@ -183,24 +226,24 @@ export async function setKey(key: APIKey, userId: number): Promise<boolean> {
             break
         case "discord":
             keys.discord = {
-                webhookURL: encrypt(key.webhookURL)
+                webhookURL: encryptKey(key.webhookURL)
             }
             break
         case "sendGrid":
             keys.sendgrid = {
-                key: encrypt(key.key),
-                recipient: encrypt(key.recipient)
+                key: encryptKey(key.key),
+                recipient: encryptKey(key.recipient)
             }
             break
         case "slack":
             keys.slack = {
-                webhookURL: encrypt(key.webhookURL)
+                webhookURL: encryptKey(key.webhookURL)
             }
             break
         case "twilio":
             keys.twilio = {
-                sid: encrypt(key.sid),
-                authToken: encrypt(key.authToken)
+                sid: encryptKey(key.sid),
+                authToken: encryptKey(key.authToken)
             }
             break
         default: // Should not be possible!
@@ -218,6 +261,15 @@ export async function setKey(key: APIKey, userId: number): Promise<boolean> {
     return true
 }
 
+/**
+ * Splits an encrypted key into its four major components:
+ * 1. The actual encrypted data.
+ * 2. The encryption's initialization vector.
+ * 3. The encryption's associated data.
+ * 4. The encryption's authentication tag
+ * @param encryptionStr The full encryped key.
+ * @returns The key's components.
+ */
 function splitEncryptionStr(encryptionStr: string) {
     // Bytes are represented by two hex chars.
     const IV_STR_LEN = 2 * IV_LENGTH
@@ -243,7 +295,12 @@ function splitEncryptionStr(encryptionStr: string) {
     }
 }
 
-async function decrypt(encryptionStr: string | undefined) {
+/**
+ * Decrypts an encryped key.
+ * @param encryptionStr - The entrypted key.
+ * @returns The decrypted key.
+ */
+async function decryptKey(encryptionStr: string | undefined) {
     if (!encryptionStr) {
         return null
     }
@@ -275,7 +332,12 @@ async function decrypt(encryptionStr: string | undefined) {
     }
 }
 
-export function encrypt(data: string) {
+/**
+ * Encrypts a plaintext key.
+ * @param data - The plaintext key.
+ * @returns - The encryped key.
+ */
+export function encryptKey(data: string) {
     try {
         const iv = crypto.randomBytes(IV_LENGTH)
         const ad = crypto.randomBytes(AD_LENGTH)

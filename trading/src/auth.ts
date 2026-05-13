@@ -4,9 +4,20 @@ import * as crypt from "./cryptography"
 import * as log from "./util/log"
 import * as time from "./util/time"
 
-const ADMIN_UID = -1 // Should probably never change this, unless you want to add in multiple admin accounts
+/*
+ * This file contains many utilities used to manage user accounts, sessions, and invites.
+ */
+
+/** Should probably never change this, unless you want to add in a system for multiple admin accounts. */
+const ADMIN_UID = -1
+/** A cache to store sessions in-memory, so they don't need to be retrieved from the database each time. */
 const sessionCache = new Map<string, Session>()
 
+/**
+ * Checks if a user is connecting with an active session.
+ * @param cookies - The user's cookies, containing their session token.
+ * @returns The user's id and session id.
+ */
 export async function validateSession(cookies: string) {
     const token = cookies.split(";")
         .map(cookie => cookie.trim())
@@ -56,6 +67,11 @@ export async function validateSession(cookies: string) {
     }
 }
 
+/**
+ * Creates a new session.
+ * @param userId - The user's id.
+ * @returns The new session's token.
+ */
 async function createSession(userId: number): Promise<string> {
     const token = crypt.generateToken()
 
@@ -72,18 +88,28 @@ async function createSession(userId: number): Promise<string> {
     return token
 }
 
+/**
+ * Logs a user into their account, should their credentials be correct.
+ * @param name - The user's username.
+ * @param password - The user's password.
+ * @returns Their new session's token.
+ */
 export async function login(name: string, password: string): Promise<string> {
     const user = await prisma.user.findUnique({
         where: { name }
     })
 
-    if (!await crypt.verify(password, user?.hashedPassword)) {
+    if (!await crypt.verifyPassword(password, user?.hashedPassword)) {
         throw new TRPCError({ code: "UNAUTHORIZED" })
     }
 
     return await createSession(user!.id)
 }
 
+/**
+ * Signs a user out from all sessions.
+ * @param userId - The user's id.
+ */
 export async function signoutUser(userId: number): Promise<void> {
     const sessions = await prisma.session.findMany({
         select: { hashedToken: true },
@@ -96,6 +122,10 @@ export async function signoutUser(userId: number): Promise<void> {
     }
 }
 
+/**
+ * Signs a user out from their current session.
+ * @param sessionId The session's id.
+ */
 export async function signoutSession(sessionId: number): Promise<void> {
     try {
         const session = await prisma.session.delete({
@@ -106,6 +136,13 @@ export async function signoutSession(sessionId: number): Promise<void> {
     } catch (err) { }
 }
 
+/**
+ * Allows a user to change their password, should their credentials be corrent.
+ * @param userId - The user's id.
+ * @param oldPassword - The user's old password.
+ * @param newPassword - The user's new password.
+ * @returns The operation's success.
+ */
 export async function changePassword(userId: number, oldPassword: string, newPassword: string): Promise<boolean> {
     await signoutUser(userId)
 
@@ -114,7 +151,7 @@ export async function changePassword(userId: number, oldPassword: string, newPas
         where: { id: userId }
     })
 
-    if (!crypt.verify(oldPassword, user?.hashedPassword)) {
+    if (!crypt.verifyPassword(oldPassword, user?.hashedPassword)) {
         return false
     }
 
@@ -126,6 +163,11 @@ export async function changePassword(userId: number, oldPassword: string, newPas
     return true
 }
 
+/**
+ * Finds the username of an invited user.
+ * @param token - The invite's token.
+ * @returns The user's username.
+ */
 export async function checkInvite(token: string): Promise<string | null> {
     const invite = await prisma.invite.findFirst({
         select: { name: true },
@@ -135,6 +177,12 @@ export async function checkInvite(token: string): Promise<string | null> {
     return invite?.name ?? null
 }
 
+/**
+ * Allows a user to create an account, given a valid invite token.
+ * @param token - The invite's token.
+ * @param password - The user's new password.
+ * @returns The new session's token.
+ */
 export async function signup(token: string, password: string): Promise<string> {
     const invite = await prisma.invite.findFirst({
         where: { hashedToken: crypt.hashToken(token) }
@@ -156,6 +204,11 @@ export async function signup(token: string, password: string): Promise<string> {
     return await createSession(user.id)
 }
 
+/**
+ * Allows an admin to create an invite.
+ * @param name - The invited user's name.
+ * @returns The new invite's token.
+ */
 export async function invite(name: string): Promise<string | null> {
 
     // Make sure no users aready have that name
@@ -182,6 +235,11 @@ export async function invite(name: string): Promise<string | null> {
     return token
 }
 
+/**
+ * Allows an admin to remove a user from the system.
+ * @param userId - The user's id.
+ * @returns The operation's success.
+ */
 export async function removeUser(userId: number): Promise<boolean> {
     if (userId === ADMIN_UID) {
         return false
@@ -196,6 +254,11 @@ export async function removeUser(userId: number): Promise<boolean> {
     }
 }
 
+/**
+ * Allows an admin to revoke a pending invite.
+ * @param name - The invited user's name.
+ * @returns The operation's success.
+ */
 export async function revokeInvite(name: string): Promise<boolean> {
     try {
         await prisma.invite.delete({ where: { name } })
@@ -205,17 +268,27 @@ export async function revokeInvite(name: string): Promise<boolean> {
     }
 }
 
+/**
+ * Checks if a given user has admin permissions.
+ * Currently, it is only possible to have one admin account.
+ * @param userId - A user's id.
+ * @returns If the user has admin permssions.
+ */
 export function isAdmin(userId: number): boolean {
     return userId === ADMIN_UID
 }
 
-export async function initAdmin(): Promise<boolean> {
+/**
+ * Creates admin accounts, if they don't already exist.
+ * Check the logs for credentials
+ */
+export async function initAdmin() {
     async function createCustomInvite(token: string, username: string, id: number) {
         if (
             await prisma.invite.findUnique({ where: { id } }) ||
             await prisma.user.findUnique({ where: { name: username } })
         ) return
-        log.info(`Creating custom invite for ${username}!`)
+        log.info(`Creating custom invite for ${username}! Use the token: ${token} to create an account.`)
         await prisma.invite.create({
             data: {
                 id,
@@ -232,7 +305,7 @@ export async function initAdmin(): Promise<boolean> {
     createCustomInvite("crain-token-singleuse", "crainm", -3)
 
     if (await prisma.user.findUnique({ where: { id: ADMIN_UID } })) {
-        return false
+        return
     }
 
     log.info("No admin account... creating one!")
@@ -251,6 +324,4 @@ export async function initAdmin(): Promise<boolean> {
     log.warn("Save the following information. It cannot be retrieved!!!")
     log.warn(`Admin username: ${name}`)
     log.warn(`Admin password: ${password}`)
-
-    return true
 }
