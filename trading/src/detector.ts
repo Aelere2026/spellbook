@@ -195,7 +195,7 @@ export async function run(): Promise<void> {
                 }
 
                 opportunitiesFound++
-                log.info(
+                log.debug(
                     `ARB FOUND | match=${match.id} | ` +
                     `net=${opp.netProfit.toFixed(4)} | ` +
                     `fee=${opp.totalFee.toFixed(4)} | polyFeeRate=${polyFeeRate} | ` +
