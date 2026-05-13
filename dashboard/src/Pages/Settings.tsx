@@ -150,7 +150,7 @@ const Settings: React.FC = () => {
               disabled={signout.isPending}
               className={`mt-4 inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all duration-200 disabled:opacity-50 ${
                 isDark
-                  ? "border-rose-400/20 bg-rose-500/10 text-rose-300 hover:-translate-y-0.5 hover:border-rose-400/40 hover:text-rose-100"
+                  ? "border-rose-400/20 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-rose-300 shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
                   : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-rose-500 shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-rose-700 hover:shadow-md"
               }`}
             >
