@@ -2,15 +2,16 @@
 
 set -eao pipefail
 
-ROOT_DIR=$(pwd)
-TRADING_BOT_DIR=$ROOT_DIR"/trading-bot"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DASHBOARD_DIR=$ROOT_DIR"/dashboard"
+TRADING_DIR=$ROOT_DIR"/trading"
 MARKET_MATCHING_DIR=$ROOT_DIR"/market-matching"
 DOCKER_DIR=$ROOT_DIR"/docker"
 SECRETS_DIR=$ROOT_DIR/"secrets"
 
 POSTGRES_ENV="postgres.env"
 DOCKER_ENV="docker.env"
-TRADING_BOT_ENV="bot.env"
+BOT_ENV="bot.env"
 
 DEFAULT_PG_PASSWORD="postgres"
 DEFAULT_PG_DATABASE="spellbookdb"
@@ -20,13 +21,6 @@ DEFAULT_TIMEZONE="America/New_York"
 DEFAULT_LLM_MODEL="qwen3:4b"
 
 main() {
-    require git
-    require npm
-    require npx
-    require python3
-    require pip
-    require docker
-
     if ((BASH_VERSINFO[0] < 4)); then
         echo "Please update to at least bash-4.0 to run this script."
         exit 1
@@ -52,8 +46,9 @@ main() {
 
     init
     setup_tool PYTHON
-    setup_tool LLM
-    setup_tool TRADING_BOT
+    setup_tool LLM N
+    setup_tool DASHBOARD
+    setup_tool TRADING
     setup_tool DOCKER
     setup_tool POSTGRES
 }
@@ -72,6 +67,9 @@ require() {
 }
 
 clean() {
+    require git
+    require docker
+
     echo ""
     echo "Removing .gitignored files..."
     git clean -dfX
@@ -81,11 +79,11 @@ clean() {
     cd "$DOCKER_DIR"
     docker compose down --volumes --rmi "all"
 
-    cd $ROOT_DIR
+    cd "$ROOT_DIR"
 }
 
 init() {
-    mkdir -p $SECRETS_DIR
+    mkdir -p "$SECRETS_DIR"
     echo ""
 }
 
@@ -123,13 +121,14 @@ prompt() {
 # Usage setup_tool <tool>
 setup_tool() {
     local tool=$1
+    local default=${2:-"Y"}
 
-    if prompt "Setup $tool?"; then
+    if prompt "Setup $tool?" "$default"; then
         echo ""
         echo "Setting up $tool..."
         $tool
 
-        cd $ROOT
+        cd "$ROOT_DIR"
         echo "Done!"
     fi
 
@@ -138,7 +137,10 @@ setup_tool() {
 
 # Sets up python venv
 PYTHON() {
-    cd $MARKET_MATCHING_DIR
+    require python3
+    require pip
+
+    cd "$MARKET_MATCHING_DIR"
 
     python3 -m venv .venv
     source .venv/bin/activate
@@ -147,11 +149,17 @@ PYTHON() {
     deactivate
 }
 
-TRADING_BOT() {
-    cd "$TRADING_BOT_DIR/client"
-    npm install
+DASHBOARD() {
+    require npm
 
-    cd "$TRADING_BOT_DIR/server"
+    cd "$DASHBOARD_DIR"
+    npm install
+}
+
+TRADING() {
+    require npm
+
+    cd "$TRADING_DIR"
     npm install
 }
 
@@ -162,7 +170,9 @@ LLM() {
 }
 
 DOCKER() {
-    cd $SECRETS_DIR
+    require docker
+
+    cd "$SECRETS_DIR"
     read -rep $'Timezone:\n > ' -i "$DEFAULT_TIMEZONE" timezone
     add_env "$DOCKER_ENV" "TIMEZONE" "$timezone"
 
@@ -172,6 +182,9 @@ DOCKER() {
 
 # Sets up
 POSTGRES() {
+    require docker
+    require npx
+
     cd "$SECRETS_DIR"
 
     read -rep $'Postgres Password:\n > ' -i $DEFAULT_PG_PASSWORD postgres_password
@@ -184,14 +197,14 @@ POSTGRES() {
     add_env "$POSTGRES_ENV" "PGPASSWORD" "$postgres_password"
     add_env "$POSTGRES_ENV" "POSTGRES_PASSWORD" "$postgres_password"
 
-    add_env "$DOCKER_ENV" "PG_PORT" "$postgres_port"
+    add_env "$DOCKER_ENV" "POSTGRES_PORT" "$postgres_port"
 
-    add_env "$TRADING_BOT_ENV" "DATABASE_URL" "postgresql://postgres:$postgres_password@localhost:$postgres_port/$postgres_database"
+    add_env "$BOT_ENV" "DATABASE_URL" "postgresql://postgres:$postgres_password@localhost:$postgres_port/$postgres_database"
 
     # Docker needs to be running for Prisma to do its thing
     # The second line here is just a weird way to set postgres_running to be true or false
     container_id=$(docker container ls --filter "name=postgres" --quiet)
-    [[ "$container_id" != "" ]] && postres_running=true || postgres_running=false
+    [[ "$container_id" != "" ]] && postgres_running=true || postgres_running=false
 
     # If it isn't running, start it up
     if ! $postgres_running; then
@@ -206,7 +219,9 @@ POSTGRES() {
     # Give the container some time to finish starting up
     sleep 2
 
-    cd "$TRADING_BOT_DIR/server/prisma"
+    export DATABASE_URL="postgresql://postgres:$postgres_password@localhost:$postgres_port/$postgres_database"
+
+    cd "$TRADING_DIR/prisma"
     if ! npx prisma migrate dev > /dev/null; then
         echo "Database out of sync! Dropping data..."
         npx prisma migrate reset
