@@ -17,6 +17,7 @@ DEFAULT_PG_DATABASE="spellbookdb"
 DEFAULT_PG_DATA="/var/lib/postgresql/data"
 DEFAULT_PG_PORT="5432"
 DEFAULT_TIMEZONE="America/New_York"
+DEFAULT_LLM_MODEL="qwen3:4b"
 
 main() {
     require git
@@ -51,6 +52,7 @@ main() {
 
     init
     setup_tool PYTHON
+    setup_tool LLM
     setup_tool TRADING_BOT
     setup_tool DOCKER
     setup_tool POSTGRES
@@ -151,6 +153,12 @@ TRADING_BOT() {
 
     cd "$TRADING_BOT_DIR/server"
     npm install
+}
+
+LLM() {
+    cd "$ROOT_DIR"
+    read -rep $'LLM model:\n > ' -i "$DEFAULT_LLM_MODEL" llm_model
+    ./install_llm.sh --model "$llm_model"
 }
 
 DOCKER() {

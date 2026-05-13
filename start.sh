@@ -39,7 +39,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-llm_check_command="if ! command -v ollama >/dev/null 2>&1; then echo '[ollama] command not found. Install Ollama: curl -fsSL https://ollama.com/install.sh | sh'; exit 1; fi; until ollama list >/dev/null 2>&1; do echo '[ollama] waiting for local server... If this repeats, run: ollama serve'; sleep 2; done; if ! ollama list | awk '{print \$1}' | grep -qx '$LLM_MODEL'; then echo '[ollama] model $LLM_MODEL not found. Install it with: ollama pull $LLM_MODEL'; exit 1; fi"
+llm_check_command="if ! command -v ollama >/dev/null 2>&1; then echo '[ollama] command not found. From the repo root, run: ./install_llm.sh --model $LLM_MODEL'; exit 1; fi; until ollama list >/dev/null 2>&1; do echo '[ollama] waiting for local server... If this repeats, run: ./install_llm.sh --model $LLM_MODEL'; sleep 2; done; if ! ollama list | awk 'NR > 1 {print \$1}' | grep -qx '$LLM_MODEL'; then echo '[ollama] model $LLM_MODEL not found. From the repo root, run: ./install_llm.sh --model $LLM_MODEL'; exit 1; fi"
 
 if tmux has-session -t "$SESSION" 2>/dev/null; then
     tmux attach -t "$SESSION"
@@ -61,7 +61,7 @@ tmux send-keys -t "$SESSION:2" "cd '$SCRIPT_DIR/trading' && npm run dev" Enter
 
 if [[ "$USE_LLM" -eq 1 ]]; then
     tmux new-window -t "$SESSION" -n "ollama"
-    tmux send-keys -t "$SESSION:3" "if ! command -v ollama >/dev/null 2>&1; then echo '[ollama] command not found. Install Ollama: curl -fsSL https://ollama.com/install.sh | sh'; exit 1; fi; ollama list >/dev/null 2>&1 || ollama serve" Enter
+    tmux send-keys -t "$SESSION:3" "if ! command -v ollama >/dev/null 2>&1; then echo '[ollama] command not found. From the repo root, run: ./install_llm.sh --model $LLM_MODEL'; exit 1; fi; ollama list >/dev/null 2>&1 || ollama serve" Enter
 fi
 
 tmux attach -t "$SESSION"

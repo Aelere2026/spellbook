@@ -13,6 +13,24 @@ cd senior_project/spellbook
 bash ./init.sh
 ```
 
+The install script now asks whether to set up the optional local LLM for
+market matching. If you skip it during setup, run it later with:
+
+```bash
+./install_llm.sh
+```
+
+This installs Ollama if needed, starts the local Ollama server, and downloads
+the default `qwen3:4b` model. The model is not copied into `market-matching/`;
+Ollama keeps downloaded models in its own local model store. `market-matching`
+only needs to know the model name through `LLM_MODEL` or `./start.sh --llm-model`.
+
+To install a different model:
+
+```bash
+./install_llm.sh --model qwen3:8b
+```
+
 ## Starting the Stack
 
 Start the default tmux session:
@@ -33,7 +51,8 @@ To enable optional local LLM verification for score-eligible market matches:
 ./start.sh --llm
 ```
 
-The LLM path uses Ollama and defaults to `qwen3:4b`. Use a different local model with:
+The LLM path is used only by `market-matching`, runs through Ollama, and
+defaults to `qwen3:4b`. Use a different local model with:
 
 ```bash
 ./start.sh --llm --llm-model qwen3:8b
@@ -43,8 +62,7 @@ If Ollama is missing, or if the requested model has not been pulled, the
 market-matching tmux pane prints the install command, for example:
 
 ```bash
-curl -fsSL https://ollama.com/install.sh | sh
-ollama pull qwen3:4b
+./install_llm.sh
 ```
 
 By default, LLM matching checks every candidate with score 92 or higher:
