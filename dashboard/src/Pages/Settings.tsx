@@ -43,6 +43,16 @@ const Settings: React.FC = () => {
     });
   };
 
+  const formatDateToYYYYMMDD = (dateInput: string | Date): string => {
+    const date = new Date(dateInput);
+
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
   const handleSaveAPIKeys = async () => {
     setApiKey1("");
     setApiKey2("");
@@ -212,7 +222,7 @@ const Settings: React.FC = () => {
                 <div className="flex gap-3">
                   <input
                     type="date"
-                    value={resolutionStart.toString()}
+                    value={formatDateToYYYYMMDD(resolutionStart)}
                     onChange={(e) =>
                       setResolutionStart(new Date(e.target.value))
                     }
@@ -224,7 +234,7 @@ const Settings: React.FC = () => {
                   />
                   <input
                     type="date"
-                    value={resolutionEnd.toString()}
+                    value={formatDateToYYYYMMDD(resolutionEnd)}
                     onChange={(e) => setResolutionEnd(new Date(e.target.value))}
                     className={`w-full rounded-xl border px-3 py-2 text-sm ${
                       isDark
