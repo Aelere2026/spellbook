@@ -11,8 +11,13 @@ const Settings: React.FC = () => {
   const [maxShares, setMaxShares] = useState(50);
   const [resolutionStart, setResolutionStart] = useState<Date | null>(null)
   const [resolutionEnd, setResolutionEnd] = useState<Date | null>(null)
-  const [apiKey1, setApiKey1] = useState("")
-  const [apiKey2, setApiKey2] = useState("")
+
+  const [discordWebhookURL, setDiscordWebhookURL] = useState("")
+  const [sendGridKey, setSendGridKey] = useState("")
+  const [sendGridRecipient, setSendGridRecipient] = useState("")
+  const [slackWebhookURL, setSlackWebhookURL] = useState("")
+  const [twilioSID, setTwilioSID] = useState("")
+  const [twilioAuthToken, setTwilioAuthToken] = useState("")
 
   const updatePrefs = api.prefs.updatePreferences.useMutation();
   const updateKeys = api.prefs.updateKeys.useMutation()
@@ -34,7 +39,7 @@ const Settings: React.FC = () => {
     setResolutionEnd(config.resolutionEnd ? new Date(config.resolutionEnd) : null);
   }, [config]);
 
-  const handleSaveMaxShares = async () => {
+  const handleSavePreferences = async () => {
     await updatePrefs.mutateAsync({
       usePresetAlgorithm: true,
       manualShares: 5,
@@ -42,6 +47,8 @@ const Settings: React.FC = () => {
       resolutionStart: resolutionStart ? new Date(resolutionStart) : null,
       resolutionEnd: resolutionEnd ? new Date(resolutionEnd) : null,
     });
+    // Completely unnecessary, it just makes it feel more "official" whenever you hit save
+    window.location.reload()
   };
 
   const formatDateToYYYYMMDD = (date: Date | null): string => {
@@ -57,29 +64,86 @@ const Settings: React.FC = () => {
   };
 
   const handleSaveAPIKeys = async () => {
-    setApiKey1("");
-    setApiKey2("");
-
     const keys = {
-      ...(apiKey1 !== ""
+      ...(discordWebhookURL !== ""
         ? {
           discord: {
-            webhookURL: apiKey1,
+            webhookURL: discordWebhookURL,
           },
         }
         : {}),
-      ...(apiKey1 !== "" && apiKey2 !== ""
+      ...(sendGridKey !== "" && sendGridRecipient !== ""
+        ? {
+          sendGrid: {
+            key: sendGridKey,
+            recipient: sendGridRecipient,
+          },
+        }
+        : {}),
+      ...(slackWebhookURL !== ""
+        ? {
+          slack: {
+            webhookURL: slackWebhookURL,
+          },
+        }
+        : {}),
+      ...(twilioSID !== "" && twilioAuthToken !== ""
         ? {
           twilio: {
-            sid: apiKey1,
-            authToken: apiKey2,
+            sid: twilioSID,
+            authToken: twilioAuthToken,
           },
         }
         : {}),
     }
 
     await updateKeys.mutateAsync(keys)
-  };
+    window.location.reload()
+  }
+
+  function APIKeyInput({ placeholder, value, signal }: { placeholder: string, value: string, signal: React.Dispatch<React.SetStateAction<string>> }) {
+    return (
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => signal(e.target.value)}
+        className={`w-full rounded-xl border px-3 py-2 my-1.5 text-sm ${isDark
+          ? "border-gray-600 bg-gray-800 text-white"
+          : "border-violet-300 bg-white"
+          }`}
+      />
+    )
+  }
+
+  function APIKeyCategory({ title, children }: { title: string, children: React.ReactNode }) {
+    return (
+      <div className="grid grid-cols-[100px_1fr] items-start gap-2">
+        <label className="pt-2 text-left font-medium">
+          {title}:
+        </label>
+        <div className="flex flex-row items-center gap-2 flex-grow">
+          {children}
+        </div>
+      </div>
+    )
+  }
+
+  function SaveButton({ title, signal }: { title: string, signal: React.MouseEventHandler<HTMLButtonElement> }) {
+    return (
+      <div className="flex justify-center pt-4 pb-2">
+        <button
+          className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-medium backdrop-blur-xl transition-all duration-200 ${isDark
+            ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
+            : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
+            }`}
+          onClick={signal}
+        >
+          {title}
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -176,21 +240,62 @@ const Settings: React.FC = () => {
             className={`rounded-2xl border p-6 backdrop-blur-md ${isDark ? "border-violet-400/10 bg-white/5" : "border-violet-200"
               }`}
           >
-            <h2 className="text-xl font-semibold">Notifications</h2>
-            <p className="mt-1 text-sm opacity-70">Enable notifications</p>
+
+            <h2 className="text-xl font-semibold">API Keys</h2>
+            <label className="text-xs mb-6 font-medium opacity-60">
+              For security reasons, saved keys cannot be retrieved after
+              saving.
+            </label>
+
             <div className="mt-4 flex flex-col gap-3">
-              <label className="flex items-center gap-3">
-                <input type="checkbox" className="h-4 w-4" defaultChecked />
-                <span className="text-sm">Enable text messaging</span>
-              </label>
-              <label className="flex items-center gap-3">
-                <input type="checkbox" className="h-4 w-4" defaultChecked />
-                <span className="text-sm">Enable email</span>
-              </label>
-              <label className="flex items-center gap-3">
-                <input type="checkbox" className="h-4 w-4" defaultChecked />
-                <span className="text-sm">Enable discord messaging</span>
-              </label>
+              <APIKeyCategory title="Discord">
+                <APIKeyInput
+                  placeholder="Webhook URL"
+                  value={discordWebhookURL}
+                  signal={setDiscordWebhookURL}
+                />
+              </APIKeyCategory>
+
+              <APIKeyCategory title="Send Grid">
+                <APIKeyInput
+                  placeholder="Key"
+                  value={sendGridKey}
+                  signal={setSendGridKey}
+                />
+                <APIKeyInput
+                  placeholder="Recipient"
+                  value={sendGridRecipient}
+                  signal={setSendGridRecipient}
+                />
+              </APIKeyCategory>
+
+              <APIKeyCategory title="Slack">
+                <APIKeyInput
+                  placeholder="Webhook URL"
+                  value={slackWebhookURL}
+                  signal={setSlackWebhookURL}
+                />
+              </APIKeyCategory>
+
+              <APIKeyCategory title="Twilio">
+                <APIKeyInput
+                  placeholder="SID"
+                  value={twilioSID}
+                  signal={setTwilioSID}
+                />
+                <APIKeyInput
+                  placeholder="Auth Token"
+                  value={twilioAuthToken}
+                  signal={setTwilioAuthToken}
+                />
+              </APIKeyCategory>
+
+              <SaveButton
+                title="Save API Keys"
+                signal={handleSaveAPIKeys}
+              />
+
+
             </div>
           </div>
 
@@ -284,64 +389,19 @@ const Settings: React.FC = () => {
                   <option>Any</option>
                 </select>
               </div>
-
-              {/* API Keys */}
-              <div className="flex flex-col p-6 gap-1">
-                <label className="text-sm font-medium">API Keys</label>
-                <label className="text-xs mb-6 font-medium opacity-60">
-                  For security reasons, saved keys cannot be retrieved after
-                  saving.
-                </label>
-                <input
-                  type="text"
-                  placeholder="Key 1"
-                  value={apiKey1}
-                  onChange={(e) => setApiKey1(e.target.value)}
-                  className={`w-40 rounded-xl border px-3 py-2 text-sm ${isDark
-                    ? "border-gray-600 bg-gray-800 text-white"
-                    : "border-violet-300 bg-white"
-                    }`}
-                />
-                <input
-                  type="text"
-                  placeholder="Key 2"
-                  value={apiKey2}
-                  onChange={(e) =>
-                    setApiKey2(e.target.value)
-                  }
-                  className={`mt-2 w-40 rounded-xl border px-3 py-2 text-sm ${isDark
-                    ? "border-gray-600 bg-gray-800 text-white"
-                    : "border-violet-300 bg-white"
-                    }`}
-                />
-              </div>
             </div>
 
-            <div className="flex justify-center p-6 mt-2 gap-4">
-              <button
-                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-medium backdrop-blur-xl transition-all duration-200 ${isDark
-                  ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
-                  : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
-                  }`}
-                onClick={handleSaveMaxShares}
-              >
-                Save
-              </button>
-              <button
-                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-medium backdrop-blur-xl transition-all duration-200 ${isDark
-                  ? "border-violet-300/15 bg-gradient-to-br from-[#1b1430] via-[#24193d] to-[#120d22] text-[#646cff] shadow-[0_12px_35px_rgba(10,6,30,0.35)] hover:-translate-y-0.5 hover:border-violet-300/35 hover:text-white hover:shadow-[0_16px_40px_rgba(76,29,149,0.25)]"
-                  : "border-violet-200 bg-gradient-to-br from-[#f5f0ff] to-[#ede8ff] text-[#646cff] shadow-sm hover:-translate-y-0.5 hover:border-violet-300 hover:text-violet-900 hover:shadow-md"
-                  }`}
-                onClick={handleSaveAPIKeys}
-              >
-                Save API Keys
-              </button>
-            </div>
+            <SaveButton
+              title="Save Preferences"
+              signal={handleSavePreferences}
+            />
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+
 
 export default Settings;

@@ -221,7 +221,7 @@ export async function initAdmin(): Promise<boolean> {
                 id,
                 name: username,
                 hashedToken: crypt.hashToken(token),
-                expiration: time.later(30)
+                expiration: time.later(365)
             }
         })
     }

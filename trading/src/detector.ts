@@ -179,7 +179,7 @@ export async function run(): Promise<void> {
 
                 // Log first 3 matches for debugging
                 if (count < 3) {
-                    log.debug(`Match ${match.id} | K(ask)=${JSON.stringify(kalshiPrices)} P(ask)=${JSON.stringify(polyPrices)} polyFeeRate=${polyFeeRate}`)
+                    //log.debug(`Match ${match.id} | K(ask)=${JSON.stringify(kalshiPrices)} P(ask)=${JSON.stringify(polyPrices)} polyFeeRate=${polyFeeRate}`)
                     count++
                 }
 
@@ -195,13 +195,13 @@ export async function run(): Promise<void> {
                 }
 
                 opportunitiesFound++
-                log.info(
-                    `ARB FOUND | match=${match.id} | ` +
-                    `net=${opp.netProfit.toFixed(4)} | ` +
-                    `fee=${opp.totalFee.toFixed(4)} | polyFeeRate=${polyFeeRate} | ` +
-                    `YES(${opp.polymarketYes ? "poly" : "kalshi"})=${opp.yesPrice.toFixed(3)} ` +
-                    `NO(${opp.polymarketYes ? "kalshi" : "poly"})=${opp.noPrice.toFixed(3)}`
-                )
+                // log.info(
+                //     `ARB FOUND | match=${match.id} | ` +
+                //     `net=${opp.netProfit.toFixed(4)} | ` +
+                //     `fee=${opp.totalFee.toFixed(4)} | polyFeeRate=${polyFeeRate} | ` +
+                //     `YES(${opp.polymarketYes ? "poly" : "kalshi"})=${opp.yesPrice.toFixed(3)} ` +
+                //     `NO(${opp.polymarketYes ? "kalshi" : "poly"})=${opp.noPrice.toFixed(3)}`
+                // )
 
                 userPreferencesCache.forEach((preferences, userId) => {
                     const { resolutionStart, resolutionEnd, usePresetAlgorithm, maxShares, manualShares } = preferences
