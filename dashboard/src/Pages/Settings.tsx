@@ -43,8 +43,12 @@ const Settings: React.FC = () => {
     });
   };
 
+  console.log()
+
   const formatDateToYYYYMMDD = (dateInput: string | Date): string => {
+    if (!dateInput) return "";
     const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return "";
 
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -235,7 +239,9 @@ const Settings: React.FC = () => {
                   <input
                     type="date"
                     value={formatDateToYYYYMMDD(resolutionEnd)}
-                    onChange={(e) => setResolutionEnd(new Date(e.target.value))}
+                    onChange={(e) => {setResolutionEnd(new Date(e.target.value))
+                     console.log("Hi there", e.target.value)}
+                    }
                     className={`w-full rounded-xl border px-3 py-2 text-sm ${
                       isDark
                         ? "border-gray-600 bg-gray-800 text-white"
@@ -315,7 +321,9 @@ const Settings: React.FC = () => {
                   type="text"
                   placeholder="Key 2"
                   value={apiKey2}
-                  onChange={(e) => setApiKey2(e.target.value)}
+                  onChange={(e) => 
+                    setApiKey2(e.target.value)
+                  }
                   className={`mt-2 w-40 rounded-xl border px-3 py-2 text-sm ${
                     isDark
                       ? "border-gray-600 bg-gray-800 text-white"
