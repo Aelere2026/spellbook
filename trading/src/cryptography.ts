@@ -22,18 +22,19 @@ import * as fs from "fs"
  */
 
 // Constants used for ChaCha
-const MASTER_KEY = process.env.MASTER_KEY ?? generateMasterKey()
 const SYMMETRIC_ALGORITHM = "chacha20-poly1305"
-const ENCODING_FORMAT = "hex"
+const ENCODING_FORMAT: BufferEncoding = "hex"
+const MASTER_KEY_LENGTH = 32
 const IV_LENGTH = 12
 const AD_LENGTH = 16
 const TAG_LENGTH = 16
+const MASTER_KEY = process.env.MASTER_KEY ?? generateMasterKey()
 
 const QUICKHASH_ALGORITHM = "sha256"
 
 function generateMasterKey(): string {
     const envPath = path.join(__dirname, "..", "..", "secrets", "bot.env")
-    const masterKey = generateToken(64)
+    const masterKey = crypto.randomBytes(MASTER_KEY_LENGTH).toBase64()
     fs.readFile(envPath, (err, data) => {
         if (err) {
             log.error("Could not find bot.env!")
@@ -41,7 +42,7 @@ function generateMasterKey(): string {
         }
         if (!data.toString().includes("MASTER_KEY")) {
             log.info("No master key, generating one!")
-            fs.appendFileSync(envPath, `MASTER_KEY=${masterKey}`)
+            fs.appendFileSync(envPath, `\nMASTER_KEY=${masterKey}\n`)
         }
     })
     return masterKey
@@ -119,10 +120,10 @@ export async function getKey(userId: number, platform: Platform) {
         return null
     }
 
-    const result = APIKeysValidator.safeParse(rawUserKeys)
+    const result = APIKeysValidator.safeParse(rawUserKeys.apiKeys)
     if (!result.success) {
         // Should never happen!
-        log.warn("Key parsing failed!")
+        log.error("Key parsing failed!")
         return null
     }
     const userKeys = result.data
@@ -135,27 +136,27 @@ export async function getKey(userId: number, platform: Platform) {
         case "discord":
             const discord = userKeys.discord
             return {
-                webhookUrl: decrypt(discord?.webhookURL)
+                webhookUrl: await decrypt(discord?.webhookURL)
             }
 
         case "sendGrid":
             const sendGrid = userKeys.sendGrid
             return {
-                key: decrypt(sendGrid?.key),
-                recipient: decrypt(sendGrid?.recipient)
+                key: await decrypt(sendGrid?.key),
+                recipient: await decrypt(sendGrid?.recipient)
             }
 
         case "slack":
             const slack = userKeys.slack
             return {
-                webhookURL: decrypt(slack?.webhookURL)
+                webhookURL: await decrypt(slack?.webhookURL)
             }
 
         case "twilio":
             const twilio = userKeys.twilio
             return {
-                sid: decrypt(twilio?.sid),
-                authToken: decrypt(twilio?.authToken)
+                sid: await decrypt(twilio?.sid),
+                authToken: await decrypt(twilio?.authToken)
             }
         default: // Should not be possible
             log.error("getKey switch default!!")
@@ -173,7 +174,7 @@ export async function setKey(key: APIKey, userId: number): Promise<boolean> {
         return false
     }
 
-    const keys = user.apiKeys as JsonObject
+    const keys = user.apiKeys as JsonObject ?? {}
 
     switch (key.platform) {
         case "polymarket":
@@ -201,14 +202,18 @@ export async function setKey(key: APIKey, userId: number): Promise<boolean> {
                 sid: encrypt(key.sid),
                 authToken: encrypt(key.authToken)
             }
+            break
         default: // Should not be possible!
+            console.log(key)
             log.error("setKey switch default!!")
             return false
     }
 
     await prisma.user.update({
         where: { id: userId },
-        data: keys
+        data: {
+            apiKeys: keys
+        }
     })
     return true
 }
@@ -255,8 +260,9 @@ async function decrypt(encryptionStr: string | undefined) {
         const iv = Buffer.from(ivStr, ENCODING_FORMAT)
         const ad = Buffer.from(adStr, ENCODING_FORMAT)
         const tag = Buffer.from(tagStr, ENCODING_FORMAT)
+        const key = Buffer.from(MASTER_KEY, "base64")
 
-        const decipher = crypto.createDecipheriv(SYMMETRIC_ALGORITHM, MASTER_KEY!, iv, { authTagLength: TAG_LENGTH })
+        const decipher = crypto.createDecipheriv(SYMMETRIC_ALGORITHM, key, iv, { authTagLength: TAG_LENGTH })
         decipher.setAAD(ad, { plaintextLength: data.length })
         decipher.setAuthTag(Buffer.from(tag))
 
@@ -272,16 +278,17 @@ async function decrypt(encryptionStr: string | undefined) {
 export function encrypt(data: string) {
     try {
         const iv = crypto.randomBytes(IV_LENGTH)
-        const ad = crypto.randomBytes(AD_LENGTH);
-        const cipher = crypto.createCipheriv(SYMMETRIC_ALGORITHM, MASTER_KEY!, iv, {
-            authTagLength: 16,
+        const ad = crypto.randomBytes(AD_LENGTH)
+        const key = Buffer.from(MASTER_KEY, "base64")
+        const cipher = crypto.createCipheriv(SYMMETRIC_ALGORITHM, key, iv, {
+            authTagLength: TAG_LENGTH,
         })
 
         cipher.setAAD(ad, { plaintextLength: Buffer.byteLength(data) })
 
         const encrypted = Buffer.concat([
             cipher.update(
-                data, 'utf-8'
+                data, "utf-8"
             ),
             cipher.final(),
         ])
@@ -289,8 +296,8 @@ export function encrypt(data: string) {
 
         return iv.toString(ENCODING_FORMAT) + ad.toString(ENCODING_FORMAT) + encrypted.toString(ENCODING_FORMAT) + tag.toString(ENCODING_FORMAT)
     } catch (err) {
-        log.warn("Key encryption failed!")
-        log.warn(err)
+        log.error("Key encryption failed!")
+        log.error(err)
         // TODO: This fails somewhat silently. Is this an issue?
         return ""
     }

@@ -11,10 +11,11 @@ const Settings: React.FC = () => {
   const [maxShares, setMaxShares] = useState(50);
   const [resolutionStart, setResolutionStart] = useState<Date | null>(null)
   const [resolutionEnd, setResolutionEnd] = useState<Date | null>(null)
-  const [apiKey1, setApiKey1] = useState("");
-  const [apiKey2, setApiKey2] = useState("");
+  const [apiKey1, setApiKey1] = useState("")
+  const [apiKey2, setApiKey2] = useState("")
 
   const updatePrefs = api.prefs.updatePreferences.useMutation();
+  const updateKeys = api.prefs.updateKeys.useMutation()
   const { data: config } = api.prefs.getPreferences.useQuery();
 
   const signout = api.auth.signout.useMutation({
@@ -59,7 +60,7 @@ const Settings: React.FC = () => {
     setApiKey1("");
     setApiKey2("");
 
-    await api.prefs.updateKeys.useMutation().mutateAsync({
+    const keys = {
       ...(apiKey1 !== ""
         ? {
           discord: {
@@ -75,7 +76,9 @@ const Settings: React.FC = () => {
           },
         }
         : {}),
-    });
+    }
+
+    await updateKeys.mutateAsync(keys)
   };
 
   return (
